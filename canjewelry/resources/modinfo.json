@@ -1,0 +1,12 @@
+{
+  "type": "code",
+  "modid": "canjewelry",
+  "name": "canjewelry",
+  "authors": [ "KenigVovan" ],
+  "description": "To be added",
+  "contributors": [ "justOmi", "DarkPaapi" ],
+  "version": "0.1.11",
+  "dependencies": {
+    "game": ""
+  }
+}
