@@ -1,0 +1,63 @@
+﻿[
+  {
+
+    "ingredientPattern": "_D_,DPD,DDD",
+    "ingredients": {
+      "P": {
+        "type": "item",
+        "code": "game:resin",
+        "quantity": 2
+      },      
+      "D": {
+        "type": "item",
+        "code": "game:leather-*",
+        "allowedVariants": [ "plain", "black" ],
+        "quantity": 2
+      }
+    },
+    "name": "cangrindlayer-fine",
+    "width": 3,
+    "height": 3,
+    "dependsOn": [
+      {
+        "modid": "em",
+        "invert": true
+      }
+    ],
+    "output": {
+      "type": "block",
+      "code": "canjewelry:grindlayeritem-fine",
+      "quantity": 1
+    }
+  },
+  {
+
+    "ingredientPattern": "_D_,DPD,DDD",
+    "ingredients": {
+      "P": {
+        "type": "item",
+        "code": "game:resin",
+        "quantity": 2
+      },
+      "D": {
+        "type": "item",
+        "code": "game:leather-*",
+        "allowedVariants": [ "plain", "black" ],
+        "quantity": 2
+      }
+    },
+    "name": "cangrindlayer-fine-bl",
+    "width": 3,
+    "height": 3,
+    "dependsOn": [
+      {
+        "modid": "em"
+      }
+    ],
+    "output": {
+      "type": "block",
+      "code": "canjewelry:grindlayeritem-fine",
+      "quantity": 1
+    }
+  }
+]

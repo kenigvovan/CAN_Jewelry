@@ -1,0 +1,153 @@
+﻿{
+  "item-leather-croc-plain": "Крокодиляча шкіра",
+  "item-crochide-soaked-huge": "Просочена крокодиляча шкура",
+  "item-crochide-scraped-huge": "Вискоблена крокодиляча шкура",
+  "item-crochide-prepared-huge": "Підготовлена крокодиляча шкура",
+
+  "smithed_by": "Виковано: {0}",
+  "playername_color": "#ffffff",
+  "can-level": "Рівень:<font color=\"#99c9f9\">{0}</font>",
+  "can-curexp-allexp": "Од. Досвіду.:<font color=\"#99c9f9\">{0}/{1}</font>",
+  "new_level_achieved": "Новий рівень - {0}",
+  "n_uses_per_hours_interval": "{0} використань/{1} годин",
+  "gui-rename-ok": "Перейменувати",
+  "rename_gui_name": "Блок для перейменування",
+  "gui_add_socket": "Додати виїмку",
+  "gui_add_gem": "Додати дорогоцінне каміння",
+
+  "jewelset_gui_name": "Ювелірний набір",
+
+  "block-renamecollectible": "Блок для перейменування",
+
+  "item-gem-rough-chipped-diamond": "Дрібний неогранений алмаз",
+  "item-gem-rough-flawed-diamond": "Середній неогранений алмаз",
+  "item-gem-rough-normal-diamond": "Великий неогранений алмаз",
+
+  "item-gem-rough-chipped-corundum": "Дрібний неогранений корунд",
+  "item-gem-rough-flawed-corundum": "Середній неогранений корунд",
+  "item-gem-rough-normal-corundum": "Великий неогранений корунд",
+
+  "item-gem-rough-chipped-emerald": "Дрібний неогранений смарагд",
+  "item-gem-rough-flawed-emerald": "Середній неогранений смарагд",
+  "item-gem-rough-normal-emerald": "Великий неогранений смарагд",
+
+  "item-gem-rough-chipped-fluorite": "Дрібний неогранений флюорит",
+  "item-gem-rough-flawed-fluorite": "Середній неогранений флюорит",
+  "item-gem-rough-normal-fluorite": "Великий неогранений флюорит",
+
+  "item-gem-rough-chipped-lapislazuli": "Дрібний неогранений лазурит",
+  "item-gem-rough-flawed-lapislazuli": "Середній неогранений лазурит",
+  "item-gem-rough-normal-lapislazuli": "Великий неогранений лазурит",
+
+  "item-gem-rough-chipped-malachite": "Дрібний неогранений малахіт",
+  "item-gem-rough-flawed-malachite": "Середній неогранений малахіт",
+  "item-gem-rough-normal-malachite": "Великий неогранений малахіт",
+
+  "item-gem-rough-chipped-olivine_peridot": "Дрібний неогранений олівін",
+  "item-gem-rough-flawed-olivine_peridot": "Середній неогранений олівін",
+  "item-gem-rough-normal-olivine_peridot": "Великий неогранений олівін",
+
+  "item-gem-rough-chipped-quartz": "Дрібний неогранений кварц",
+  "item-gem-rough-flawed-quartz": "Середній неогранений кварц",
+  "item-gem-rough-normal-quartz": "Великий неогранений кварц",
+
+  "item-gem-rough-chipped-uranium": "Дрібний неогранений уран",
+  "item-gem-rough-flawed-uranium": "Середній неогранений уран",
+  "item-gem-rough-normal-uranium": "Великий неогранений уран",
+
+  "item-gem-cut-exquisite-diamond": "Великий огранений алмаз",
+  "item-gem-cut-flawless-diamond": "Середній огранений алмаз",
+  "item-gem-cut-normal-diamond": "Дрібний огранений алмаз",
+
+  "item-gem-cut-exquisite-corundum": "Великий огранений корунд",
+  "item-gem-cut-flawless-corundum": "Середній огранений корунд",
+  "item-gem-cut-normal-corundum": "Дрібний огранений корунд",
+
+  "item-gem-cut-exquisite-emerald": "Великий огранений смарагд",
+  "item-gem-cut-flawless-emerald": "Середній огранений смарагд",
+  "item-gem-cut-normal-emerald": "Дрібний огранений смарагд",
+
+  "item-gem-cut-exquisite-fluorite": "Великий огранений флюорит",
+  "item-gem-cut-flawless-fluorite": "Середній огранений флюорит",
+  "item-gem-cut-normal-fluorite": "Дрібний огранений флюорит",
+
+  "item-gem-cut-exquisite-lapislazuli": "Великий огранений лазурит",
+  "item-gem-cut-flawless-lapislazuli": "Середній огранений лазурит",
+  "item-gem-cut-normal-lapislazuli": "Дрібний огранений лазурит",
+
+  "item-gem-cut-exquisite-malachite": "Великий огранений малахіт",
+  "item-gem-cut-flawless-malachite": "Середній огранений малахіт",
+  "item-gem-cut-normal-malachite": "Дрібний огранений малахіт",
+
+  "item-gem-cut-exquisite-olivine": "Великий огранений олівін",
+  "item-gem-cut-flawless-olivine": "Середній огранений олівін",
+  "item-gem-cut-normal-olivine": "Дрібний огранений олівін",
+
+  "item-gem-cut-exquisite-quartz": "Великий огранений кварц",
+  "item-gem-cut-flawless-quartz": "Середній огранений кварц",
+  "item-gem-cut-normal-quartz": "Дрібний огранений кварц",
+
+  "item-gem-cut-exquisite-uranium": "Великий огранений уран",
+  "item-gem-cut-flawless-uranium": "Середній огранений уран",
+  "item-gem-cut-normal-uranium": "Дрібний огранений уран",
+
+  "item-crushed-diamond": "Подрібнений алмаз",
+
+  "item-can-have-n-sockets": "Може мати ({0}) виїмки",
+  "item-socket-tier": "Рівень виїмки: {0}",
+  "socket-has-attribute": "В.{0} <font color=\"#99c9f9\"> {1} </font>",
+  "socket-has-attribute-percent": "В.{0} <font color=\"#99c9f9\"> {1}% </font>",
+
+  "item-cansocket-steel": "Виїмка зі сталі",
+  "item-cansocket-tinbronze": "Виїмка з олов'яної бронзи",
+  "item-cansocket-bismuthbronze": "Виїмка з бісмутинової бронзи",
+  "item-cansocket-blackbronze": "Виїмка з чорної бронзи",
+  "item-cansocket-iron": "Виїмка з заліза",
+  "item-cansocket-meteoriciron": "Виїмка з метеоритного заліза",
+  "block-jewelerset": "Стіл ювеліра",
+  "block-jewelerset-north": "Стіл ювеліра",
+  "block-jewelgrinder": "Шліфувальний стіл",
+
+  "processedgem-chipped-diamond": "Заготівля з маленького алмазу",
+  "processedgem-chipped-corundum": "Заготівля з маленького корунду",
+  "processedgem-chipped-emerald": "Заготівля з маленького смарагду",
+  "processedgem-chipped-fluorite": "Заготівля з маленького флюориту",
+  "processedgem-chipped-lapislazuli": "Заготівля з маленького лазуриту",
+  "processedgem-chipped-olivine_peridot": "Заготівля з маленького олівіну",
+  "processedgem-chipped-quartz": "Заготівля з маленького кварцу",
+  "processedgem-chipped-uranium": "Заготівля з маленького урану",
+
+  "processedgem-flawed-diamond": "Заготівля з середнього алмазу",
+  "processedgem-flawed-corundum": "Заготівля з середнього корунду",
+  "processedgem-flawed-emerald": "Заготівля з середнього смарагду",
+  "processedgem-flawed-fluorite": "Заготівля з середнього флюорит",
+  "processedgem-flawed-lapislazuli": "Заготівля з середнього лазуриту",
+  "processedgem-flawed-olivine_peridot": "Заготівля з середнього олівіну",
+  "processedgem-flawed-quartz": "Заготівля з середнього кварцу",
+  "processedgem-flawed-uranium": "Заготівля з середнього урану",
+
+  "processedgem-normal-diamond": "Заготівля з великого алмазу",
+  "processedgem-normal-corundum": "Заготівля з великого корунду",
+  "processedgem-normal-emerald": "Заготівля з великого смарагду",
+  "processedgem-normal-fluorite": "Заготівля з великого флюориту",
+  "processedgem-normal-lapislazuli": "Заготівля з великого лазуриту",
+  "processedgem-normal-olivine_peridot": "Заготівля з великого олівіну",
+  "processedgem-normal-quartz": "Заготівля з великого кварцу",
+  "processedgem-normal-uranium": "Заготівля з великого урану",
+  "buff-name-walkspeed": "<font color=\"#99c9f9\">швидкість ходьби</font>",
+  "buff-name-miningSpeedMul": "<font color=\"#99c9f9\">швидкість видобутку</font>",
+  "buff-name-maxhealthExtraPoints": "<font color=\"#99c9f9\">додаткові одиниці здоров'я</font>",
+  "buff-name-meleeWeaponsDamage": "<font color=\"#99c9f9\">шкоди у ближньому бою</font>",
+  "buff-name-hungerrate": "<font color=\"#99c9f9\">швидкість голоду</font>",
+  "buff-name-wildCropDropRate": "<font color=\"#99c9f9\">збір дикого насіння</font>",
+  "buff-name-armorDurabilityLoss": "<font color=\"#99c9f9\">втрата міцності броні</font>",
+  "buff-name-oreDropRate": "<font color=\"#99c9f9\">видобуток руди</font>",
+  "buff-name-healingeffectivness": "<font color=\"#99c9f9\">ефективність лікування</font>",
+
+  "block-grindlayeritem-rough": "Грубий шліфувальний камінь",
+  "block-grindlayeritem-medium": "Середній шліфувальний камінь",
+  "block-grindlayeritem-fine": "Щільний шліфувальний камінь",
+  "exp_tired": "Ти втомився. Сьогодні ти не отримуєш більше одиниць досвіду.",
+  "game:tabname-canjewelry": "CANJewelry"
+
+}

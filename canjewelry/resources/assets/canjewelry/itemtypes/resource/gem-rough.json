@@ -1,0 +1,158 @@
+﻿{
+  "code": "gem",
+  "__comment": "ItemOre is just for displaying the yield in units in the tooltip",
+  "maxstacksize": 8,
+  "class": "CANCutGemItem",
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "ore-{ore}-*" ]
+    },
+    "pigmentByType": {
+      "*-malachite": {
+        "name": "Verdigris",
+        "color": {
+          "red": 112,
+          "green": 154,
+          "blue": 108
+        }
+      }
+    },
+    "canGemTypeByType": {
+      "*-normal-*": 3,
+      "*-flawed-*": 2,
+      "*-chipped-*": 1
+    },
+    "canGemTypeToAttributeByType": {
+      "*-diamond": "walkspeed",
+      "*-corundum": "miningSpeedMul",
+      "*-emerald": "maxhealthExtraPoints",
+      "*-fluorite": "meleeWeaponsDamage",
+      "*-lapislazuli": "hungerrate",
+      "*-malachite": "wildCropDropRate",
+      "*-olivine_peridot": "armorDurabilityLoss",
+      "*-quartz": "oreDropRate",
+      "*-uranium": "healingeffectivness"
+    },
+    "displaycaseable": true,
+    "shelvable": true
+  },
+  "variantgroups": [
+    {
+      "code": "refinestate",
+      "states": [ "rough" ]
+    },
+    {
+      "code": "quality",
+      "states": [ "flawed", "chipped", "normal" ]
+    },
+    {
+      "code": "gemtype",
+      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine_peridot", "quartz", "uranium" ]
+    }
+  ],
+  "storageFlags": 5,
+  "shape": { "base": "canjewelry:item/gem/{refinestate}/{quality}/{gemtype}" },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "canjewelry": [ "*" ]
+  },
+  "crushingPropsByType": {
+    "*-chipped-diamond": {
+      "crushedStack": {
+        "type": "item",
+        "code": "canjewelry:crushed-diamond",
+        "stacksize": 1
+      },
+      "hardnessTier": 4
+    },
+    "*-normal-diamond": {
+      "crushedStack": {
+        "type": "item",
+        "code": "canjewelry:crushed-diamond",
+        "stacksize": 3
+      },
+      "hardnessTier": 4
+    },
+    "*-flawed-diamond": {
+      "crushedStack": {
+        "type": "item",
+        "code": "canjewelry:crushed-diamond",
+        "stacksize": 2
+      },
+      "hardnessTier": 4
+    }
+  },
+  "guiTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 151,
+      "y": -3,
+      "z": 0
+    },
+    "origin": {
+      "x": 0.487,
+      "y": 0.08,
+      "z": 0.5
+    },
+    "scale": 6
+  },
+  "fpHandTransform": {
+    "translation": {
+      "x": -0.05,
+      "y": 0.04,
+      "z": 0
+    },
+    "rotation": {
+      "x": 5,
+      "y": 100,
+      "z": 0
+    },
+    "origin": {
+      "x": 0.5,
+      "y": -0.13,
+      "z": 0.5
+    },
+    "scale": 3.4
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -0.78,
+      "y": -0.11,
+      "z": -0.7
+    },
+    "rotation": {
+      "x": -41,
+      "y": -29,
+      "z": -60
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0.09,
+      "z": 0.5
+    },
+    "scale": 0.75
+  },
+  "groundTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0,
+      "z": 0.5
+    },
+    "scale": 4.5
+  }
+}

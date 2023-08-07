@@ -1,3 +1,172 @@
-{
-    "hello": "hello world!"
+﻿{
+  "item-leather-croc-plain": "Crocodile leather",
+  "item-crochide-soaked-huge": "Soaked crocodile hide",
+  "item-crochide-scraped-huge": "Scraped crocodile hide",
+  "item-crochide-prepared-huge": "Prepared crocodile hide",
+
+
+  "game:tabname-collabclasses": "Collaborative Classes",
+  "game:collaborative-classes-title": "Collaborative Classes",
+
+  "smithed_by": "Forged by: {0}",
+  "playername_color": "#ffffff",
+  "can-level": "Level:<font color=\"#99c9f9\">{0}</font>",
+  "can-curexp-allexp": "Exp.:<font color=\"#99c9f9\">{0}/{1}</font>",
+  "new_level_achieved": "New level - {0}",
+  "n_uses_per_hours_interval": "{0} uses/{1} hours",
+  "gui-rename-ok": "Rename",
+  "rename_gui_name": "Renaming block",
+  "gui_add_socket": "Add socket",
+  "gui_add_gem": "Add gem",
+
+  "jewelset_gui_name": "Jewel set",
+
+  "block-renamecollectible": "Renaming block",
+
+  "item-gem-rough-chipped-diamond": "Small rough diamond",
+  "item-gem-rough-flawed-diamond": "Medium rough diamond",
+  "item-gem-rough-normal-diamond": "Great rough diamond",
+
+  "item-gem-rough-chipped-corundum": "Small rough corundum",
+  "item-gem-rough-flawed-corundum": "Medium rough corundum",
+  "item-gem-rough-normal-corundum": "Great rough corundum",
+
+  "item-gem-rough-chipped-emerald": "Small rough emerald",
+  "item-gem-rough-flawed-emerald": "Medium rough emerald",
+  "item-gem-rough-normal-emerald": "Great rough emerald",
+
+  "item-gem-rough-chipped-fluorite": "Small rough fluorite",
+  "item-gem-rough-flawed-fluorite": "Medium rough fluorite",
+  "item-gem-rough-normal-fluorite": "Great rough fluorite",
+
+  "item-gem-rough-chipped-lapislazuli": "Small rough lapislazuli",
+  "item-gem-rough-flawed-lapislazuli": "Medium rough lapislazuli",
+  "item-gem-rough-normal-lapislazuli": "Great rough lapislazuli",
+
+  "item-gem-rough-chipped-malachite": "Small rough malachite",
+  "item-gem-rough-flawed-malachite": "Medium rough malachite",
+  "item-gem-rough-normal-malachite": "Great rough malachite",
+
+  "item-gem-rough-chipped-olivine_peridot": "Small rough peridot",
+  "item-gem-rough-flawed-olivine_peridot": "Medium rough peridot",
+  "item-gem-rough-normal-olivine_peridot": "Great rough peridot",
+
+  "item-gem-rough-chipped-quartz": "Small rough quartz",
+  "item-gem-rough-flawed-quartz": "Medium rough quartz",
+  "item-gem-rough-normal-quartz": "Great rough quartz",
+
+  "item-gem-rough-chipped-uranium": "Small rough uranium",
+  "item-gem-rough-flawed-uranium": "Medium rough uranium",
+  "item-gem-rough-normal-uranium": "Great rough uranium",
+
+  //Cut gems
+
+  "item-gem-cut-exquisite-diamond": "Great cut diamond",
+  "item-gem-cut-flawless-diamond": "Medium cut diamond",
+  "item-gem-cut-normal-diamond": "Small cut diamond",
+
+  "item-gem-cut-exquisite-corundum": "Great cut corundum",
+  "item-gem-cut-flawless-corundum": "Medium cut corundum",
+  "item-gem-cut-normal-corundum": "Small cut corundum",
+
+  "item-gem-cut-exquisite-emerald": "Great cut emerald",
+  "item-gem-cut-flawless-emerald": "Medium cut emerald",
+  "item-gem-cut-normal-emerald": "Small cut emerald",
+
+  "item-gem-cut-exquisite-fluorite": "Great cut fluorite",
+  "item-gem-cut-flawless-fluorite": "Medium cut fluorite",
+  "item-gem-cut-normal-fluorite": "Small cut fluorite",
+
+  "item-gem-cut-exquisite-lapislazuli": "Great cut lapislazuli",
+  "item-gem-cut-flawless-lapislazuli": "Medium cut lapislazuli",
+  "item-gem-cut-normal-lapislazuli": "Small cut lapislazuli",
+
+  "item-gem-cut-exquisite-malachite": "Great cut malachite",
+  "item-gem-cut-flawless-malachite": "Medium cut malachite",
+  "item-gem-cut-normal-malachite": "Small cut malachite",
+
+  "item-gem-cut-exquisite-olivine": "Great cut peridot",
+  "item-gem-cut-flawless-olivine": "Medium cut peridot",
+  "item-gem-cut-normal-olivine": "Small cut peridot",
+
+  "item-gem-cut-exquisite-quartz": "Great cut quartz",
+  "item-gem-cut-flawless-quartz": "Medium cut quartz",
+  "item-gem-cut-normal-quartz": "Small cut quartz",
+
+
+  "item-gem-cut-exquisite-uranium": "Great cut uranium",
+  "item-gem-cut-flawless-uranium": "Medium cut uranium",
+  "item-gem-cut-normal-uranium": "Small cut uranium",
+
+  "item-crushed-diamond": "Crushed diamond",
+
+  "item-can-have-n-sockets": "Can have ({0}) sockets",
+  "item-socket-tier": "Socket tier: {0}",
+  "socket-has-attribute": "S.{0} <font color=\"#99c9f9\"> {1} </font>",
+  "socket-has-attribute-percent": "S.{0} <font color=\"#99c9f9\"> {1}% </font>",
+
+  "item-cansocket-steel": "Steel socket",
+  "itemdesc-cansocket-steel": "Small, Medium and Great gems",
+  "item-cansocket-tinbronze": "Tin bronze socket",
+  "itemdesc-cansocket-tinbronze": "Small gems only",
+  "item-cansocket-bismuthbronze": "Bismuth bronze socket",
+  "itemdesc-cansocket-bismuthbronze": "Small gems only",
+  "item-cansocket-blackbronze": "Black bronze socket",
+  "itemdesc-cansocket-blackbronze": "Small gems only",
+  "item-cansocket-iron": "Iron socket",
+  "itemdesc-cansocket-iron": "Small and Medium gems",
+  "item-cansocket-meteoriciron": "Meteoric iron socket",
+  "itemdesc-cansocket-meteoriciron": "Small and Medium gems",
+
+  "block-jewelerset": "Jeweler's table",
+  "block-jewelerset-north": "Jeweler's table",
+  "block-jewelgrinder": "Jewelgrinder",
+
+  "block-grindlayer-rough": "Rough grindlayer",
+  "block-grindlayer-medium": "Medium grindlayer",
+  "block-grindlayer-fine": "Fine grindlayer",
+
+  "processedgem-chipped-diamond": "Small processed diamond",
+  "processedgem-chipped-corundum": "Small processed corundum",
+  "processedgem-chipped-emerald": "Small processed emerald",
+  "processedgem-chipped-fluorite": "Small processed fluorite",
+  "processedgem-chipped-lapislazuli": "Small processed lapislazuli",
+  "processedgem-chipped-olivine_peridot": "Small processed olivine",
+  "processedgem-chipped-quartz": "Small processed quartz",
+  "processedgem-chipped-uranium": "Small processed uranium",
+
+  "processedgem-flawed-diamond": "Medium processed diamond",
+  "processedgem-flawed-corundum": "Medium processed corundum",
+  "processedgem-flawed-emerald": "Medium processed emerald",
+  "processedgem-flawed-fluorite": "Medium processed fluorite",
+  "processedgem-flawed-lapislazuli": "Medium processed lapislazuli",
+  "processedgem-flawed-olivine_peridot": "Medium processed olivine",
+  "processedgem-flawed-quartz": "Medium processed quartz",
+  "processedgem-flawed-uranium": "Medium processed uranium",
+
+  "processedgem-normal-diamond": "Greate processed diamond",
+  "processedgem-normal-corundum": "Greate processed corundum",
+  "processedgem-normal-emerald": "Greate processed emerald",
+  "processedgem-normal-fluorite": "Greate processed fluorite",
+  "processedgem-normal-lapislazuli": "Greate processed lapislazuli",
+  "processedgem-normal-olivine_peridot": "Greate processed olivine",
+  "processedgem-normal-quartz": "Greate processed quartz",
+  "processedgem-normal-uranium": "Greate processed uranium",
+
+  "buff-name-walkspeed": "<font color=\"#99c9f9\">walkspeed</font>",
+  "buff-name-miningSpeedMul": "<font color=\"#99c9f9\">mining speed</font>",
+  "buff-name-maxhealthExtraPoints": "<font color=\"#99c9f9\">extra health</font>",
+  "buff-name-meleeWeaponsDamage": "<font color=\"#99c9f9\">melee damage</font>",
+  "buff-name-hungerrate": "<font color=\"#99c9f9\">hunger rate</font>",
+  "buff-name-wildCropDropRate": "<font color=\"#99c9f9\">wild crop drop</font>",
+  "buff-name-armorDurabilityLoss": "<font color=\"#99c9f9\">armor durability loss</font>",
+  "buff-name-oreDropRate": "<font color=\"#99c9f9\">ore drop</font>",
+  "buff-name-healingeffectivness": "<font color=\"#99c9f9\">healing effectivness</font>",
+
+  "block-grindlayeritem-rough": "Rough grindlayer",
+  "block-grindlayeritem-medium": "Medium grindlayer",
+  "block-grindlayeritem-fine": "Fine grindlayer",
+  "exp_tired": "You feel tired, you won't get more experience today.",
+  "game:tabname-canjewelry": "CANJewelry"
+
 }

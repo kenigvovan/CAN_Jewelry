@@ -1,0 +1,59 @@
+﻿[
+  {
+
+    "ingredientPattern": "D",
+    "ingredients": {
+      "D": {
+        "type": "item",
+        "code": "game:gem-diamond-rough"
+      }
+    },
+    "name": "canolddiamond",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-rough-flawed-diamond",
+      "quantity": 1
+    }
+
+  },
+  {
+
+    "ingredientPattern": "D",
+    "ingredients": {
+      "D": {
+        "type": "item",
+        "code": "game:gem-olivine_peridot-rough"
+      }
+    },
+    "name": "canolddiamond",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+      "quantity": 1
+    }
+
+  },
+  {
+
+    "ingredientPattern": "D",
+    "ingredients": {
+      "D": {
+        "type": "item",
+        "code": "game:gem-emerald-rough"
+      }
+    },
+    "name": "canolddiamond",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-rough-flawed-emerald",
+      "quantity": 1
+    }
+
+  }
+]

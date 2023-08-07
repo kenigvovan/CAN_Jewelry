@@ -1,0 +1,105 @@
+﻿{
+  "code": "cansocket",
+  "maxstacksize": 4,
+  "shape": { "base": "canjewelry:encrusting/socket" },
+  "variantgroups": [
+    {
+      "code": "metal",
+      "states": [ "tinbronze", "bismuthbronze", "blackbronze", "iron", "meteoriciron", "steel" ]
+    }
+  ],
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "helvehammer-*" ]
+    },
+    "levelOfSocketByType": {
+      "cansocket-tinbronze": 1,
+      "cansocket-bismuthbronze": 1,
+      "cansocket-blackbronze": 1,
+      "cansocket-iron": 2,
+      "cansocket-meteoriciron": 2,
+      "cansocket-steel": 3
+    }
+  },
+  "textures": {
+    "metal": { "base": "game:block/metal/ingot/{metal}" }
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "canjewelry": [ "*" ]
+  },
+  "heldTpIdleAnimation": "holdunderarm",
+  "guiTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": -30,
+      "y": 26,
+      "z": 180
+    },
+    "origin": {
+      "x": 0.52,
+      "y": 0.07,
+      "z": 0.5
+    },
+    "scale": 2.9
+  },
+  "groundTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 0,
+      "z": 1
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0,
+      "z": 0.5
+    },
+    "scale": 2.5
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -0.54,
+      "y": -0.16,
+      "z": -0.4
+    },
+    "rotation": {
+      "x": 44,
+      "y": -69,
+      "z": 2
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0.13,
+      "z": 0.5
+    },
+    "scale": 1
+  },
+  "fpHandTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0.3,
+      "z": 0.3
+    },
+    "rotation": {
+      "x": 66,
+      "y": -80,
+      "z": 64
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0.1,
+      "z": 0.5
+    },
+    "scale": 1.04
+  }
+}

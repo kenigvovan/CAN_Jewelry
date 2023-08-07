@@ -1,0 +1,80 @@
+﻿[
+  {
+    "op": "add",
+    "path": "/behaviors/-",
+    "value": { "name": "Encrustable" },
+    "file": "itemtypes/tool/blade.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors/-",
+    "value": { "name": "Encrustable" },
+    "file": "itemtypes/tool/knife.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors/-",
+    "value": { "name": "Encrustable" },
+    "file": "itemtypes/tool/pickaxe.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors/-",
+    "value": { "name": "Encrustable" },
+    "file": "itemtypes/tool/spear.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "game:itemtypes/wearable/armor.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/halberd.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/longsword.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/mace.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/messer.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/pike.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/rapier.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/spear.json"
+  },
+  {
+    "op": "add",
+    "path": "/behaviors",
+    "value": [ { "name": "Encrustable" } ],
+    "file": "xmelee:itemtypes/weapon/zweihander.json"
+  }
+]

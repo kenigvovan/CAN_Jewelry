@@ -1,0 +1,89 @@
+{
+	"editor": {
+		"allAngles": true,
+		"singleTexture": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"fluorite": "game:block/stone/gem/fluorite"
+	},
+	"elements": [
+		{
+			"name": "origin",
+			"from": [ 6.3, -0.5, 6.0 ], 
+			"to": [ 6.3, -0.5, 6.0 ], 
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#native", "uv": [ 6.0, 6.0, 6.0, 6.0 ], "enabled": false },
+				"east": { "texture": "#native", "uv": [ 8.0, 8.0, 8.0, 8.0 ], "enabled": false },
+				"south": { "texture": "#native", "uv": [ 5.0, 8.0, 5.0, 8.0 ], "enabled": false },
+				"west": { "texture": "#native", "uv": [ 7.0, 7.0, 7.0, 7.0 ], "enabled": false },
+				"up": { "texture": "#native", "uv": [ 0.0, 12.0, 0.0, 12.0 ], "enabled": false },
+				"down": { "texture": "#native", "uv": [ 5.0, 6.0, 5.0, 6.0 ], "enabled": false }
+			},
+			"children": [
+				{
+					"name": "Cube1",
+					"from": [ 0.7, 0.5, 0.6 ], 
+					"to": [ 2.1, 1.3, 2.1 ], 
+					"faces": {
+						"north": { "texture": "#fluorite", "uv": [ 4.0, 2.5, 5.0, 3.0 ] },
+						"east": { "texture": "#fluorite", "uv": [ 6.5, 6.5, 8.0, 7.0 ] },
+						"south": { "texture": "#fluorite", "uv": [ 3.5, 5.5, 4.5, 6.0 ] },
+						"west": { "texture": "#fluorite", "uv": [ 3.5, 6.0, 5.0, 6.5 ] },
+						"up": { "texture": "#fluorite", "uv": [ 4.0, 4.0, 5.0, 5.5 ] },
+						"down": { "texture": "#fluorite", "uv": [ 3.5, 5.0, 4.5, 6.5 ] }
+					}
+				},
+				{
+					"name": "Cube5",
+					"from": [ 1.2, 0.4, 1.2 ], 
+					"to": [ 2.1, 1.1, 2.1 ], 
+					"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+					"rotationY": 22.5,
+					"rotationZ": 22.5,
+					"faces": {
+						"north": { "texture": "#fluorite", "uv": [ 11.0, 5.5, 11.5, 6.0 ] },
+						"east": { "texture": "#fluorite", "uv": [ 10.0, 5.0, 10.5, 5.5 ] },
+						"south": { "texture": "#fluorite", "uv": [ 6.5, 7.0, 7.0, 7.5 ] },
+						"west": { "texture": "#fluorite", "uv": [ 10.5, 3.0, 11.0, 3.5 ] },
+						"up": { "texture": "#fluorite", "uv": [ 2.0, 3.5, 2.5, 4.0 ] },
+						"down": { "texture": "#fluorite", "uv": [ 1.5, 4.5, 2.0, 5.0 ] }
+					}
+				},
+				{
+					"name": "Cube6",
+					"from": [ 1.3, 0.7, 0.8 ], 
+					"to": [ 2.2, 1.4, 1.7 ], 
+					"rotationOrigin": [ 0.0, 0.0, 0.0 ],
+					"rotationY": -19.0,
+					"rotationZ": 8.0,
+					"faces": {
+						"north": { "texture": "#fluorite", "uv": [ 5.0, 5.0, 5.5, 5.5 ] },
+						"east": { "texture": "#fluorite", "uv": [ 5.5, 4.5, 6.0, 5.0 ] },
+						"south": { "texture": "#fluorite", "uv": [ 3.5, 10.5, 4.0, 11.0 ] },
+						"west": { "texture": "#fluorite", "uv": [ 6.5, 8.5, 7.0, 9.0 ] },
+						"up": { "texture": "#fluorite", "uv": [ 4.0, 12.0, 4.5, 12.5 ] },
+						"down": { "texture": "#fluorite", "uv": [ 3.0, 5.5, 3.5, 6.0 ] }
+					}
+				},
+				{
+					"name": "Cube7",
+					"from": [ 0.6, 0.8, 0.1 ], 
+					"to": [ 1.7, 1.3, 1.0 ], 
+					"rotationOrigin": [ 0.0, 0.0, -0.1 ],
+					"rotationY": -22.0,
+					"rotationZ": -8.0,
+					"faces": {
+						"north": { "texture": "#fluorite", "uv": [ 0.0, 0.0, 1.0, 0.5 ], "enabled": false },
+						"east": { "texture": "#fluorite", "uv": [ 4.5, 5.5, 5.0, 6.0 ] },
+						"south": { "texture": "#fluorite", "uv": [ 4.0, 6.0, 5.0, 6.5 ] },
+						"west": { "texture": "#fluorite", "uv": [ 5.0, 6.0, 5.5, 6.5 ] },
+						"up": { "texture": "#fluorite", "uv": [ 2.0, 9.0, 3.0, 9.5 ] },
+						"down": { "texture": "#fluorite", "uv": [ 3.5, 4.5, 4.5, 5.0 ] }
+					}
+				}
+			]
+		}
+	]}

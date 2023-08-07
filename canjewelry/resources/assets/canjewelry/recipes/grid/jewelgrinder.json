@@ -1,0 +1,49 @@
+﻿[
+  {
+
+    "ingredientPattern": "GGG,CPH,GPG",
+    "ingredients": {
+      "G": {
+        "type": "item",
+        "code": "game:plank-*",
+        "name": "wood",
+        "quantity": 6
+      },
+      "H": {
+        "type": "item",
+        "code": "game:hammer-*",
+        "isTool": true,
+        "toolDurabilityCost": 15
+      },
+      "C": {
+        "type": "item",
+        "code": "game:chisel-*",
+        "isTool": true,
+        "toolDurabilityCost": 15
+      },
+      "S": {
+        "type": "block",
+        "code": "game:log-placed-*-ud",
+        "name": "wood"
+      },
+      "F": {
+        "type": "item",
+        "code": "fat"
+      },
+      "P": {
+        "type": "block",
+        "code": "game:woodenaxle-ud",
+        "quantity": 1
+      }
+
+    },
+    "name": "canjewelgrinder",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "block",
+      "code": "canjewelry:jewelgrinder",
+      "quantity": 1
+    }
+  }
+]

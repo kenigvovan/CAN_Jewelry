@@ -1,0 +1,60 @@
+﻿{
+  "code": "jewelerset",
+  "class": "JewelerSetBlock",
+  "entityClass": "JewelerSetBE",
+  "behaviors": [ { "name": "HorizontalOrientable" } ],
+  "attributes": {
+
+  },
+  "variantgroups": [
+    {
+      "code": "side",
+      "loadFromProperties": "abstract/horizontalorientation"
+    }
+  ],
+  "creativeinventory": {
+    "general": [ "*-north" ],
+    "construction": [ "*-north" ],
+    "canjewelry": [ "*-north" ]
+  },
+  "blockmaterial": "Wood",
+  "shapebytype": {
+    "*-north": {
+      "base": "canjewelry:block/jewelsetnormal",
+      "rotateY": 0
+    },
+    "*-east": {
+      "base": "canjewelry:block/jewelsetnormal",
+      "rotateY": 270
+    },
+    "*-south": {
+      "base": "canjewelry:block/jewelsetnormal",
+      "rotateY": 180
+    },
+    "*-west": {
+      "base": "canjewelry:block/jewelsetnormal",
+      "rotateY": 90
+    }
+  },
+  "sidesolid": {
+    "all": false,
+    "down": true
+  },
+  "sideopaque": {
+    "all": false
+  },
+  "lightAbsorption": 1,
+  "maxStackSize": 8,
+  "replaceable": 600,
+  "resistance": 1.5,
+  "collisionSelectionBoxes": [
+    {
+      "x1": 0.0625,
+      "y1": 0,
+      "z1": 0.0625,
+      "x2": 0.9375,
+      "y2": 0.9375,
+      "z2": 0.9375
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+﻿[
+  {
+    "ingredientPattern": "_C_,CPC,DDD",
+    "ingredients": {
+      "P": {
+        "type": "item",
+        "code": "game:resin",
+        "quantity": 2
+      },
+      "C": {
+        "type": "item",
+        "code": "game:crushed-*",
+        "allowedVariants": [ "ilmenite", "chromite" ],
+        "quantity": 2
+      },
+
+      "D": {
+        "type": "item",
+        "code": "game:leather-*",
+        "allowedVariants": [ "plain", "black" ],
+        "quantity": 2
+      }
+    },
+    "name": "cangrindlayer-rough",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "block",
+      "code": "canjewelry:grindlayeritem-rough",
+      "quantity": 1
+    }
+  }
+]

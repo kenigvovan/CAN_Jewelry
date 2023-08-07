@@ -1,0 +1,59 @@
+﻿{
+  "code": "jewelgrinder",
+  "class": "BlockJewelGrinder",
+  "entityClass": "BEJewelGrinder",
+  "entityBehaviors": [ { "name": "MPConsumer" } ],
+  "behaviors": [
+    { "name": "Container" }
+    
+  ],
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "quern-*" ]
+    }
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "terrain": [ "*" ],
+    "mechanics": [ "*" ],
+    "canjewelry": [ "*" ]
+  },
+  "shape": { "base": "canjewelry:block/jewelgrinder" },
+  "textures": {
+    "steel": {
+      "base": "game:block/wood/planks/generic"
+    },
+    "grindlayer": {
+      "base": "game:block/wood/planks/generic"
+    }
+  },
+  "blockmaterial": "Stone",
+  "sidesolid": {
+    "all": true
+  },
+  "sideopaque": {
+    "all": false,
+  },
+  "lightAbsorption": 1,
+  "maxStackSize": 1,
+  "replaceable": 600,
+  "resistance": 1.5,
+  "collisionSelectionBoxes": [
+    {
+      "x1": 0,
+      "y1": 0,
+      "z1": 0,
+      "x2": 1,
+      "y2": 0.6875,
+      "z1": 1
+    },
+    {
+      "x1": 0.125,
+      "y1": 0.6875,
+      "z1": 0.125,
+      "x2": 0.875,
+      "y2": 0.8,
+      "z2": 0.875
+    }
+  ]
+}

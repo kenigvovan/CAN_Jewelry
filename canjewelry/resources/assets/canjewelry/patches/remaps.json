@@ -1,0 +1,90 @@
+﻿[
+  {
+    "file": "game:config/remaps.json",
+    "op": "add",
+    "path": "/canjewelry:canmods",
+    "value": [
+      "/bir remapq canjewelry:grindlayeritem-fine canmods:grindlayeritem-fine force",
+      "/bir remapq canjewelry:grindlayeritem-rough canmods:grindlayeritem-rough force",
+      "/bir remapq canjewelry:grindlayeritem-medium canmods:grindlayeritem-medium force",
+
+      "/bir remapq canjewelry:jewelerset-north canmods:jewelerset-north force",
+      "/bir remapq canjewelry:jewelerset-south canmods:jewelerset-south force",
+      "/bir remapq canjewelry:jewelerset-west canmods:jewelerset-west force",
+      "/bir remapq canjewelry:jewelerset-east canmods:jewelerset-east force",
+
+      "/bir remapq canjewelry:jewelgrinder canmods:jewelgrinder force",
+
+      "/iir remapq canjewelry:gem-cut-flawless-diamond canmods:gem-cut-flawless-diamond force",
+      "/iir remapq canjewelry:gem-cut-flawless-corundum canmods:gem-cut-flawless-corundum force",
+      "/iir remapq canjewelry:gem-cut-flawless-emerald canmods:gem-cut-flawless-emerald force",
+      "/iir remapq canjewelry:gem-cut-flawless-fluorite canmods:gem-cut-flawless-fluorite force",
+      "/iir remapq canjewelry:gem-cut-flawless-lapislazuli canmods:gem-cut-flawless-lapislazuli force",
+      "/iir remapq canjewelry:gem-cut-flawless-malachite canmods:gem-cut-flawless-malachite force",
+      "/iir remapq canjewelry:gem-cut-flawless-olivine_peridot canmods:gem-cut-flawless-olivine_peridot force",
+      "/iir remapq canjewelry:gem-cut-flawless-quartz canmods:gem-cut-flawless-quartz force",
+      "/iir remapq canjewelry:gem-cut-flawless-uranium canmods:gem-cut-flawless-uranium force",
+
+      "/iir remapq canjewelry:gem-cut-exquisite-diamond canmods:gem-cut-exquisite-diamond force",
+      "/iir remapq canjewelry:gem-cut-exquisite-corundum canmods:gem-cut-exquisite-corundum force",
+      "/iir remapq canjewelry:gem-cut-exquisite-emerald canmods:gem-cut-exquisite-emerald force",
+      "/iir remapq canjewelry:gem-cut-exquisite-fluorite canmods:gem-cut-exquisite-fluorite force",
+      "/iir remapq canjewelry:gem-cut-exquisite-lapislazuli canmods:gem-cut-exquisite-lapislazuli force",
+      "/iir remapq canjewelry:gem-cut-exquisite-malachite canmods:gem-cut-exquisite-malachite force",
+      "/iir remapq canjewelry:gem-cut-exquisite-olivine_peridot canmods:gem-cut-exquisite-olivine_peridot force",
+      "/iir remapq canjewelry:gem-cut-exquisite-quartz canmods:gem-cut-exquisite-quartz force",
+      "/iir remapq canjewelry:gem-cut-exquisite-uranium canmods:gem-cut-exquisite-uranium force",
+
+      "/iir remapq canjewelry:gem-cut-normal-diamond canmods:gem-cut-normal-diamond force",
+      "/iir remapq canjewelry:gem-cut-normal-corundum canmods:gem-cut-normal-corundum force",
+      "/iir remapq canjewelry:gem-cut-normal-emerald canmods:gem-cut-normal-emerald force",
+      "/iir remapq canjewelry:gem-cut-normal-fluorite canmods:gem-cut-normal-fluorite force",
+      "/iir remapq canjewelry:gem-cut-normal-lapislazuli canmods:gem-cut-normal-lapislazuli force",
+      "/iir remapq canjewelry:gem-cut-normal-malachite canmods:gem-cut-normal-malachite force",
+      "/iir remapq canjewelry:gem-cut-normal-olivine_peridot canmods:gem-cut-normal-olivine_peridot force",
+      "/iir remapq canjewelry:gem-cut-normal-quartz canmods:gem-cut-normal-quartz force",
+      "/iir remapq canjewelry:gem-cut-normal-uranium canmods:gem-cut-normal-uranium force",
+
+
+      "/iir remapq canjewelry:gem-rough-flawed-diamond canmods:gem-rough-flawed-diamond force",
+      "/iir remapq canjewelry:gem-rough-flawed-corundum canmods:gem-rough-flawed-corundum force",
+      "/iir remapq canjewelry:gem-rough-flawed-emerald canmods:gem-rough-flawed-emerald force",
+      "/iir remapq canjewelry:gem-rough-flawed-fluorite canmods:gem-rough-flawed-fluorite force",
+      "/iir remapq canjewelry:gem-rough-flawed-lapislazuli canmods:gem-rough-flawed-lapislazuli force",
+      "/iir remapq canjewelry:gem-rough-flawed-malachite canmods:gem-rough-flawed-malachite force",
+      "/iir remapq canjewelry:gem-rough-flawed-olivine_peridot canmods:gem-rough-flawed-olivine_peridot force",
+      "/iir remapq canjewelry:gem-rough-flawed-quartz canmods:gem-rough-flawed-quartz force",
+      "/iir remapq canjewelry:gem-rough-flawed-uranium canmods:gem-rough-flawed-uranium force",
+
+      "/iir remapq canjewelry:gem-rough-chipped-diamond canmods:gem-rough-chipped-diamond force",
+      "/iir remapq canjewelry:gem-rough-chipped-corundum canmods:gem-rough-chipped-corundum force",
+      "/iir remapq canjewelry:gem-rough-chipped-emerald canmods:gem-rough-chipped-emerald force",
+      "/iir remapq canjewelry:gem-rough-chipped-fluorite canmods:gem-rough-chipped-fluorite force",
+      "/iir remapq canjewelry:gem-rough-chipped-lapislazuli canmods:gem-rough-chipped-lapislazuli force",
+      "/iir remapq canjewelry:gem-rough-chipped-malachite canmods:gem-rough-chipped-malachite force",
+      "/iir remapq canjewelry:gem-rough-chipped-olivine_peridot canmods:gem-rough-chipped-olivine_peridot force",
+      "/iir remapq canjewelry:gem-rough-chipped-quartz canmods:gem-rough-chipped-quartz force",
+      "/iir remapq canjewelry:gem-rough-chipped-uranium canmods:gem-rough-chipped-uranium force",
+
+      "/iir remapq canjewelry:gem-rough-normal-diamond canmods:gem-rough-normal-diamond force",
+      "/iir remapq canjewelry:gem-rough-normal-corundum canmods:gem-rough-normal-corundum force",
+      "/iir remapq canjewelry:gem-rough-normal-emerald canmods:gem-rough-normal-emerald force",
+      "/iir remapq canjewelry:gem-rough-normal-fluorite canmods:gem-rough-normal-fluorite force",
+      "/iir remapq canjewelry:gem-rough-normal-lapislazuli canmods:gem-rough-normal-lapislazuli force",
+      "/iir remapq canjewelry:gem-rough-normal-malachite canmods:gem-rough-normal-malachite force",
+      "/iir remapq canjewelry:gem-rough-normal-olivine_peridot canmods:gem-rough-normal-olivine_peridot force",
+      "/iir remapq canjewelry:gem-rough-normal-quartz canmods:gem-rough-normal-quartz force",
+      "/iir remapq canjewelry:gem-rough-normal-uranium canmods:gem-rough-normal-uranium force",
+
+
+      "/iir remapq canjewelry:crushed-diamond canmods:crushed-diamond force",
+
+      "/iir remapq canjewelry:cansocket-tinbronze  canmods:cansocket-tinbronze force",
+      "/iir remapq canjewelry:cansocket-bismuthbronze  canmods:cansocket-bismuthbronze force",
+      "/iir remapq canjewelry:cansocket-blackbronze  canmods:cansocket-blackbronze force",
+      "/iir remapq canjewelry:cansocket-meteoriciron  canmods:cansocket-meteoriciron force",
+      "/iir remapq canjewelry:cansocket-steel  canmods:cansocket-steel force",
+      "/iir remapq canjewelry:cansocket-iron  canmods:cansocket-iron force"
+    ]
+  }
+]

@@ -1,0 +1,632 @@
+﻿[
+  {
+    "op": "add",
+    "path": "/dropsByType",
+    "value": {
+      "rock-limestone": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-malachite",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-malachite",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-malachite",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-granite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-quartz",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-quartz",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-quartz",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-whitemarble": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-malachite",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-malachite",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-malachite",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-chalk": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-malachite",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-malachite",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-malachite",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-greenmarble": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-malachite",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-malachite",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-malachite",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-kimberlite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-diamond",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-diamond",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-diamond",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-suevite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-diamond",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-diamond",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-diamond",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-phyllite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-corundum",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-corundum",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-corundum",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-shale": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-emerald",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-emerald",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-emerald",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-slate": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-fluorite",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-fluorite",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-fluorite",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-claystone": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-quartz",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-quartz",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-quartz",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-andesite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-uranium",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-uranium",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-uranium",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-sandstone": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-conglomerate": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-fluorite",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-fluorite",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-fluorite",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-chert": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-uranium",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-uranium",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-uranium",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-basalt": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-quartz",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-quartz",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-quartz",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "rock-peridotite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+
+      "rock-bauxite": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-lapislazuli",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-lapislazuli",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-lapislazuli",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        }
+      ],
+      "*": [
+        {
+          "type": "item",
+          "code": "stone-{rock}",
+          "quantity": {
+            "avg": 2.5,
+            "var": 0.5
+          }
+        }
+      ]
+    },
+    "file": "game:blocktypes/stone/rock.json"
+  }
+]

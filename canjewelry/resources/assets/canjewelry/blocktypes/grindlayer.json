@@ -1,0 +1,133 @@
+﻿{
+  "code": "grindlayeritem",
+  "class": "GrindLayerBlock",
+  "heldTpIdleAnimation": "holdbothhands",
+  "variantgroups": [
+    {
+      "code": "metal",
+      "states": [
+        "fine",
+        "rough",
+        "medium"
+      ]
+    }
+  ],
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "crushed-*" ],
+      "extraSections": [
+        {
+          "title": "handbooktitle-crushed",
+          "text": "handbooktext-crushed"
+        }
+      ]
+
+    },
+    "cangrindinfoByType": {
+      "*-rough": 0,
+      "*-medium": 1,
+      "*-fine": 2
+    },
+    "cangrinddurabilityByType": {
+      "*-rough": 200,
+      "*-medium": 250,
+      "*-fine": 300
+    },
+    "displaycaseable": true,
+    "shelvable": true,
+    "dissolveInWater": true,
+    "onDisplayTransform": {
+      "translation": {
+        "x": 0.05,
+        "y": 0,
+        "z": 0
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 0,
+        "z": 0.5
+      },
+      "scale": 0.65
+    }
+  },
+  "shape": { "base": "encrusting/grindlayer" },
+  "texturesByType": {
+    "*": {
+      "metal": { "base": "canjewelry:item/grindlayer/{metal}" }
+    }
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "canjewelry": [ "*" ]
+  },
+  "maxstacksize": 64,
+  "materialDensity": 500,
+  "guiTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": -25
+    },
+    "rotation": {
+      "x": -31,
+      "y": 10,
+      "z": -4
+    },
+    "origin": {
+      "x": 0.46,
+      "y": 0.05,
+      "z": 0.5
+    },
+    "scale": 2.0
+  },
+  "fpHandTransform": {
+    "translation": {
+      "x": 0.2,
+      "y": 0.4,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 40,
+      "z": 0
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0.1,
+      "z": 0.5
+    },
+    "scale": 1.95
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -1.53,
+      "y": -1.1,
+      "z": -0.7
+    },
+    "rotation": {
+      "x": 20,
+      "y": 26,
+      "z": -83
+    },
+    "scale": 0.71
+  },
+  "groundTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": 3,
+      "y": 1,
+      "z": 0
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0,
+      "z": 0.5
+    },
+    "scale": 2.65
+  }
+}

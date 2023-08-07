@@ -1,0 +1,81 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"class": "GrindLayerBlock",
+	"textureSizes": {
+	},
+	"textures": {
+		"metal": "canjewelry:item/grindlayer/rough",
+		"wood": "game:item/tool/material/wood"
+	},
+	"elements": [
+		{
+			"name": "Cube1",
+			"from": [ 3.0, 0.0, 3.0 ],
+			"to": [ 13.0, 1.0, 13.0 ],
+			"rotationOrigin": [ 3.0, 0.0, 3.0 ],
+			"faces": {
+				"north": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
+				},
+				"east": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
+				},
+				"south": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
+				},
+				"west": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
+				},
+				"up": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 10.0, 10.0 ]
+				},
+				"down": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 10.0, 10.0 ]
+				}
+			}
+		},
+		{
+			"name": "Cube2",
+			"from": [ 6.0, 1.0, 6.0 ],
+			"to": [ 10.0, 2.0, 10.0 ],
+			"rotationOrigin": [ 6.0, 1.0, 6.0 ],
+			"faces": {
+				"north": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
+				},
+				"east": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
+				},
+				"south": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
+				},
+				"west": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
+				},
+				"up": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 4.0, 4.0 ]
+				},
+				"down": {
+					"texture": "#metal",
+					"uv": [ 0.0, 0.0, 4.0, 4.0 ]
+				}
+			}
+		}
+	]
+}

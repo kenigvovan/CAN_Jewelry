@@ -1,0 +1,40 @@
+﻿{
+  "ingredient": {
+    "type": "item",
+    "code": "game:ingot-*",
+    "name": "metal",
+    "allowedVariants": [ "bismuthbronze", "tinbronze", "blackbronze", "iron", "meteoriciron", "steel" ]
+  },
+  "pattern": [
+    [
+      "__#####__",
+      "__#####__",
+      "__#####__",
+      "__#####__",
+      "_________",
+      "__#####__",
+      "__#####__",
+      "__#####__",
+      "__#####__"
+
+    ],
+    [
+      "___###___",
+      "__##_##__",
+      "__##_##__",
+      "___###___",
+      "_________",
+      "___###___",
+      "__##_##__",
+      "__##_##__",
+      "___###___"
+
+    ]
+  ],
+  "name": "Socket",
+  "output": {
+    "type": "item",
+    "code": "canjewelry:cansocket-{metal}",
+    "quantity": 2
+  }
+}

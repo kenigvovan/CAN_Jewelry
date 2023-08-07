@@ -1,0 +1,74 @@
+﻿[
+  {
+
+    "ingredientPattern": "_T_,TPT,DDD",
+    "ingredients": {
+      "P": {
+        "type": "item",
+        "code": "game:resin",
+        "quantity": 2
+      },
+      "T": {
+        "type": "item",
+        "code": "canjewelry:crushed-diamond",
+        "quantity": 1
+      },
+      "D": {
+        "type": "item",
+        "code": "game:leather-*",
+        "allowedVariants": [ "plain", "black" ],
+        "quantity": 2
+      }
+    },
+    "name": "cangrindlayer-medium",
+    "width": 3,
+    "height": 3,
+    "dependsOn": [
+      {
+        "modid": "em",
+        "invert": true
+      }
+    ],
+    "output": {
+      "type": "block",
+      "code": "canjewelry:grindlayeritem-medium",
+      "quantity": 1
+    }
+  },
+  {
+
+    "ingredientPattern": "_T_,TPT,DDD",
+    "ingredients": {
+      "P": {
+        "type": "item",
+        "code": "game:resin",
+        "quantity": 2
+      },
+      "T": {
+        "type": "item",
+        "code": "canjewelry:crushed-diamond",
+        "quantity": 1
+      },
+      "D": {
+        "type": "item",
+        "code": "game:leather-*",
+        "allowedVariants": [ "plain", "black" ],
+        "quantity": 2
+      }
+    },
+    "name": "cangrindlayer-medium-bl",
+    "width": 3,
+    "height": 3,
+    "dependsOn": [
+      {
+        "modid": "em"
+      }
+    ],
+    "output": {
+      "type": "block",
+      "code": "canjewelry:grindlayeritem-medium",
+      "quantity": 1
+    }
+  }
+
+]
