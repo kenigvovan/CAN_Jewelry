@@ -29,18 +29,21 @@ namespace canjewelry.src
        
         public static void Prefix_AsyncRecompose(Vintagestory.API.Client.GuiElementItemstackInfo __instance)
         {
+
             if(__instance.curSlot == null || __instance.curSlot.Itemstack == null)
             {
                 return;
             }
-            ImageSurface textSurface = new ImageSurface(0, (int)GuiElement.scaled(180), (int)GuiElement.scaled(180));
-            Context context = new Context(textSurface);
+            
+            
             ITreeAttribute encrustTree = __instance.curSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
             if (encrustTree == null)
             {
                 return;
             }
-           
+            
+            ImageSurface textSurface = new ImageSurface(0, (int)GuiElement.scaled(180), (int)GuiElement.scaled(180));
+            Context context = new Context(textSurface);
             double tr = GuiElement.scaledi(21);
             for (int p = 0; p < encrustTree.GetInt("socketsnumber"); p++)
             {
@@ -67,6 +70,7 @@ namespace canjewelry.src
                 context.SetSourceSurface(socketSurface, 0, 0);
 
                 context.FillPreserve();
+                context.Dispose();
             }
             LoadedTexture texture = new LoadedTexture(canjewelry.capi);
             canjewelry.capi.Gui.LoadOrUpdateCairoTexture(textSurface, true, ref __instance.texture);
@@ -638,6 +642,7 @@ namespace canjewelry.src
         //NOT USED
         public static void addSocketsOverlaysNotDrawItemDamage(ElementBounds[] slotBounds, int slotIndex, ItemSlot slot, LoadedTexture[] slotQuantityTextures, ImageSurface textSurface, Context context)
         {
+            //memory leak
             var unsSlotSize = GuiElementPassiveItemSlot.unscaledSlotSize;
             if(textSurface == null)
             {
@@ -663,7 +668,7 @@ namespace canjewelry.src
                     continue;
                 }
                     //i++;
-                    var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, harmPatch.preparedEncrustedGemsImages[socketSlot.GetString("gemtype")], 255);
+                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, harmPatch.preparedEncrustedGemsImages[socketSlot.GetString("gemtype")], 255);
                 //context.Rotate(0.9);
                 double tr = unsSlotSize / 4;
                 
@@ -677,10 +682,11 @@ namespace canjewelry.src
                 context.SetSourceSurface(socketSurface, 0, 0);
                 
                 context.FillPreserve();
+                socketSurface.Dispose();
             }
             canjewelry.capi.Gui.LoadOrUpdateCairoTexture(textSurface, true, ref slotQuantityTextures[slotIndex]);
-         //   context.Dispose();
-          //  textSurface.Dispose();
+            context.Dispose();
+            textSurface.Dispose();
             return;
         }
         public static MethodInfo GetItemStackFromItemSlot = typeof(ItemSlot).GetMethod("get_Itemstack");
@@ -769,84 +775,7 @@ namespace canjewelry.src
         //NOT USED
         public static void addSocketsOverlays(Context context, ItemSlot slot, int slotId, int slotIndex, ElementBounds[] slotBounds)
         {
-            return;
-            ITreeAttribute encrustTree = slot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-            if (encrustTree == null)
-            {
-                return;
-            }
-            double width = slotBounds[slotIndex].InnerWidth - GuiElement.scaled(8.0);
-            double height = slotBounds[slotIndex].InnerHeight;
-            //context.Scale(GuiElement.scaled(0.5), GuiElement.scaled(0.5));
-            for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
-            {
-                ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                //i++;
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, socketsTextureDict["socket-" + socketSlot.GetInt("sockettype")], 255);
-                //context.Rotate(0.9);
-                double tr = 21;
-
-                context.NewPath();
-                context.LineTo((int)GuiElement.scaled(3) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(14));
-                context.LineTo((int)GuiElement.scaled(14) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(3));
-                context.LineTo((int)GuiElement.scaled(24) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(14));
-                context.LineTo((int)GuiElement.scaled(14) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(24));
-                context.Translate(tr * i, 0);
-                context.ClosePath();
-                context.SetSourceSurface(socketSurface, 0, 0);
-
-                context.FillPreserve();
-                context.Translate(-tr * i, 0);
-
-                //if "" then socket is empty
-                if (socketSlot.GetInt("size") > 0)
-                {
-                    if (socketSlot.GetInt("size") == 2)
-                    {
-
-                        context.NewPath();
-                        context.Arc((int)GuiElement.scaled(14) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(14), (int)GuiElement.scaled(5), 0, 2 * 3.14);
-                        context.ClosePath();
-
-                        context.Translate(tr * i, 0);
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, preparedEncrustedGemsImages["3-diamond"], 255);
-                        context.SetSourceSurface(gemSurface, 0, 0);
-
-                        context.Translate(-(tr * i), 0);
-                    }
-                    else if (socketSlot.GetInt("size") == 1)
-                    {
-                        context.NewPath();
-                        context.LineTo((int)GuiElement.scaled(9) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(16));
-                        context.LineTo((int)GuiElement.scaled(14) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(8));
-                        context.LineTo((int)GuiElement.scaled(19) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(16));
-                        context.ClosePath();
-                        context.Translate(i * tr, 0);
-
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, preparedEncrustedGemsImages["3-diamond"], 255);
-                        context.SetSourceSurface(gemSurface, 0, 0);
-
-                        context.Translate(-i * tr, 0);
-                    }
-                    else if (socketSlot.GetInt("size") == 3)
-                    {
-                        context.NewPath();
-                        context.LineTo((int)GuiElement.scaled(10) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(9));
-                        context.LineTo((int)GuiElement.scaled(17) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(9));
-                        context.LineTo((int)GuiElement.scaled(17) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(17));
-                        context.LineTo((int)GuiElement.scaled(10) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(17));
-                        context.ClosePath();
-                        context.Translate(i * tr, 0);
-
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, preparedEncrustedGemsImages["3-diamond"], 255);
-                        context.SetSourceSurface(gemSurface, 0, 0);
-
-                        context.Translate(-i * tr, 0);
-                    }
-                    context.FillPreserve();
-
-                }
-            }
+            return;           
         }
         //NOT USED
         public static IEnumerable<CodeInstruction> Transpiler_ComposeSlotOverlays_Add_Socket_Overlays(IEnumerable<CodeInstruction> instructions)
@@ -887,8 +816,12 @@ namespace canjewelry.src
             if(itemstack.Attributes.HasAttribute("canencrusted"))
             {
                 var tree = itemstack.Attributes.GetTreeAttribute("canencrusted");
-                dsc.Append(Lang.Get("canjewelry:item-can-have-n-sockets", tree.GetInt("socketsnumber")));
-                dsc.Append("\n");
+                int canHaveNsocketsMore = itemstack.ItemAttributes["canhavesocketsnumber"].AsInt() - tree.GetInt("socketsnumber");
+                if (canHaveNsocketsMore > 0)
+                {
+                    dsc.Append(Lang.Get("canjewelry:item-can-have-n-sockets", canHaveNsocketsMore)).Append("\n");
+                }
+                
                 for (int i = 0; i < tree.GetInt("socketsnumber"); i++)
                 {
                     var treeSlot = tree.GetTreeAttribute("slot" + i);
