@@ -7,6 +7,8 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Util;
+using Vintagestory.ServerMods.NoObf;
 
 namespace canjewelry.src.jewelry
 {
@@ -79,11 +81,11 @@ namespace canjewelry.src.jewelry
             tabs1[1].Name = "Gems";
             tabs1[1].DataInt = 1;
 
-            this.SingleComposer = this.capi.Gui.CreateCompo("jewelersetgui" + this.BlockEntityPosition?.ToString(), elementBounds).
+            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()] = this.capi.Gui.CreateCompo("jewelersetgui" + this.BlockEntityPosition?.ToString(), elementBounds).
                   AddShadedDialogBG(backgroundBounds).
                   AddDialogTitleBar(Lang.Get("canjewelry:jewelset_gui_name"), new Action(this.OnTitleBarClose));
-            SingleComposer.AddHorizontalTabs(tabs1, tabsBounds, new Action<int>(this.OnGroupTabClicked), CairoFont.WhiteSmallText(), CairoFont.WhiteSmallText(), "GroupTabs");
-            this.groupOfInterests = this.SingleComposer.GetHorizontalTabs("GroupTabs");
+            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddHorizontalTabs(tabs1, tabsBounds, new Action<int>(this.OnGroupTabClicked), CairoFont.WhiteSmallText(), CairoFont.WhiteSmallText(), "GroupTabs");
+            this.groupOfInterests = this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].GetHorizontalTabs("GroupTabs");
             this.groupOfInterests.activeElement = chosenGroupTab;
             //SingleComposer.AddInset(backgroundBounds);
             //SingleComposer.AddInset(tabsBounds);
@@ -95,21 +97,21 @@ namespace canjewelry.src.jewelry
 
                 double elementToDialogPadding = GuiStyle.ElementToDialogPadding;
                 double unscaledSlotPadding = GuiElementItemSlotGridBase.unscaledSlotPadding;
-                
-                SingleComposer.AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
+
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
                 {
                    0
                 }, leftSlotBounds, "craftinggrid");
 
                 rightInsetBounds.WithFixedHeight(70).WithFixedWidth(72);
-                
-                SingleComposer.AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
+
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
                 {
                     1
                 }, rightSlotsBounds, "craftinggrid2");
-                SingleComposer.AddInset(leftInsetBounds);
-                SingleComposer.AddInset(rightInsetBounds);
-                SingleComposer.AddButton(Lang.Get("canjewelry:gui_add_socket"),
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(leftInsetBounds);
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(rightInsetBounds);
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddButton(Lang.Get("canjewelry:gui_add_socket"),
                     () => onClickBackButtonPutSocket(),
                     buttonBounds,
                     CairoFont.WhiteSmallText().WithOrientation(EnumTextOrientation.Center));
@@ -124,7 +126,7 @@ namespace canjewelry.src.jewelry
 
 
 
-                SingleComposer.AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
                             {
                                 0
                             }, leftSlotBounds, "encrusteditem");
@@ -149,21 +151,21 @@ namespace canjewelry.src.jewelry
                                 {
                                     intArr[i] = i + 1;
                                 }
-                                SingleComposer.AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), intArr.Length, intArr, rightSlotsBounds, "socketsslots");
+                                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), intArr.Length, intArr, rightSlotsBounds, "socketsslots");
                             }
                         }
                     }
                 }
-                SingleComposer.AddInset(leftInsetBounds);
-                SingleComposer.AddInset(rightInsetBounds);
-                SingleComposer.AddButton(Lang.Get("canjewelry:gui_add_gem"),
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(leftInsetBounds);
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(rightInsetBounds);
+                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddButton(Lang.Get("canjewelry:gui_add_gem"),
                    () => onClickBackButtonPutGem(),
                    buttonBounds,
                    CairoFont.WhiteSmallText().WithOrientation(EnumTextOrientation.Center));
-            }      
-            SingleComposer.Compose();
-            this.SingleComposer.UnfocusOwnElements();
-
+            }
+            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].Compose();
+            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].UnfocusOwnElements();
+            ComposeAvailableGemTypesGui();
 
             /*double elementToDialogPadding = GuiStyle.ElementToDialogPadding;
             double unscaledSlotPadding = GuiElementItemSlotGridBase.unscaledSlotPadding;
@@ -184,6 +186,89 @@ namespace canjewelry.src.jewelry
             SingleComposer.Compose();
             this.SingleComposer.UnfocusOwnElements();*/
         }
+        private string[] GetAvailableGemTypes(ItemStack itemStack)
+        {
+            string itemCode = itemStack.Collectible.Code.Path;
+            List<string> res = new List<string>();
+            foreach(var gemTypeSetPair in Config.Current.buffNameToPossibleItem.Val)
+            {
+                foreach(var it in gemTypeSetPair.Value)
+                {                 
+                    if (it.Contains("pick"))
+                    {
+                        var c = 3;
+                    }
+                    if (WildcardUtil.Match("*" + it + "*", itemCode))
+                    {
+                        res.Add(gemTypeSetPair.Key);
+                    }
+                }
+            }
+            return res.ToArray();
+        }
+        public void ComposeAvailableGemTypesGui()
+        {
+            if(this.Inventory[0].Itemstack == null || !this.Inventory[0].Itemstack.Collectible.Attributes.KeyExists("canhavesocketsnumber"))
+            {
+                this.Composers.Remove("jewelersetgui-types");
+                //this.Composers["jewelersetgui-types"]?.Clear();
+                //this.capi.Gui.CreateCompo("jewelersetgui-types", dialogBounds).Compose();
+                //this.Composers["jewelersetgui-types"]?.Dispose();
+                //var cc = this.capi.Gui.CreateCompo("jewelersetgui-types", new ElementBounds());
+                //cc.Compose();
+                return;
+            }
+            string[] availableGemTypes = GetAvailableGemTypes(this.Inventory[0].Itemstack);
+            if(availableGemTypes.Length < 1)
+            {
+                return;
+            }
+            ElementBounds leftDlgBounds = this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].Bounds;
+            double b = leftDlgBounds.InnerHeight / (double)RuntimeEnv.GUIScale + 10.0;
+
+            //ElementBounds elementBounds = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.RightBottom);
+            //ElementBounds backgroundBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding).WithFixedSize(Width, Height);
+            ElementBounds bgBounds = ElementBounds.Fixed(0.0, 0.0,
+                235, leftDlgBounds.InnerHeight / (double)RuntimeEnv.GUIScale - GuiStyle.ElementToDialogPadding - 20.0 + b).WithFixedPadding(GuiStyle.ElementToDialogPadding);
+            ElementBounds dialogBounds = bgBounds.ForkBoundingParent(0.0, 0.0, 0.0, 0.0)
+                .WithAlignment(EnumDialogArea.LeftMiddle)
+                .WithFixedAlignmentOffset((leftDlgBounds.renderX + leftDlgBounds.OuterWidth + 10.0) / (double)RuntimeEnv.GUIScale,  0);
+            bgBounds.BothSizing = ElementSizing.FitToChildren;
+
+            dialogBounds.BothSizing = ElementSizing.FitToChildren;
+            dialogBounds.WithChild(bgBounds);
+            ElementBounds textBounds = ElementBounds.FixedPos(EnumDialogArea.LeftTop,
+                                                               0,
+                                                                0);
+                //.WithFixedHeight(leftDlgBounds.InnerHeight)
+                //.WithFixedWidth(leftDlgBounds.InnerWidth / 2);
+            bgBounds.WithChildren(textBounds);
+
+            //SingleComposer.AddStaticText("hello", CairoFont.WhiteDetailText(), bgBounds);
+
+            this.Composers["jewelersetgui-types"] = this.capi.Gui.CreateCompo("jewelersetgui-types", dialogBounds).AddShadedDialogBG(bgBounds, false, 5.0, 0.75f);
+           // this.Composers["jewelersetgui-types"].AddInset(dialogBounds);
+            for(int i = 0; i < availableGemTypes.Length; i++)
+            {
+                ElementBounds el = textBounds.CopyOffsetedSibling().WithFixedHeight(20)
+                    .WithFixedWidth(100)
+                    .WithFixedPosition(0, i * 20);
+                bgBounds.WithChildren(el);
+
+                this.Composers["jewelersetgui-types"].AddStaticText(availableGemTypes[i], CairoFont.WhiteDetailText(), el);
+            }
+            //this.Composers["jewelersetgui-types"].AddStaticText("hello", CairoFont.WhiteDetailText(), ElementBounds.Fixed(0, 0, 200, 20));
+            //this.Composers["jewelersetgui-types"].AddStaticText("hello1", CairoFont.WhiteDetailText(), bgBounds);
+            /*ElementBounds leftDlgBounds = this.Composers["single"].Bounds;
+            ElementBounds bounds = this.Composers["single"].Bounds;
+            double b = bounds.InnerHeight / (double)RuntimeEnv.GUIScale + 10.0;
+            ElementBounds bgBounds = ElementBounds.Fixed(0.0, 0.0, 235.0,
+                leftDlgBounds.InnerHeight / (double)RuntimeEnv.GUIScale - GuiStyle.ElementToDialogPadding - 20.0 + b)
+                .WithFixedPadding(GuiStyle.ElementToDialogPadding);
+            ElementBounds dialogBounds = bgBounds.ForkBoundingParent(0.0, 0.0, 0.0, 0.0).WithAlignment(EnumDialogArea.LeftMiddle);
+            SingleComposer.AddStaticText("hello", CairoFont.WhiteDetailText(), bgBounds);*/
+            this.Composers["jewelersetgui-types"].Compose();
+        }
         private void OnTitleBarClose() => this.TryClose();
         public override void OnGuiClosed()
         {
@@ -200,12 +285,15 @@ namespace canjewelry.src.jewelry
         {
             base.OnGuiOpened();
             base.Inventory.SlotModified += this.OnInventorySlotModified;
+
         }
         private void OnInventorySlotModified(int slotid)
         {
             if (slotid == 0)
             {
-                this.capi.Event.EnqueueMainThreadTask(new Action(this.SetupDialog), "setupfirepitdlg");
+                this.capi.Event.EnqueueMainThreadTask(new Action(this.SetupDialog), "setupjewelersetdlg");
+                this.capi.Event.EnqueueMainThreadTask(new Action(this.ComposeAvailableGemTypesGui), "setupavailabletypesdlg");
+                
             }
         }
         public bool onClickBackButtonPutSocket()

@@ -43,15 +43,15 @@ namespace canjewelry.src
 
         public Part<Dictionary<string, HashSet<string>>> buffNameToPossibleItem = new Part<Dictionary<string, HashSet<string>>>
         (new Dictionary<string, HashSet<string>> {
-            {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale" } },
-            {"corundum", new HashSet<string>{ "pickaxe" } },
-            {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale" } },
-            {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx" } },
-            {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale" } },
-            {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife" } },
-            {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale" } },
-            {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale" } },
-            {"quartz", new HashSet<string>{ "pickaxe"} }
+            {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
+            {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace" } },
+            {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
+            {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace" } },
+            {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
+            {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace" } },
+            {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
+            {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
+            {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" } }
         });
         public Part<Dictionary<string, Dictionary<string, float>>> gems_buffs = new Part<Dictionary<string, Dictionary<string, float>>>
             (new Dictionary<string, Dictionary<string, float>>  {
@@ -163,29 +163,29 @@ namespace canjewelry.src
             { "armor-body-chain-*", 2 },
 
 
-            { "xmelee:zweihander-meteoriciron", 1 },
-            { "xmelee:zweihander-steel", 2 },
+            { "xmelee:xzweihander-meteoriciron", 1 },
+            { "xmelee:xzweihander-steel", 2 },
 
-            { "xmelee:longsword-meteoriciron", 1 },
-            { "xmelee:longsword-steel", 2 },
+            { "xmelee:xlongsword-meteoriciron", 1 },
+            { "xmelee:xlongsword-steel", 2 },
 
-            { "xmelee:halberd-meteoriciron", 1 },
-            { "xmelee:halberd-steel", 2 },
+            { "xmelee:xhalberd-meteoriciron", 1 },
+            { "xmelee:xhalberd-steel", 2 },
 
-            { "xmelee:messer-meteoriciron", 1 },
-            { "xmelee:messer-steel", 2 },
+            { "xmelee:xmesser-meteoriciron", 1 },
+            { "xmelee:xmesser-steel", 2 },
 
-            { "xmelee:mace-meteoriciron", 1 },
-            { "xmelee:mace-steel", 2 },
+            { "xmelee:xmace-meteoriciron", 1 },
+            { "xmelee:xmace-steel", 2 },
 
-            { "xmelee:pike-meteoriciron", 1 },
-            { "xmelee:pike-steel", 2 },
+            { "xmelee:xpike-meteoriciron", 1 },
+            { "xmelee:xpike-steel", 2 },
 
-            { "xmelee:rapier-meteoriciron", 1 },
-            { "xmelee:rapier-steel", 2 },
+            { "xmelee:xrapier-meteoriciron", 1 },
+            { "xmelee:xrapier-steel", 2 },
 
-            { "xmelee:spear-meteoriciron", 1 },
-            { "xmelee:spear-steel", 2 },
+            { "xmelee:xspear-meteoriciron", 1 },
+            { "xmelee:xspear-steel", 2 },
 
             { "*blade-gold", 1 },
             { "*blade-silver", 1 },

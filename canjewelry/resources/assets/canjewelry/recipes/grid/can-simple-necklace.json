@@ -1,0 +1,37 @@
+[
+  {
+
+    "ingredientPattern": "L_L,LBL,_S_",
+    "ingredients": {
+      "S": {
+        "type": "item",
+        "code": "canjewelry:cansocket-*",
+        "name": "metal-socket"
+      },
+      "L": {
+        "type": "item",
+        "code": "canjewelry:canstrap-*",
+        "name": "metal-strap"
+      },
+      "B": {
+        "type": "item",
+        "code": "game:metalscale-*",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ]
+      }
+    },
+    "name": "can-simplenecklace",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:cansimplenecklace-normal-neck",
+      "quantity": 1,
+      "attributes": {
+        "loop": "{metal-strap}",
+        "socket": "{metal-socket}",
+        "gem": "none"
+      }
+    }
+
+  }
+]

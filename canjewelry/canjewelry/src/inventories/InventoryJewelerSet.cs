@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 
-namespace canjewelry.src.jewelry
+namespace canjewelry.src.inventories
 {
     public class InventoryJewelerSet : InventoryBase, ISlotProvider
     {
@@ -20,73 +20,73 @@ namespace canjewelry.src.jewelry
         public InventoryJewelerSet(string inventoryID, ICoreAPI api)
          : base(inventoryID, api)
         {
-            this.slots = this.GenEmptySlots(this.invSize);
-           // this.outputSlot = new ItemSlotCraftingTableOutput((InventoryBase)this);
-           // this.InvNetworkUtil = (IInventoryNetworkUtil)new CraftingInventoryNetworkUtil((InventoryBase)this, api);
+            slots = GenEmptySlots(invSize);
+            // this.outputSlot = new ItemSlotCraftingTableOutput((InventoryBase)this);
+            // this.InvNetworkUtil = (IInventoryNetworkUtil)new CraftingInventoryNetworkUtil((InventoryBase)this, api);
         }
         public override ItemSlot this[int slotId]
         {
             get
             {
-                if (slotId < 0 || slotId >= this.Count)
-                    return (ItemSlot)null;
+                if (slotId < 0 || slotId >= Count)
+                    return null;
                 return //slotId == this.GridSizeSq ? (ItemSlot)this.outputSlot : 
-                    this.slots[slotId];
+                    slots[slotId];
             }
             set
             {
-                if (slotId < 0 || slotId >= this.Count)
+                if (slotId < 0 || slotId >= Count)
                     throw new ArgumentOutOfRangeException("slotid");
                 if (value == null)
                     throw new ArgumentNullException(nameof(value));
                 //if (slotId == this.GridSizeSq)
-                   // this.outputSlot = (ItemSlotCraftingTableOutput)value;
+                // this.outputSlot = (ItemSlotCraftingTableOutput)value;
                 //else
-                    this.slots[slotId] = value;
+                slots[slotId] = value;
             }
         }
         public override bool CanContain(ItemSlot sinkSlot, ItemSlot sourceSlot)
         {
-            if(!base.CanContain(sinkSlot, sourceSlot))
+            if (!base.CanContain(sinkSlot, sourceSlot))
             {
                 return false;
             }
 
             int sinkId = sinkSlot.Inventory.GetSlotId(sinkSlot);
-            if(sinkId == 0)
+            if (sinkId == 0)
             {
-                if(sourceSlot.Itemstack.Collectible.HasBehavior<EncrustableCB>())
+                if (sourceSlot.Itemstack.Collectible.HasBehavior<EncrustableCB>())
                 {
                     return true;
                 }
             }
-            else if(sinkId > 0 && sinkId < this.Count)
+            else if (sinkId > 0 && sinkId < Count)
             {
-               if(sourceSlot.Itemstack.Collectible.Code.Path.Contains("cansocket-") || sourceSlot.Itemstack.Collectible.Code.Path.Contains("gem-cut-"))
-               {
+                if (sourceSlot.Itemstack.Collectible.Code.Path.Contains("cansocket-") || sourceSlot.Itemstack.Collectible.Code.Path.Contains("gem-cut-"))
+                {
                     return true;
-               }
+                }
             }
             return false;
         }
-        public override int Count =>this.invSize;
+        public override int Count => invSize;
 
-        public ItemSlot[] Slots => this.slots;
+        public ItemSlot[] Slots => slots;
 
         public override void FromTreeAttributes(ITreeAttribute tree)
         {
-            ItemSlot[] itemSlotArray = this.SlotsFromTreeAttributes(tree);
+            ItemSlot[] itemSlotArray = SlotsFromTreeAttributes(tree);
             int? length1 = itemSlotArray?.Length;
-            int length2 = this.slots.Length;
+            int length2 = slots.Length;
             if (!(length1.GetValueOrDefault() == length2 & length1.HasValue))
                 return;
-            this.slots = itemSlotArray;
+            slots = itemSlotArray;
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
-            this.SlotsToTreeAttributes(this.slots, tree);
-            this.ResolveBlocksOrItems();
+            SlotsToTreeAttributes(slots, tree);
+            ResolveBlocksOrItems();
         }
     }
 }

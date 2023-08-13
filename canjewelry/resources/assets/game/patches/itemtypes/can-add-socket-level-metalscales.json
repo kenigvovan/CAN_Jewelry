@@ -1,0 +1,20 @@
+[
+  {
+    "op": "add",
+    "path": "/attributes",
+    "value": {
+      "levelOfSocketByType": {
+        "*-tinbronze": 1,
+        "*-bismuthbronze": 1,
+        "*-blackbronze": 1,
+        "*-gold": 2,
+        "*-silver": 2,
+        "*-iron": 2,
+        "*-meteoriciron": 2,
+        "*-steel": 3
+
+      }
+    },
+    "file": "game:itemtypes/resource/metalscale.json"
+  }
+]

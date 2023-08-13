@@ -1,5 +1,4 @@
-﻿using canjewelry.src.jewelry;
-using canjewelry.src.CB;
+﻿using canjewelry.src.CB;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -20,6 +19,8 @@ using Newtonsoft.Json;
 using Vintagestory.API.Util;
 using System.Security.Claims;
 using Newtonsoft.Json.Linq;
+using canjewelry.src.jewelry;
+using canjewelry.src.items;
 
 namespace canjewelry.src
 {
@@ -47,7 +48,8 @@ namespace canjewelry.src
 
             api.RegisterBlockClass("GrindLayerBlock", typeof(GrindLayerBlock));
             api.RegisterItemClass("ProcessedGem", typeof(ProcessedGem));
-            api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));            
+            api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
+            api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
         }
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -81,7 +83,9 @@ namespace canjewelry.src
             harmPatch.preparedEncrustedGemsImages.Add("uranium", new AssetLocation("canjewelry:item/gem/uranium.png"));
             //ItemSlot inSlot, double posX, double posY, double posZ, float size, int color, float dt, bool shading = true, bool origRotate = false, bool showStackSize = true
             harmonyInstance.Patch(typeof(Vintagestory.API.Client.GuiElementItemSlotGridBase).GetMethod("ComposeSlotOverlays", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage")));
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
+            harmonyInstance.Patch(typeof(Vintagestory.API.Common.EntityAgent).GetMethod("addGearToShape",
+                BindingFlags.NonPublic | BindingFlags.Instance, new[] { typeof(ItemSlot), typeof(Shape), typeof(string) }), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_addGearToShape")));
+             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             clientChannel.SetMessageHandler<SyncCANJewelryPacket>((packet) =>

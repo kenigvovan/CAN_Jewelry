@@ -1,4 +1,5 @@
 ﻿using Cairo;
+using canjewelry.src.items;
 using HarmonyLib;
 
 using System;
@@ -849,6 +850,185 @@ namespace canjewelry.src
             }
 
             return;
+        }
+
+
+        public static bool Prefix_addGearToShape(EntityAgent __instance, ItemSlot slot, Shape entityShape, string shapePathForLogging, ICoreAPI ___Api, ref Shape __result)
+        {
+            if (slot.Empty)
+            {
+                __result = entityShape;
+                return false;
+            }
+            if(!(slot.Itemstack.Item is CANItemWearable))
+            {
+                return true;
+            }
+            ItemStack stack = slot.Itemstack;
+            JsonObject attrObj = stack.Collectible.Attributes;
+
+            string[] disableElements = attrObj?["disableElements"]?.AsArray<string>(null);
+            if (disableElements != null)
+            {
+                foreach (var val in disableElements)
+                {
+                    entityShape.RemoveElementByName(val);
+                }
+            }
+
+            if (attrObj?["wearableAttachment"].Exists != true)
+            {
+                __result = entityShape;
+                return true;
+            }
+            Shape armorShape = null;
+            AssetLocation shapePath = null;
+            CompositeShape compArmorShape = null;
+            if (stack.Collectible is IWearableShapeSupplier iwss)
+            {
+                armorShape = iwss.GetShape(stack, __instance);
+            }
+
+            if (armorShape == null)
+            {
+                compArmorShape = !attrObj["attachShape"].Exists ? (stack.Class == EnumItemClass.Item ? stack.Item.Shape : stack.Block.Shape) : attrObj["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain);
+                shapePath = shapePath = compArmorShape.Base.CopyWithPath("shapes/" + compArmorShape.Base.Path + ".json");
+                armorShape = Shape.TryGet(___Api, shapePath);
+                if (armorShape == null)
+                {
+                    ___Api.World.Logger.Warning("Entity armor shape {0} defined in {1} {2} not found or errored, was supposed to be at {3}. Armor piece will be invisible.", compArmorShape.Base, stack.Class, stack.Collectible.Code, shapePath);
+                    __result = null;
+                    return true;
+                }
+            }
+
+
+            bool added = false;
+            foreach (var val in armorShape.Elements)
+            {
+                ShapeElement elem;
+
+                if (val.StepParentName != null)
+                {
+                    elem = entityShape.GetElementByName(val.StepParentName, StringComparison.InvariantCultureIgnoreCase);
+                    if (elem == null)
+                    {
+                       ___Api.World.Logger.Warning("Entity gear shape {0} defined in {1} {2} requires step parent element with name {3}, but no such element was found in shape {4}. Will not be visible.", compArmorShape.Base, slot.Itemstack.Class, slot.Itemstack.Collectible.Code, val.StepParentName, shapePathForLogging);
+                        continue;
+                    }
+                }
+                else
+                {
+                    ___Api.World.Logger.Warning("Entity gear shape element {0} in shape {1} defined in {2} {3} did not define a step parent element. Will not be visible.", val.Name, compArmorShape.Base, slot.Itemstack.Class, slot.Itemstack.Collectible.Code);
+                    continue;
+                }
+
+                if (elem.Children == null)
+                {
+                    elem.Children = new ShapeElement[] { val };
+                }
+                else
+                {
+                    elem.Children = elem.Children.Append(val);
+                }
+
+                val.SetJointIdRecursive(elem.JointId);
+                val.WalkRecursive((el) =>
+                {
+                    foreach (var face in el.FacesResolved)
+                    {
+                        if (face != null) face.Texture = stack.Collectible.Code + "-" + face.Texture;
+                    }
+                });
+
+                added = true;
+            }
+
+            if (added && armorShape.Textures != null)
+            {
+                Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
+                string loop = slot.Itemstack.Attributes.GetString("loop", null);
+                string socket = slot.Itemstack.Attributes.GetString("socket", null);
+                string gem = slot.Itemstack.Attributes.GetString("gem", null);
+
+                //new AssetLocation("canjewelry:item/gem/notvis.png");
+                newdict[stack.Collectible.Code + "-" + "loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
+                newdict[stack.Collectible.Code + "-" + "socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
+                if (gem == "none")
+                {
+                    newdict[stack.Collectible.Code + "-" + "gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    newdict[stack.Collectible.Code + "-" + "gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
+                }
+                
+                /*foreach (var val in armorShape.Textures)
+                {
+                    newdict[stack.Collectible.Code + "-" + val.Key] = val.Value;
+                }
+
+                // Item overrides
+                var collDict = stack.Class == EnumItemClass.Block ? stack.Block.Textures : stack.Item.Textures;
+                foreach (var val in collDict)
+                {
+                    newdict[stack.Collectible.Code + "-" + val.Key] = val.Value.Base;
+                }*/
+
+                armorShape.Textures = newdict;
+
+                foreach (var val in armorShape.Textures)
+                {
+                    CompositeTexture ctex = new CompositeTexture() { Base = val.Value };
+
+                    entityShape.TextureSizes[val.Key] = new int[] { armorShape.TextureWidth, armorShape.TextureHeight };
+
+                    AssetLocation armorTexLoc = val.Value;
+
+                    // Weird backreference to the shaperenderer. Should be refactored.
+                    var texturesByLoc = ObjectCacheUtil.GetOrCreate(___Api, "entityShapeExtraTexturesByLoc", () => new Dictionary<AssetLocation, BakedCompositeTexture>());
+                    var texturesByName = ObjectCacheUtil.GetOrCreate(___Api, "entityShapeExtraTexturesByName", () => new Dictionary<string, CompositeTexture>());
+
+                    BakedCompositeTexture bakedCtex;
+
+                    ICoreClientAPI capi = ___Api as ICoreClientAPI;
+
+                    if (!texturesByLoc.TryGetValue(armorTexLoc, out bakedCtex))
+                    {
+                        int textureSubId = 0;
+                        TextureAtlasPosition texpos;
+
+                        capi.EntityTextureAtlas.GetOrInsertTexture(armorTexLoc, out textureSubId, out texpos, () =>
+                        {
+                            IAsset texAsset = ___Api.Assets.TryGet(armorTexLoc.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
+                            if (texAsset != null)
+                            {
+                                return texAsset.ToBitmap(capi);
+                            }
+
+                            capi.World.Logger.Warning("Entity armor shape {0} defined texture {1}, no such texture found.", shapePath, armorTexLoc);
+                            return null;
+                        });
+
+                        ctex.Baked = new BakedCompositeTexture() { BakedName = armorTexLoc, TextureSubId = textureSubId };
+
+                        texturesByName[val.Key] = ctex;
+                        texturesByLoc[armorTexLoc] = ctex.Baked;
+                    }
+                    else
+                    {
+                        ctex.Baked = bakedCtex;
+                        texturesByName[val.Key] = ctex;
+                    }
+                }
+
+                foreach (var val in armorShape.TextureSizes)
+                {
+                    entityShape.TextureSizes[val.Key] = val.Value;
+                }
+            }
+            __result = entityShape;
+            return false;
         }
     }
 }

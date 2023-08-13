@@ -3,9 +3,9 @@
   "modid": "canjewelry",
   "name": "canjewelry",
   "authors": [ "KenigVovan" ],
-  "description": "To be added",
+  "description": "Gems and jewelry with buffs.",
   "contributors": [ "justOmi", "DarkPaapi" ],
-  "version": "0.1.11",
+  "version": "0.1.13",
   "dependencies": {
     "game": ""
   }

@@ -4,11 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using canjewelry.src.inventories;
+using canjewelry.src.items;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace canjewelry.src.jewelry
@@ -217,10 +220,16 @@ namespace canjewelry.src.jewelry
             {
                 foreach (var it in hashSetClasses)
                 {
-                    if (targetItemStack.Item.Code.Path.Contains(it))
+                    if (WildcardUtil.Match("*" + it + "*", targetItemStack.Collectible.Code.Path))
                     {
                         return true;
+                        //res.Add(gemTypeSetPair.Key);
                     }
+
+                    /*if (targetItemStack.Item.Code.Path.Contains(it))
+                    {
+                        return true;
+                    }*/
 
                 }
             }
@@ -266,7 +275,7 @@ namespace canjewelry.src.jewelry
                                 socketSlotTree.SetInt("size", 0);
                                 socketSlotTree.SetString("gemtype", "");
                                 socketSlotTree.SetInt("sockettype", this.inventory[1].Itemstack.Collectible.Attributes["levelOfSocket"].AsInt());
-                                this.inventory[1].Itemstack = null;
+                                this.inventory[1].TakeOut(1);
                                 this.inventory[1].MarkDirty();
                                 this.inventory[0].MarkDirty();
                                 tree["slot" + (tree.GetInt("socketsnumber") - 1).ToString()] = socketSlotTree;
@@ -343,6 +352,11 @@ namespace canjewelry.src.jewelry
                                 var b = Config.Current.gems_buffs.Val[this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()];
                                 treeSocket.SetFloat("attributeBuffValue", Config.Current.gems_buffs.Val
                                     [this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][this.inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
+                                if(this.inventory[0].Itemstack.Item is CANItemSimpleNecklace)
+                                {
+                                    this.inventory[0].Itemstack.Attributes.SetString("gem", this.inventory[i].Itemstack.Collectible.Code.Path.Split('-').Last());
+                                }
+                                
                                 this.inventory[i].TakeOut(1);
                                 this.inventory[i].MarkDirty();
                                 this.inventory[0].MarkDirty();
@@ -360,7 +374,7 @@ namespace canjewelry.src.jewelry
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
         {
             
-            var f = BlockFacing.EAST;
+            //var f = BlockFacing.EAST;
             return base.OnTesselation(mesher, tessThreadTesselator);
         }
     }

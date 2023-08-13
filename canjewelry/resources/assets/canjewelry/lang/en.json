@@ -167,6 +167,17 @@
   "block-grindlayeritem-medium": "Medium grindlayer",
   "block-grindlayeritem-fine": "Fine grindlayer",
   "exp_tired": "You feel tired, you won't get more experience today.",
-  "game:tabname-canjewelry": "CANJewelry"
+  "game:tabname-canjewelry": "CANJewelry",
 
+  //simplenecklace
+  "necklace-parts-with-gem-held-info": "Strap: {0}, pendant: {1}, gem: {2}",
+  "necklace-parts-without-gem-held-info": "Strap: {0}, pendant: {1}",
+
+  //strap
+  "item-canstrap-tinbronze": "Tin bronze strap",
+  "item-canstrap-bismuthtinbronze": "Bismuth bronze strap",
+  "item-canstrap-iron": "Iron strap",
+  "item-canstrap-blackbronze": "Black bronze strap",
+  "item-canstrap-meteoriciron": "Meteorice iron strap",
+  "item-canstrap-steel": "Steel strap"
 }

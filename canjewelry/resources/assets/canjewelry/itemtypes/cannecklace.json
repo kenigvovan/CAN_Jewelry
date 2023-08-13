@@ -1,0 +1,277 @@
+﻿{
+  "code": "cansimplenecklace",
+  "class": "CANItemSimpleNecklace",
+  "storageFlags": 128,
+
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "cannecklace-*" ]
+    },
+    "clothescategory": "neck",
+    "canhavesocketsnumber": 1,
+    "warmth": 0.5,
+    "rackable": true,
+    "wearableAttachment": true,
+    "toolrackTransformByType": {
+      "*": {
+        "translation": {
+          "x": 0.3,
+          "y": -0.62,
+          "z": -0.625
+        },
+        "rotation": {
+          "x": 91,
+          "y": -6,
+          "z": -90
+        },
+        "scale": 1.5
+      }
+    },
+    "onmoldrackTransformByType": {
+      "*": {
+        "translation": {
+          "x": 0.74,
+          "y": 0.5,
+          "z": -0.4
+        },
+        "rotation": {
+          "x": -90,
+          "y": 82,
+          "z": 90
+        },
+        "origin": {
+          "x": 0.5,
+          "y": 0,
+          "z": 0.5
+        },
+        "scale": 1.01
+      }
+    },
+    "groundStorageTransformByType": {
+      "*": {
+        "translation": {
+          "x": -0.42,
+          "y": -0.45,
+          "z": -0.045
+        },
+        "rotation": {
+          "x": 21,
+          "y": 179,
+          "z": -90
+        },
+        "scale": 1
+      }
+    },
+    "__comment": "Note: variantgroups inside attributes. Used to generate all variants for the creative inventory dynamically, and for valid recipe checking",
+    "variantGroups": {
+      "loop": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
+      "socket": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
+      "gem": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium" ]
+    },
+    "allowedVariants": [
+      {
+        "construction": "normal-neck",
+        "loop": "*",
+        "socket": "*",
+        "gem": "*"
+      }
+    ]
+  },
+  "behaviors": [
+    {
+      "name": "Encrustable"
+    }
+  ],
+  "variantgroups": [
+    {
+      "code": "construction",
+      "states": [ "normal-neck" ]
+    }
+  ],
+  "creativeinventory": {
+
+  },
+  "texturesByType": {
+    "@*-(pearl-necklace|forlorn-talisman|marketeer|rottenking|king|forgotten|deep)": {
+      "seraph": { "base": "entity/humanoid/seraphclothes/{category}/{neck}" }
+    },
+    "*": {
+      "seraph": { "base": "game:block/transparent" }
+    }
+  },
+  "shapeByType": {
+    "normal-neck": { "base": "canjewelry:item/bronze-gem-necklace" },
+    "*": { "base": "canjewelry:item/bronze-gem-necklace" }
+  },
+  "fpHandTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0.3,
+      "z": 0.3
+    },
+    "rotation": {
+      "x": 65,
+      "y": -81,
+      "z": 67
+    },
+    "origin": {
+      "x": 0.1,
+      "y": -0.9,
+      "z": 0.5
+    },
+    "scale": 1.00
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -0.6,
+      "y": -2.1,
+      "z": -0.7
+    },
+    "rotation": {
+      "x": -21,
+      "y": -180,
+      "z": 25
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 1.4,
+      "z": 0.5
+    },
+    "scale": 0.71
+  },
+  "guiTransformByType": {
+    "*-copper-torc": {
+      "translation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 174,
+        "y": -128,
+        "z": 6
+      },
+      "origin": {
+        "x": 0.54,
+        "y": 1.5499,
+        "z": 0.54
+      },
+      "scale": 3.95
+    },
+    "@*-(pearl-necklace|forlorn-talisman)": {
+      "rotate": false,
+      "translation": {
+        "x": 0,
+        "y": 0,
+        "z": 19
+      },
+      "rotation": {
+        "x": 174,
+        "y": -90,
+        "z": 23
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.4,
+        "z": 0.55
+      },
+      "scale": 2.5
+    },
+    "@*-(walnut-amulet|redwood-amulet|pinecone-amulet|larch-seed-amulet|cypress-seed-amulet|acorn-amulet)": {
+      "rotate": false,
+      "translation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 163,
+        "y": -113,
+        "z": 6
+      },
+      "origin": {
+        "x": 0.45,
+        "y": 1.48,
+        "z": 0.55
+      },
+      "scale": 3.93
+    },
+    "*-marketeer": {
+      "rotate": false,
+      "translation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 174,
+        "y": -128,
+        "z": 6
+      },
+      "origin": {
+        "x": 0.45,
+        "y": 1.63,
+        "z": 0.54
+      },
+      "scale": 3.5
+    },
+    "*": {
+      "rotate": false,
+      "translation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 174,
+        "y": -128,
+        "z": 6
+      },
+      "origin": {
+        "x": 0.45,
+        "y": 1.43,
+        "z": 0.54
+      },
+      "scale": 3.5
+    }
+  },
+  "groundTransformByType": {
+    "*-copper-torc": {
+      "translation": {
+        "x": 0,
+        "y": 0.05,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -180
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 0.5
+      },
+      "scale": 3.06
+    },
+    "*": {
+      "translation": {
+        "x": 0,
+        "y": -0.05,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -90
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 0.5
+      },
+      "scale": 3.06
+    }
+  }
+
+}

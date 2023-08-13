@@ -1,0 +1,118 @@
+[
+  {
+    "ingredientPattern": "C\tA",
+    "ingredients": {
+      "C": {
+        "type": "item",
+        "code": "game:chisel-*",
+        "name": "metal",
+        "isTool": true,
+        "toolDurabilityCost": 40
+      },
+      "A": {
+        "type": "item",
+        "code": "game:clothes-arm-silver-chain"
+      }
+    },
+    "width": 1,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "game:metalbit-silver",
+      "quantity": 20
+    }
+  },
+  {
+    "ingredientPattern": "C\tA",
+    "ingredients": {
+      "C": {
+        "type": "item",
+        "code": "game:chisel-*",
+        "name": "metal",
+        "isTool": true,
+        "toolDurabilityCost": 40
+      },
+      "A": {
+        "type": "item",
+        "code": "game:clothes-arm-silver-bracelet"
+      }
+    },
+    "width": 1,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "game:metalbit-silver",
+      "quantity": 25
+    }
+  },
+  {
+    "ingredientPattern": "C\tA",
+    "ingredients": {
+      "C": {
+        "type": "item",
+        "code": "game:chisel-*",
+        "name": "metal",
+        "isTool": true,
+        "toolDurabilityCost": 40
+      },
+      "A": {
+        "type": "item",
+        "code": "game:clothes-arm-copper-bracelet"
+      }
+    },
+    "width": 1,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "game:metalbit-copper",
+      "quantity": 30
+    }
+  },
+  {
+    "ingredientPattern": "C\tA",
+    "ingredients": {
+      "C": {
+        "type": "item",
+        "code": "game:chisel-*",
+        "name": "metal",
+        "isTool": true,
+        "toolDurabilityCost": 40
+      },
+      "A": {
+        "type": "item",
+        "code": "game:clothes-arm-bronze-bracelet"
+      }
+    },
+    "width": 1,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "game:metalbit-tinbronze",
+      "quantity": 20
+    }
+  },
+
+  {
+    "ingredientPattern": "C\tA",
+    "ingredients": {
+      "C": {
+        "type": "item",
+        "code": "game:chisel-*",
+        "name": "metal",
+        "isTool": true,
+        "toolDurabilityCost": 40
+      },
+      "A": {
+        "type": "item",
+        "code": "game:clothes-arm-bronze-armlet"
+      }
+    },
+    "width": 1,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "game:metalbit-tinbronze",
+      "quantity": 33
+    }
+  }
+]
