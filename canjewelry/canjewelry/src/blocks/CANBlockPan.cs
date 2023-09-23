@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
@@ -16,8 +17,6 @@ namespace canjewelry.src.blocks
     public class CANBlockPan : Block, ITexPositionSource
     {
         public Size2i AtlasSize { get; set; }
-
-        // Token: 0x06001ADF RID: 6879 RVA: 0x000ED068 File Offset: 0x000EB268
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
@@ -96,8 +95,6 @@ namespace canjewelry.src.blocks
                 return array;
             });
         }
-
-        // Token: 0x06001AE0 RID: 6880 RVA: 0x000ED170 File Offset: 0x000EB370
         private ItemStack Resolve(EnumItemClass type, string code)
         {
             if (type == EnumItemClass.Block)
@@ -127,8 +124,6 @@ namespace canjewelry.src.blocks
                 return new ItemStack(item, 1);
             }
         }
-
-        // Token: 0x1700032E RID: 814
         public TextureAtlasPosition this[string textureCode]
         {
             get
@@ -140,8 +135,6 @@ namespace canjewelry.src.blocks
                 return this.ownTextureSource[textureCode];
             }
         }
-
-        // Token: 0x06001AE2 RID: 6882 RVA: 0x000ED231 File Offset: 0x000EB431
         public string GetBlockMaterialCode(ItemStack stack)
         {
             if (stack == null)
@@ -155,20 +148,14 @@ namespace canjewelry.src.blocks
             }
             return attributes.GetString("materialBlockCode", null);
         }
-
-        // Token: 0x06001AE3 RID: 6883 RVA: 0x000ED24F File Offset: 0x000EB44F
         public void SetMaterial(ItemSlot slot, Block block)
         {
             slot.Itemstack.Attributes.SetString("materialBlockCode", block.Code.ToShortString());
         }
-
-        // Token: 0x06001AE4 RID: 6884 RVA: 0x000ED271 File Offset: 0x000EB471
         public void RemoveMaterial(ItemSlot slot)
         {
             slot.Itemstack.Attributes.RemoveAttribute("materialBlockCode");
         }
-
-        // Token: 0x06001AE5 RID: 6885 RVA: 0x000ED288 File Offset: 0x000EB488
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             string blockMaterialCode = this.GetBlockMaterialCode(itemstack);
@@ -190,8 +177,6 @@ namespace canjewelry.src.blocks
                 return capi.Render.UploadMesh(meshdata);
             });
         }
-
-        // Token: 0x06001AE6 RID: 6886 RVA: 0x000ED300 File Offset: 0x000EB500
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
         {
             handling = EnumHandHandling.PreventDefault;
@@ -226,8 +211,6 @@ namespace canjewelry.src.blocks
                 slot.Itemstack.TempAttributes.SetBool("canpan", true);
             }
         }
-
-        // Token: 0x06001AE7 RID: 6887 RVA: 0x000ED3DC File Offset: 0x000EB5DC
         public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
         {
             if ((byEntity.Controls.TriesToMove || byEntity.Controls.Jump) && !byEntity.Controls.Sneak)
@@ -300,8 +283,6 @@ namespace canjewelry.src.blocks
             }
             return true;
         }
-
-        // Token: 0x06001AE8 RID: 6888 RVA: 0x000ED77D File Offset: 0x000EB97D
         public override bool OnHeldInteractCancel(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, EnumItemUseCancelReason cancelReason)
         {
             if (cancelReason == EnumItemUseCancelReason.ReleasedMouse)
@@ -319,8 +300,6 @@ namespace canjewelry.src.blocks
             }
             return true;
         }
-
-        // Token: 0x06001AE9 RID: 6889 RVA: 0x000ED7AC File Offset: 0x000EB9AC
         public override void OnHeldInteractStop(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
         {
             ILoadedSound loadedSound = this.sound;
@@ -346,8 +325,6 @@ namespace canjewelry.src.blocks
                 behavior.ConsumeSaturation(4f);
             }
         }
-
-        // Token: 0x06001AEA RID: 6890 RVA: 0x000ED824 File Offset: 0x000EBA24
         private void CreateDrop(EntityAgent byEntity, string fromBlockCode)
         {
             EntityPlayer entityPlayer = byEntity as EntityPlayer;
@@ -399,17 +376,30 @@ namespace canjewelry.src.blocks
                 }
             }
         }
-
-        // Token: 0x06001AEB RID: 6891 RVA: 0x000ED9F8 File Offset: 0x000EBBF8
         public virtual bool IsPannableMaterial(Block block)
         {
             JsonObject attributes = block.Attributes;
             return attributes != null && attributes.IsTrue("pannable");
         }
-
-        // Token: 0x06001AEC RID: 6892 RVA: 0x000EDA10 File Offset: 0x000EBC10
         protected virtual void TryTakeMaterial(ItemSlot slot, EntityAgent byEntity, BlockPos position)
         {
+            var hotbarSlotNumber = (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
+            if (hotbarSlotNumber < 9)
+            {
+                //0-8 are ok
+                var player = (byEntity as EntityPlayer).Player;
+                IInventory playerHotbar = player.InventoryManager.GetHotbarInventory();
+                ItemSlot oreSlot = playerHotbar[hotbarSlotNumber + 1];
+                //var c2 = base.FirstCodePart(0);
+                if (oreSlot.Itemstack != null)
+                {
+                    var c2 = oreSlot.Itemstack.Item.FirstCodePart(0);
+
+                    return;
+                }
+                var f = 3;
+
+            }
             Block block = this.api.World.BlockAccessor.GetBlock(position);
             if (this.IsPannableMaterial(block))
             {
@@ -421,6 +411,13 @@ namespace canjewelry.src.blocks
                     }
                     return;
                 }
+               /* var hotbarSlotNumber = (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
+                if(hotbarSlotNumber < 11)
+                {
+                    var f = 3;
+                }*/
+               // (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlotNumber < 
+
                 string layer = block.Variant["layer"];
                 if (layer != null)
                 {
@@ -465,26 +462,14 @@ namespace canjewelry.src.blocks
                 slot.MarkDirty();
             }
         }
-
-        // Token: 0x06001AED RID: 6893 RVA: 0x000EDC4F File Offset: 0x000EBE4F
         public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
         {
             return this.interactions.Append(base.GetHeldInteractionHelp(inSlot));
         }
-
-        // Token: 0x04000EBC RID: 3772
         private ITexPositionSource ownTextureSource;
-
-        // Token: 0x04000EBD RID: 3773
         private TextureAtlasPosition matTexPosition;
-
-        // Token: 0x04000EBE RID: 3774
         private ILoadedSound sound;
-
-        // Token: 0x04000EBF RID: 3775
         private Dictionary<string, PanningDrop[]> dropsBySourceMat;
-
-        // Token: 0x04000EC0 RID: 3776
         private WorldInteraction[] interactions;
     }
 }

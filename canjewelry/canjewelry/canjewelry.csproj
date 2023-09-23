@@ -52,6 +52,10 @@
 </ItemGroup>
 
 <ItemGroup>
+  <Content Remove="..\resources\assets\game\patches\CB\can-add-cb.json" />
+</ItemGroup>
+
+<ItemGroup>
   <PackageReference Include="SkiaSharp" Version="2.88.3" />
 </ItemGroup>
 

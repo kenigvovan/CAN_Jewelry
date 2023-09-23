@@ -12,6 +12,7 @@ namespace canjewelry.src.CB
     {
         public EncrustableCB(CollectibleObject collObj) : base(collObj)
         {
+            
         }
 
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)

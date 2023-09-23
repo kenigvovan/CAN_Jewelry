@@ -81,7 +81,7 @@ namespace canjewelry.src.jewelry
             tabs1[1].Name = "Gems";
             tabs1[1].DataInt = 1;
 
-            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()] = this.capi.Gui.CreateCompo("jewelersetgui" + this.BlockEntityPosition?.ToString(), elementBounds).
+            this.SingleComposer = this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()] = this.capi.Gui.CreateCompo("jewelersetgui" + this.BlockEntityPosition?.ToString(), elementBounds).
                   AddShadedDialogBG(backgroundBounds).
                   AddDialogTitleBar(Lang.Get("canjewelry:jewelset_gui_name"), new Action(this.OnTitleBarClose));
             this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddHorizontalTabs(tabs1, tabsBounds, new Action<int>(this.OnGroupTabClicked), CairoFont.WhiteSmallText(), CairoFont.WhiteSmallText(), "GroupTabs");

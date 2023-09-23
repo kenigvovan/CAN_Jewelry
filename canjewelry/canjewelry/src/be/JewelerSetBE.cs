@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
+using canjewelry.src.utils;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -214,27 +215,7 @@ namespace canjewelry.src.jewelry
             }
             return true;
         }
-        bool canItemContainThisGem(string gemType, ItemStack targetItemStack)
-        {
-            if (Config.Current.buffNameToPossibleItem.Val.TryGetValue(gemType, out var hashSetClasses))
-            {
-                foreach (var it in hashSetClasses)
-                {
-                    if (WildcardUtil.Match("*" + it + "*", targetItemStack.Collectible.Code.Path))
-                    {
-                        return true;
-                        //res.Add(gemTypeSetPair.Key);
-                    }
 
-                    /*if (targetItemStack.Item.Code.Path.Contains(it))
-                    {
-                        return true;
-                    }*/
-
-                }
-            }
-            return false;
-        }
         public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
         {
             if (packetid < 1000)
@@ -250,71 +231,7 @@ namespace canjewelry.src.jewelry
                 }
                 if (packetid == 1004)
                 {
-                    this.inventory.TakeLocked = true;
-                    if (this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Collectible.Attributes.KeyExists("canhavesocketsnumber"))
-                    {
-                        //already has itree -> has socket alteast 1
-                        if (this.inventory[0].Itemstack.Attributes.HasAttribute("canencrusted"))
-                        {
-                            var tree = this.inventory[0].Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                            if (tree.GetInt("socketsnumber") >= this.inventory[0].Itemstack.Collectible.Attributes["canhavesocketsnumber"].AsInt())
-                            {
-                                this.inventory.TakeLocked = false;
-                                return;
-                            }
-                            else
-                            {
-                                if (!(this.inventory[1].Itemstack != null && this.inventory[1].Itemstack.Collectible.Attributes.KeyExists("levelOfSocket")))
-                                {
-                                    this.inventory.TakeLocked = false;
-                                    return;
-                                }
-
-                                tree.SetInt("socketsnumber", tree.GetInt("socketsnumber") + 1);
-                                ITreeAttribute socketSlotTree = new TreeAttribute();
-                                socketSlotTree.SetInt("size", 0);
-                                socketSlotTree.SetString("gemtype", "");
-                                socketSlotTree.SetInt("sockettype", this.inventory[1].Itemstack.Collectible.Attributes["levelOfSocket"].AsInt());
-                                this.inventory[1].TakeOut(1);
-                                this.inventory[1].MarkDirty();
-                                this.inventory[0].MarkDirty();
-                                tree["slot" + (tree.GetInt("socketsnumber") - 1).ToString()] = socketSlotTree;
-                            }
-                        }
-                        else
-                        {
-                            if (this.inventory[0].Itemstack.Collectible.Attributes["canhavesocketsnumber"].AsInt() < 1)
-                            {
-                                this.inventory.TakeLocked = false;
-                                return;
-                            }
-                            if (!(this.inventory[1].Itemstack != null && this.inventory[1].Itemstack.Collectible.Attributes.KeyExists("levelOfSocket")))
-                            {
-                                this.inventory.TakeLocked = false;
-                                return;
-                            }
-
-                            ITreeAttribute socketSlotTree = new TreeAttribute();
-
-                            socketSlotTree.SetInt("size", 0);
-                            socketSlotTree.SetString("gemtype", "");
-                            socketSlotTree.SetInt("sockettype", this.inventory[1].Itemstack.Collectible.Attributes["levelOfSocket"].AsInt());
-
-                            ITreeAttribute socketEncrusted = new TreeAttribute();
-                            socketEncrusted.SetInt("socketsnumber", 1);
-                            socketEncrusted["slot" + 0] = socketSlotTree;
-                            this.inventory[1].TakeOut(1);
-                            this.inventory[1].MarkDirty();
-                            this.inventory[0].MarkDirty();
-                            this.inventory[0].Itemstack.Attributes["canencrusted"] = socketEncrusted;
-                        }
-                    }
-                    this.inventory.TakeLocked = false;
-                    //check left item that can be encrusted
-                    //if it at all can be ecnrusted
-                    //can add more sockets to it
-                    //if ok we take socket form slot
-                    //create itree for left item and add info about socket
+                    EncrustableFunctions.TryToAddSocket(this.inventory);
                 }
                 else if (packetid == 1005)
                 {
@@ -322,59 +239,13 @@ namespace canjewelry.src.jewelry
                     //for 1-3 slots
                     //check if null try to place if slotN exists at target
                     //set null if taken
-                    this.inventory.TakeLocked = true;
-                    if (this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Attributes.HasAttribute("canencrusted"))
-                    {
-                        var tree = this.inventory[0].Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                        for (int i = 1; i < tree.GetInt("socketsnumber") + 1; i++)
-                        {
-                            ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + (i - 1).ToString());
-                            if (this.inventory[i].Itemstack != null && this.inventory[i].Itemstack.Collectible.Attributes.KeyExists("canGemType"))
-                            {
-                                if (treeSocket.GetInt("sockettype") < this.inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt())
-                                {
-                                    this.inventory.TakeLocked = false;
-                                    return;
-                                }
-                                if (!this.canItemContainThisGem(this.inventory[i].Itemstack.Collectible.Code.Path.Split('-').Last(), this.inventory[0].Itemstack))
-                                {
-                                    this.inventory.TakeLocked = false;
-                                    return;
-                                }
-                                treeSocket.SetInt("size", this.inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt());
-                                treeSocket.SetString("gemtype", this.inventory[i].Itemstack.Collectible.Code.Path.Split('-').Last());
-                                treeSocket.SetString("attributeBuff", this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString());
-
-                                var g = this.inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt();
-                                var cb = Config.Current.gems_buffs.Val[this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][this.inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()];
-
-                                var c = this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"];
-                                var b = Config.Current.gems_buffs.Val[this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()];
-                                treeSocket.SetFloat("attributeBuffValue", Config.Current.gems_buffs.Val
-                                    [this.inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][this.inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
-                                if(this.inventory[0].Itemstack.Item is CANItemSimpleNecklace)
-                                {
-                                    this.inventory[0].Itemstack.Attributes.SetString("gem", this.inventory[i].Itemstack.Collectible.Code.Path.Split('-').Last());
-                                }
-                                
-                                this.inventory[i].TakeOut(1);
-                                this.inventory[i].MarkDirty();
-                                this.inventory[0].MarkDirty();
-                                //this.inventory[i].Itemstack
-                                // string tmp = "";
-                                //treeSocket.SetString("size", this.inventory[i].Itemstack.Attributes)
-                            }
-                        }
-                    }
-                    this.inventory.TakeLocked = false;
+                    EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
                 }
 
             }
         }
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
         {
-            
-            //var f = BlockFacing.EAST;
             return base.OnTesselation(mesher, tessThreadTesselator);
         }
     }

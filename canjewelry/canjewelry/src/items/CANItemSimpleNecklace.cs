@@ -469,6 +469,12 @@ namespace canjewelry.src.items
             {
                 ITexPositionSource textureSource = coreClientAPI.Tesselator.GetTextureSource(itemstack.Item);
                 return genMesh(coreClientAPI, itemstack, this);
+                /* ITexPositionSource textureSource = coreClientAPI.Tesselator.GetTextureSource(itemstack.Item);
+                MeshData meshData1 =  genMesh(coreClientAPI, itemstack, this);
+                MeshData meshData2 = genMesh(coreClientAPI, itemstack, this);
+                meshData2.Rotate(new Vec3f(0.5f, 0.5f, 0.6f), 40, 40, 40);
+                meshData1.AddMeshData(meshData2);
+                return meshData1;*/
             }
 
             curAtlas = targetAtlas;

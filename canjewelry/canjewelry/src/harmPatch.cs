@@ -56,7 +56,7 @@ namespace canjewelry.src
                     i = 0;
                 }
                 ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, socketsTextureDict["socket-" + socketSlot.GetInt("sockettype")], 255);
+                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/socket-" + socketSlot.GetInt("sockettype") + ".png").Location, 255);
 
 
                 context.NewPath();
@@ -162,10 +162,6 @@ namespace canjewelry.src
             {
                 return;
             }
-            if (!socketSlot.HasAttribute("attributeBuff"))
-            {
-                return;
-            }
             if (add)
             {
                 if (ep.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey.ContainsKey("canencrusted"))
@@ -248,6 +244,7 @@ namespace canjewelry.src
                         }
                     }
                 }
+                //????
                 else if(__instance.Inventory.ClassName.Equals("character"))
                 {
                     ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
@@ -426,8 +423,8 @@ namespace canjewelry.src
                     i = 0;
                 }
                 ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, socketsTextureDict["socket-" + socketSlot.GetInt("sockettype")], 255);
-               
+                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/socket-" + socketSlot.GetInt("sockettype") + ".png").Location, 255);
+
 
                 context.NewPath();
                 context.LineTo(GuiElement.scaledi(3) + i * (tr), (int)GuiElement.scaled(12) + j * tr);
@@ -451,7 +448,7 @@ namespace canjewelry.src
                         context.ClosePath();
 
                         context.Translate(tr * i, tr * j);
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, preparedEncrustedGemsImages[socketSlot.GetString("gemtype")], 255);
+                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                         context.SetSourceSurface(gemSurface, 0, 0);
 
                         context.Translate(-(tr * i), -tr * j);
@@ -465,7 +462,7 @@ namespace canjewelry.src
                         context.ClosePath();
                         context.Translate(i * tr, tr * j);
 
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, preparedEncrustedGemsImages[socketSlot.GetString("gemtype")], 255);
+                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                         context.SetSourceSurface(gemSurface, 0, 0);
 
                         context.Translate(-i * tr, -tr * j);
@@ -480,7 +477,7 @@ namespace canjewelry.src
                         context.ClosePath();
                         context.Translate(i * tr, tr * j);
 
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, preparedEncrustedGemsImages[socketSlot.GetString("gemtype")], 255);
+                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                         context.SetSourceSurface(gemSurface, 0, 0);
 
                         context.Translate(-i * tr, -tr * j);
@@ -669,7 +666,7 @@ namespace canjewelry.src
                     continue;
                 }
                     //i++;
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, harmPatch.preparedEncrustedGemsImages[socketSlot.GetString("gemtype")], 255);
+                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                 //context.Rotate(0.9);
                 double tr = unsSlotSize / 4;
                 
@@ -770,9 +767,6 @@ namespace canjewelry.src
         }
 
 
-
-        public static Dictionary<string, AssetLocation> preparedEncrustedGemsImages;
-        public static Dictionary<string, AssetLocation> socketsTextureDict;
         //NOT USED
         public static void addSocketsOverlays(Context context, ItemSlot slot, int slotId, int slotIndex, ElementBounds[] slotBounds)
         {

@@ -172,6 +172,48 @@
           }
         }
       ],
+      "ore-*-quartz*": [
+        {
+          "type": "item",
+          "code": "crystalizedore-{grade}-{type}-{rock}",
+          "quantity": {
+            "avg": 0.01,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "ore-{grade}-{type}-{rock}",
+          "quantity": {
+            "avg": 1.25,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-quartz",
+          "quantity": {
+            "avg": 0.01,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-quartz",
+          "quantity": {
+            "avg": 0.005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-quartz",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        }
+      ],
       "*": [
         {
           "type": "item",

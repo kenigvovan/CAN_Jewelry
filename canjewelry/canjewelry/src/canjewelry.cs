@@ -47,40 +47,20 @@ namespace canjewelry.src
             api.RegisterBlockEntityClass("BEJewelGrinder", typeof(BEJewelGrinder));
 
             api.RegisterBlockClass("GrindLayerBlock", typeof(GrindLayerBlock));
+
             api.RegisterItemClass("ProcessedGem", typeof(ProcessedGem));
             api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
             api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
+
+            //api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
         public override void StartClientSide(ICoreClientAPI api)
         {
             base.StartClientSide(api);
-            //WildcardUtil.Match(new AssetLocation(key), obj.Code)
-            harmPatch.preparedEncrustedGemsImages = new Dictionary<string, AssetLocation>();
-
-            harmPatch.socketsTextureDict = new Dictionary<string, AssetLocation>();
+           
             capi = api;
             harmonyInstance = new Harmony(harmonyID);
-            harmPatch.socketsTextureDict.Add("socket-1", new AssetLocation("canjewelry:textures/item/tinbronze.png"));
-            harmPatch.socketsTextureDict.Add("socket-2", new AssetLocation("canjewelry:textures/item/iron.png"));
-            harmPatch.socketsTextureDict.Add("socket-3", new AssetLocation("canjewelry:textures/item/steel.png"));
 
-            harmPatch.preparedEncrustedGemsImages.Add("diamond", new AssetLocation("canjewelry:item/gem/diamond.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("corundum", new AssetLocation("canjewelry:item/gem/corundum.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("emerald", new AssetLocation("canjewelry:item/gem/emerald.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("fluorite", new AssetLocation("canjewelry:item/gem/fluorite.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("lapislazuli", new AssetLocation("canjewelry:item/gem/lapislazuli.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("malachite", new AssetLocation("canjewelry:item/gem/malachite.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("olivine", new AssetLocation("canjewelry:item/gem/olivine.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("quartz", new AssetLocation("canjewelry:item/gem/quartz.png"));
-
-            harmPatch.preparedEncrustedGemsImages.Add("uranium", new AssetLocation("canjewelry:item/gem/uranium.png"));
             //ItemSlot inSlot, double posX, double posY, double posZ, float size, int color, float dt, bool shading = true, bool origRotate = false, bool showStackSize = true
             harmonyInstance.Patch(typeof(Vintagestory.API.Client.GuiElementItemSlotGridBase).GetMethod("ComposeSlotOverlays", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage")));
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.EntityAgent).GetMethod("addGearToShape",
@@ -102,7 +82,6 @@ namespace canjewelry.src
             {
                 api = sapi;
             }
-           // return;
             foreach (var it in Config.Current.items_codes_with_socket_count.Val)
             {
                 Item[] arrayResult = api.World.SearchItems(new AssetLocation(it.Key));

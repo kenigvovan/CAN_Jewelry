@@ -4,7 +4,7 @@
     "path": "/dropsByType",
     "value": {
       //lapislazuli
-      "ore-*-lapislazuli-*": [
+      "ore-lapislazuli-*": [
         {
           "type": "item",
           "code": "ore-{type}",
@@ -39,7 +39,7 @@
         }
       ],
       //qurtz
-      "ore-*-qurtz-*": [
+      "ore-quartz-*": [
         {
           "type": "item",
           "code": "clearquartz",
@@ -59,7 +59,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-qurtz",
+          "code": "canjewelry:gem-rough-chipped-quartz",
           "quantity": {
             "avg": 0.01,
             "var": 0
@@ -67,7 +67,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-qurtz",
+          "code": "canjewelry:gem-rough-flawed-quartz",
           "quantity": {
             "avg": 0.005,
             "var": 0
@@ -75,7 +75,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-normal-qurtz",
+          "code": "canjewelry:gem-rough-normal-quartz",
           "quantity": {
             "avg": 0.0005,
             "var": 0
@@ -83,7 +83,7 @@
         }
       ],
       //qurtz
-      "ore-*-fluorite-*": [
+      "ore-fluorite-*": [
         {
           "type": "item",
           "code": "ore-{type}",
@@ -120,7 +120,7 @@
       "ore-flint-*": [
         {
           "type": "item",
-          "code": "flint",
+          "code": "game:flint",
           "quantity": {
             "avg": 1.5,
             "var": 0
