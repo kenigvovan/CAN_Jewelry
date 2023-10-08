@@ -81,6 +81,10 @@ namespace canjewelry.src
             textSurface.Dispose();
             return;
         }
+        public static void Postfix_ItemSlot_ActivateSlotRightClick(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
+        {
+            Postfix_ItemSlot_ActivateSlotLeftClick(__instance, sourceSlot, ref op);
+        }
 
         public static void Postfix_ItemSlot_ActivateSlotLeftClick(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
         {
@@ -96,21 +100,31 @@ namespace canjewelry.src
             {
                 return;
             }
-
+            //wth
+            if(op.MovedQuantity > 0)
+            {
+                //var c = 3;
+                //return;
+            }
+            else
+            {
+                //var c = 3;
+                return;
+            }
             if (__instance.Itemstack != null && sourceSlot.Itemstack != null)
             {
                 if (sourceSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
                 {
                     if (__instance.Inventory.ClassName.Equals("character") && sourceSlot.Inventory.ClassName.Equals("mouse"))
-                {
-                    ITreeAttribute encrustTreeHere = sourceSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
                     {
-                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (sourceSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        ITreeAttribute encrustTreeHere = sourceSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                        for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                        {
+                            ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                            applyBuffFromItemStack(socketSlot, (sourceSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
                     }
-                }
-                return;
+                    return;
                 }
             }
             if (!__instance.Inventory.ClassName.Equals("hotbar") && !__instance.Inventory.ClassName.Equals("character"))
@@ -595,7 +609,7 @@ namespace canjewelry.src
             }
         }
         //We took new itemstack and check the same way, hotbar for activeslot, character invetory
-        public static void Postfix_Collectible_DidModifyItemSlot(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sinkSlot, ref ItemStackMoveOperation op)
+        public static void Postfix_ItemSlot_TryPutInto(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sinkSlot, ref ItemStackMoveOperation op)
         {
             //-->0
             if(sinkSlot.Inventory == null)
