@@ -16,19 +16,13 @@
       "D": {
         "type": "item",
         "code": "game:leather-*",
-        "allowedVariants": [ "plain", "black" ],
+        "allowedVariants": [ "plain", "orange", "black", "red", "blue", "purple", "pink", "white", "yellow", "gray", "green" ],
         "quantity": 2
       }
     },
     "name": "cangrindlayer-medium",
     "width": 3,
     "height": 3,
-    "dependsOn": [
-      {
-        "modid": "em",
-        "invert": true
-      }
-    ],
     "output": {
       "type": "block",
       "code": "canjewelry:grindlayeritem-medium",
@@ -46,13 +40,13 @@
       },
       "T": {
         "type": "item",
-        "code": "canjewelry:crushed-diamond",
-        "quantity": 1
+        "code": "necessaries:grounddiamond",
+        "quantity": 2
       },
       "D": {
         "type": "item",
         "code": "game:leather-*",
-        "allowedVariants": [ "plain", "black" ],
+        "allowedVariants": [ "plain", "orange", "black", "red", "blue", "purple", "pink", "white", "yellow", "gray", "green" ],
         "quantity": 2
       }
     },
@@ -61,7 +55,7 @@
     "height": 3,
     "dependsOn": [
       {
-        "modid": "em"
+        "modid": "necessaries"
       }
     ],
     "output": {

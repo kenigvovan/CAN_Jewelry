@@ -1,20 +1,47 @@
-﻿using canjewelry.src.utils;
-using HarmonyLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Intrinsics.X86;
 using System.Text;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace canjewelry.src
 {
-    public class Config
+    public class OldConfig
     {
-        public float grindTimeOneTick = 3;
+        public static OldConfig Current { get; set; } = new OldConfig();
+        public class Part<Config>
+        {
+            public readonly string Comment;
+            public readonly Config Default;
+            private Config val;
+            public Config Val
+            {
+                get => (val != null ? val : val = Default);
+                set => val = (value != null ? value : Default);
+            }
+            public Part(Config Default, string Comment = null)
+            {
+                this.Default = Default;
+                this.Val = Default;
+                this.Comment = Comment;
+            }
+            public Part(Config Default, string prefix, string[] allowed, string postfix = null)
+            {
+                this.Default = Default;
+                this.Val = Default;
+                this.Comment = prefix;
 
-        public Dictionary<string, HashSet<string>> buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
+                this.Comment += "[" + allowed[0];
+                for (int i = 1; i < allowed.Length; i++)
+                {
+                    this.Comment += ", " + allowed[i];
+                }
+                this.Comment += "]" + postfix;
+            }
+        }
+        public Part<float> grindTimeOneTick = new Part<float>(3);
+
+        public Part<Dictionary<string, HashSet<string>>> buffNameToPossibleItem = new Part<Dictionary<string, HashSet<string>>>
         (new Dictionary<string, HashSet<string>> {
             {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
             {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace" } },
@@ -26,13 +53,13 @@ namespace canjewelry.src
             {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
             {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" } }
         });
-        public Dictionary<string, Dictionary<string, float>> gems_buffs = new Dictionary<string, Dictionary<string, float>>
+        public Part<Dictionary<string, Dictionary<string, float>>> gems_buffs = new Part<Dictionary<string, Dictionary<string, float>>>
             (new Dictionary<string, Dictionary<string, float>>  {
                 { "walkspeed", new Dictionary<string, float>{
                     { "1", 0.02f },
                     { "2", 0.04f },
                     { "3", 0.08f }
-                    }
+                    }              
                 },
                 { "miningSpeedMul", new Dictionary<string, float>{
                     { "1", 0.03f },
@@ -84,7 +111,7 @@ namespace canjewelry.src
                 }
             });
 
-        public Dictionary<string, int> items_codes_with_socket_count = new Dictionary<string, int>(new Dictionary<string, int>
+        public Part<Dictionary<string, int>> items_codes_with_socket_count = new Part<Dictionary<string, int>>(new Dictionary<string, int>
         {
             { "*knife-generic-gold", 1 },
             { "*knife-generic-silver", 1 },
@@ -160,15 +187,14 @@ namespace canjewelry.src
             { "xmelee:xspear-meteoriciron", 1 },
             { "xmelee:xspear-steel", 2 },
 
-            { "*blade-falx-gold", 1 },
-            { "*blade-falx-silver", 1 },
-            { "*blade-falx-iron", 1 },
-            { "*blade-falx-meteoriciron", 2 },
-            { "*blade-falx-steel", 2 },
-            { "*blade-falx-blackguard-iron", 2 },
-            { "*blade-forlorn-iron", 2 },
-            { "*blade-longsword-admin", 3 },
+            { "*blade-gold", 1 },
+            { "*blade-silver", 1 },
+            { "*blade-iron", 1 },
+            { "*blade-meteoriciron", 2 },
+            { "*blade-steel", 2 },
+            { "*blade-blackguard", 2 },
+            { "*blade-forlorn", 2 },
+            { "*blade-admin", 3 },
         });
-        public int pan_take_per_use = 8;
     }
 }

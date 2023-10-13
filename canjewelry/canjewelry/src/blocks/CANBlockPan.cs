@@ -1,8 +1,10 @@
-﻿using System;
+﻿using canjewelry.src.utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -20,8 +22,8 @@ namespace canjewelry.src.blocks
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
-            this.dropsBySourceMat = this.Attributes["panningDrops"].AsObject<Dictionary<string, PanningDrop[]>>(null);
-            foreach (PanningDrop[] drops in this.dropsBySourceMat.Values)
+            this.dropsBySourceMat = this.Attributes["panningDrops"].AsObject<Dictionary<string, CANPanningDrop[]>>(null);
+            foreach (CANPanningDrop[] drops in this.dropsBySourceMat.Values)
             {
                 for (int i = 0; i < drops.Length; i++)
                 {
@@ -148,9 +150,10 @@ namespace canjewelry.src.blocks
             }
             return attributes.GetString("materialBlockCode", null);
         }
-        public void SetMaterial(ItemSlot slot, Block block)
+        public void SetMaterial(ItemSlot slot, string materialCode)
         {
-            slot.Itemstack.Attributes.SetString("materialBlockCode", block.Code.ToShortString());
+
+            slot.Itemstack.Attributes.SetString("materialBlockCode", materialCode);
         }
         public void RemoveMaterial(ItemSlot slot)
         {
@@ -166,7 +169,7 @@ namespace canjewelry.src.blocks
             string key = "pan-filled-" + blockMaterialCode + target.ToString();
             renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MeshRef>(capi, key, delegate
             {
-                AssetLocation shapeloc = new AssetLocation("shapes/block/wood/pan/filled.json");
+                AssetLocation shapeloc = new AssetLocation("canjewelery:shape/blocks/filled.json");
                 Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, shapeloc);
                 Block block = capi.World.GetBlock(new AssetLocation(blockMaterialCode));
                 this.AtlasSize = capi.BlockTextureAtlas.Size;
@@ -190,19 +193,16 @@ namespace canjewelry.src.blocks
             {
                 return;
             }
-            if (blockSel != null && !byEntity.World.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak))
-            {
-                return;
-            }
+
             string blockMatCode = this.GetBlockMaterialCode(slot.Itemstack);
             if (!byEntity.FeetInLiquid && this.api.Side == EnumAppSide.Client && blockMatCode != null)
             {
                 (this.api as ICoreClientAPI).TriggerIngameError(this, "notinwater", Lang.Get("ingameerror-panning-notinwater", Array.Empty<object>()));
                 return;
             }
-            if (blockMatCode == null && blockSel != null)
+            if (blockMatCode == null)
             {
-                this.TryTakeMaterial(slot, byEntity, blockSel.Position);
+                this.TryTakeMaterial(slot, byEntity);
                 slot.Itemstack.TempAttributes.SetBool("canpan", false);
                 return;
             }
@@ -325,11 +325,22 @@ namespace canjewelry.src.blocks
                 behavior.ConsumeSaturation(4f);
             }
         }
+        public string CodePartsAfterFirst(string path)
+        {
+            int num = path.IndexOf('-') + 1;
+            //int num2 = ((num <= 0) ? (-1) : path.IndexOf('-', num));
+            if (num >= 0)
+            {
+                return path.Substring(num);
+            }
+
+            return path;
+        }
         private void CreateDrop(EntityAgent byEntity, string fromBlockCode)
         {
             EntityPlayer entityPlayer = byEntity as EntityPlayer;
             IPlayer player = (entityPlayer != null) ? entityPlayer.Player : null;
-            PanningDrop[] drops = null;
+            CANPanningDrop[] drops = null;
             foreach (string val in this.dropsBySourceMat.Keys)
             {
                 if (WildcardUtil.Match(val, fromBlockCode))
@@ -347,7 +358,7 @@ namespace canjewelry.src.blocks
             int i = 0;
             while (i < drops.Length)
             {
-                PanningDrop drop = drops[i];
+                CANPanningDrop drop = drops[i];
                 double num = this.api.World.Rand.NextDouble();
                 float extraMul = 1f;
                 if (drop.DropModbyStat != null)
@@ -381,7 +392,7 @@ namespace canjewelry.src.blocks
             JsonObject attributes = block.Attributes;
             return attributes != null && attributes.IsTrue("pannable");
         }
-        protected virtual void TryTakeMaterial(ItemSlot slot, EntityAgent byEntity, BlockPos position)
+        protected virtual void TryTakeMaterial(ItemSlot slot, EntityAgent byEntity)
         {
             var hotbarSlotNumber = (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
             if (hotbarSlotNumber < 9)
@@ -390,76 +401,46 @@ namespace canjewelry.src.blocks
                 var player = (byEntity as EntityPlayer).Player;
                 IInventory playerHotbar = player.InventoryManager.GetHotbarInventory();
                 ItemSlot oreSlot = playerHotbar[hotbarSlotNumber + 1];
+
                 //var c2 = base.FirstCodePart(0);
-                if (oreSlot.Itemstack != null)
+                if (oreSlot.Itemstack != null && oreSlot.Itemstack.Item != null)
                 {
-                    var c2 = oreSlot.Itemstack.Item.FirstCodePart(0);
+                    if(oreSlot.Itemstack.StackSize < canjewelry.config.pan_take_per_use)
+                    {
+                        return;
+                    }
+                    string firstCodePart = oreSlot.Itemstack.Item.FirstCodePart(0);
+                    string itemCode;
+                    if (firstCodePart.Equals("crystalizedore"))
+                    {
 
+                        itemCode = "ore-" + CodePartsAfterFirst(oreSlot.Itemstack.Item.Code.ToShortString());
+                    }
+                    else
+                    {
+                        itemCode = oreSlot.Itemstack.Item.Code.ToShortString();
+                    }
+                    //var c = this.api.World.GetBlock(new AssetLocation("game:pan-wooden"));
+                    bool dropFound = false;
+                    foreach (string val in this.dropsBySourceMat.Keys)
+                    {
+                        if (WildcardUtil.Match(val, itemCode))
+                        {
+                            dropFound = true;
+                            break;
+                        }
+                    }
+                    if(!dropFound)
+                    {
+                        return;
+                    }
+                    
+                    this.SetMaterial(slot, itemCode);
+                    oreSlot.TakeOut(canjewelry.config.pan_take_per_use);
+                    oreSlot.MarkDirty();
+                    slot.MarkDirty();
                     return;
                 }
-                var f = 3;
-
-            }
-            Block block = this.api.World.BlockAccessor.GetBlock(position);
-            if (this.IsPannableMaterial(block))
-            {
-                if (this.api.World.BlockAccessor.GetBlock(position.UpCopy(1)).Id != 0)
-                {
-                    if (this.api.Side == EnumAppSide.Client)
-                    {
-                        (this.api as ICoreClientAPI).TriggerIngameError(this, "noair", Lang.Get("ingameerror-panning-requireairabove", Array.Empty<object>()));
-                    }
-                    return;
-                }
-               /* var hotbarSlotNumber = (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
-                if(hotbarSlotNumber < 11)
-                {
-                    var f = 3;
-                }*/
-               // (byEntity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlotNumber < 
-
-                string layer = block.Variant["layer"];
-                if (layer != null)
-                {
-                    string baseCode = block.FirstCodePart(0) + "-" + block.FirstCodePart(1);
-                    Block origblock = this.api.World.GetBlock(new AssetLocation(baseCode));
-                    this.SetMaterial(slot, origblock);
-                    if (layer == "1")
-                    {
-                        this.api.World.BlockAccessor.SetBlock(0, position);
-                    }
-                    else
-                    {
-                        AssetLocation code = block.CodeWithVariant("layer", (int.Parse(layer) - 1).ToString() ?? "");
-                        Block reducedBlock = this.api.World.GetBlock(code);
-                        this.api.World.BlockAccessor.SetBlock(reducedBlock.BlockId, position);
-                    }
-                    this.api.World.BlockAccessor.TriggerNeighbourBlockUpdate(position);
-                }
-                else
-                {
-                    string pannedBlock = block.Attributes["pannedBlock"].AsString(null);
-                    Block reducedBlock2;
-                    if (pannedBlock != null)
-                    {
-                        reducedBlock2 = this.api.World.GetBlock(AssetLocation.Create(pannedBlock, block.Code.Domain));
-                    }
-                    else
-                    {
-                        reducedBlock2 = this.api.World.GetBlock(block.CodeWithVariant("layer", "7"));
-                    }
-                    if (reducedBlock2 != null)
-                    {
-                        this.SetMaterial(slot, block);
-                        this.api.World.BlockAccessor.SetBlock(reducedBlock2.BlockId, position);
-                        this.api.World.BlockAccessor.TriggerNeighbourBlockUpdate(position);
-                    }
-                    else
-                    {
-                        this.api.Logger.Warning("Missing \"pannedBlock\" attribute for pannable block " + block.Code.ToShortString());
-                    }
-                }
-                slot.MarkDirty();
             }
         }
         public override WorldInteraction[] GetHeldInteractionHelp(ItemSlot inSlot)
@@ -469,7 +450,7 @@ namespace canjewelry.src.blocks
         private ITexPositionSource ownTextureSource;
         private TextureAtlasPosition matTexPosition;
         private ILoadedSound sound;
-        private Dictionary<string, PanningDrop[]> dropsBySourceMat;
+        private Dictionary<string, CANPanningDrop[]> dropsBySourceMat;
         private WorldInteraction[] interactions;
     }
 }

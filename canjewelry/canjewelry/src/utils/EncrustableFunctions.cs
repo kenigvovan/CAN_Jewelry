@@ -40,7 +40,7 @@ namespace canjewelry.src.utils
                         treeSocket.SetString("attributeBuff", inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString());
 
 
-                        treeSocket.SetFloat("attributeBuffValue", Config.Current.gems_buffs.Val
+                        treeSocket.SetFloat("attributeBuffValue", canjewelry.config.gems_buffs
                             [inventory[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][inventory[i].Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
                         if (encrustable.Itemstack.Item is CANItemSimpleNecklace)
                         {
@@ -127,7 +127,7 @@ namespace canjewelry.src.utils
         }
         public static bool canItemContainThisGem(string gemType, ItemStack targetItemStack)
         {
-            if (Config.Current.buffNameToPossibleItem.Val.TryGetValue(gemType, out var hashSetClasses))
+            if (canjewelry.config.buffNameToPossibleItem.TryGetValue(gemType, out var hashSetClasses))
             {
                 foreach (var it in hashSetClasses)
                 {

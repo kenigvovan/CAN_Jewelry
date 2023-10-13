@@ -179,5 +179,9 @@
   "item-canstrap-iron": "Iron strap",
   "item-canstrap-blackbronze": "Black bronze strap",
   "item-canstrap-meteoriciron": "Meteorice iron strap",
-  "item-canstrap-steel": "Steel strap"
+  "item-canstrap-steel": "Steel strap",
+  "item-canstrap-bismuthbronze": "Bismuth bronze strap",
+  "item-canstrap-gold": "Gold strap",
+  "block-canpan-steel": "Steel pan",
+  "block-canpan-iron": "Iron pan"
 }

@@ -397,9 +397,9 @@ namespace canjewelry.src.jewelry
                 ITreeAttribute itree = player.InventoryManager.ActiveHotbarSlot.Itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
                 if (itree.GetInt("grindtype") == this.getGrindLayerType())
                 {
-                    if(!this.InputStack.Attributes.HasAttribute("durability"))
+                    if (!this.InputStack.Attributes.HasAttribute("durability"))
                     {
-                        this.InputStack.Attributes.SetInt("durability", this.InputStack.ItemAttributes["cangrinddurability"].AsInt());
+                        this.InputStack.Attributes.SetInt("durability", this.InputStack.ItemAttributes["durability"].AsInt());
                     }
                     else
                     {

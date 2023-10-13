@@ -190,7 +190,7 @@ namespace canjewelry.src.jewelry
         {
             string itemCode = itemStack.Collectible.Code.Path;
             List<string> res = new List<string>();
-            foreach(var gemTypeSetPair in Config.Current.buffNameToPossibleItem.Val)
+            foreach(var gemTypeSetPair in canjewelry.config.buffNameToPossibleItem)
             {
                 foreach(var it in gemTypeSetPair.Value)
                 {                 

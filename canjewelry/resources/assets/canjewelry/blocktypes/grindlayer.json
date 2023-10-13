@@ -28,7 +28,7 @@
       "*-medium": 1,
       "*-fine": 2
     },
-    "cangrinddurabilityByType": {
+    "durabilitybytype": {
       "*-rough": 200,
       "*-medium": 250,
       "*-fine": 300

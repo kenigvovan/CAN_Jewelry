@@ -32,6 +32,7 @@ namespace canjewelry.src
         public static ICoreServerAPI sapi;
         internal static IServerNetworkChannel serverChannel;
         internal static IClientNetworkChannel clientChannel;
+        public static Config config;
 
         public override void Start(ICoreAPI api)
         {
@@ -52,7 +53,7 @@ namespace canjewelry.src
             api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
             api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
 
-            //api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
+            api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -70,7 +71,7 @@ namespace canjewelry.src
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             clientChannel.SetMessageHandler<SyncCANJewelryPacket>((packet) =>
             {
-                Config.Current = JsonConvert.DeserializeObject<Config>(packet.CompressedConfig);
+                config = JsonConvert.DeserializeObject<Config>(packet.CompressedConfig);
                 AddBehaviorAndSocketNumber(false);
             });           
         }
@@ -82,7 +83,7 @@ namespace canjewelry.src
             {
                 api = sapi;
             }
-            foreach (var it in Config.Current.items_codes_with_socket_count.Val)
+            foreach (var it in config.items_codes_with_socket_count)
             {
                 Item[] arrayResult = api.World.SearchItems(new AssetLocation(it.Key));
                 if(arrayResult.Length > 0) 
@@ -281,7 +282,7 @@ namespace canjewelry.src
                 {
                     serverChannel.SendPacket(new SyncCANJewelryPacket()
                     {
-                        CompressedConfig = JsonConvert.SerializeObject(Config.Current)
+                        CompressedConfig = JsonConvert.SerializeObject(config)
                     },
                     byPlayer);
                 }
@@ -290,25 +291,50 @@ namespace canjewelry.src
         }
         private void loadConfig()
         {
+            //Try to read old config
+            OldConfig oldConfig = null;
             try
             {
-                Config.Current = sapi.LoadModConfig<Config>(this.Mod.Info.ModID + ".json");
-                sapi.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " config loaded.");
-                if (Config.Current != null)
-                {
-                    sapi.StoreModConfig<Config>(Config.Current, this.Mod.Info.ModID + ".json");
-                    return;
-                }
+                oldConfig = sapi.LoadModConfig<OldConfig>(this.Mod.Info.ModID + ".json");
             }
             catch (Exception e)
             {
-                sapi.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " config not found.");
+                sapi.Logger.Debug("[canjewelry] No old config found.");
             }
-
-            Config.Current = new Config();
-            sapi.StoreModConfig<Config>(Config.Current, this.Mod.Info.ModID + ".json");
-            sapi.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " config created and stored.");
-            return;
+            //old config was found and we just copy values from it
+            if (oldConfig != null)
+            {
+                config = new Config();
+                config.grindTimeOneTick = oldConfig.grindTimeOneTick.Val;
+                config.buffNameToPossibleItem = oldConfig.buffNameToPossibleItem.Val;
+                config.gems_buffs = oldConfig.gems_buffs.Val;
+                config.items_codes_with_socket_count = oldConfig.items_codes_with_socket_count.Val;
+                //make copy of the old config and new to old file
+                try
+                {
+                    sapi.StoreModConfig<OldConfig>(oldConfig, this.Mod.Info.ModID + "_old.json");
+                    sapi.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
+                }
+                catch(Exception e)
+                {
+                    sapi.Logger.Debug("[canjewelry] " + "Saving old config failed." + e);
+                }
+                return;
+            }
+            //no old config, try to load new format
+            else
+            {
+                config = sapi.LoadModConfig<Config>(this.Mod.Info.ModID + ".json");
+                if(config == null)
+                {
+                    sapi.Logger.Debug("[canjewelry] " + "Config file not found.");
+                    config = new Config();
+                    sapi.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
+                    sapi.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " new config created and stored.");
+                    return;
+                }                
+                return;
+            }
         }
         public override void Dispose()
         {
