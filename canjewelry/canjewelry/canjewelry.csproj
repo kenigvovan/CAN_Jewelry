@@ -52,6 +52,10 @@
 </ItemGroup>
 
 <ItemGroup>
+  <Content Remove="..\resources\assets\canjewelry\textures\item\resource\crochides\**" />
+</ItemGroup>
+
+<ItemGroup>
   <Content Remove="..\resources\assets\game\patches\CB\can-add-cb.json" />
 </ItemGroup>
 

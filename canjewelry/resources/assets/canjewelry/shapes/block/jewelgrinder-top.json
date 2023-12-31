@@ -8,7 +8,7 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"steel": "game:block/wood/planks/generic",
+		"layer": "game:block/wood/planks/generic",
 		"generic": "game:block/wood/planks/generic",
 		"why1": "canjewelry:item/grindlayer/fine",
 		"why2": "canjewelry:item/grindlayer/rough",
@@ -268,12 +268,12 @@
 					"to": [ 11.0, 2.0, 11.0 ], 
 					"rotationOrigin": [ 1.0, 0.0, 1.0 ],
 					"faces": {
-						"north": { "texture": "#steel", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
-						"east": { "texture": "#steel", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
-						"south": { "texture": "#steel", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
-						"west": { "texture": "#steel", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
-						"up": { "texture": "#steel", "uv": [ 0.0, 0.0, 10.0, 10.0 ] },
-						"down": { "texture": "#steel", "uv": [ 0.0, 0.0, 10.0, 10.0 ] }
+						"north": { "texture": "#layer", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
+						"east": { "texture": "#layer", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
+						"south": { "texture": "#layer", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
+						"west": { "texture": "#layer", "uv": [ 0.0, 0.0, 10.0, 2.0 ] },
+						"up": { "texture": "#layer", "uv": [ 0.0, 0.0, 10.0, 10.0 ] },
+						"down": { "texture": "#layer", "uv": [ 0.0, 0.0, 10.0, 10.0 ] }
 					}
 				}
 			]

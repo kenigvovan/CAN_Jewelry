@@ -166,10 +166,10 @@ namespace canjewelry.src.blocks
             {
                 return;
             }
-            string key = "pan-filled-" + blockMaterialCode + target.ToString();
+            string key = "canjewelry:pan-filled-" + blockMaterialCode + target.ToString();
             renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MeshRef>(capi, key, delegate
             {
-                AssetLocation shapeloc = new AssetLocation("canjewelery:shape/blocks/filled.json");
+                AssetLocation shapeloc = new AssetLocation("canjewelry:shapes/block/filled.json");
                 Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, shapeloc);
                 Block block = capi.World.GetBlock(new AssetLocation(blockMaterialCode));
                 this.AtlasSize = capi.BlockTextureAtlas.Size;

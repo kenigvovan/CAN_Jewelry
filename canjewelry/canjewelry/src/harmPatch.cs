@@ -462,7 +462,7 @@ namespace canjewelry.src
                         context.ClosePath();
 
                         context.Translate(tr * i, tr * j);
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
+                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                         context.SetSourceSurface(gemSurface, 0, 0);
 
                         context.Translate(-(tr * i), -tr * j);
@@ -476,7 +476,7 @@ namespace canjewelry.src
                         context.ClosePath();
                         context.Translate(i * tr, tr * j);
 
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
+                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:texture/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                         context.SetSourceSurface(gemSurface, 0, 0);
 
                         context.Translate(-i * tr, -tr * j);
@@ -491,7 +491,7 @@ namespace canjewelry.src
                         context.ClosePath();
                         context.Translate(i * tr, tr * j);
 
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
+                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                         context.SetSourceSurface(gemSurface, 0, 0);
 
                         context.Translate(-i * tr, -tr * j);
@@ -680,7 +680,7 @@ namespace canjewelry.src
                     continue;
                 }
                     //i++;
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
+                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
                 //context.Rotate(0.9);
                 double tr = unsSlotSize / 4;
                 

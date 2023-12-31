@@ -6,7 +6,7 @@
   "textureWidth": 16,
   "textureHeight": 16,
   "textures": {
-    "diamond": "game:block/stone/gem/corundum"
+    "gem": "game:block/stone/gem/corundum"
   },
   "elements": [
     {
@@ -55,27 +55,27 @@
           "rotationY": 11.0,
           "faces": {
             "north": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 7.5, 9.0, 8.0 ]
             },
             "east": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.0, 9.0, 9.5, 9.5 ]
             },
             "south": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 7.5, 9.0, 8.0 ]
             },
             "west": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 10.0, 8.5, 10.5 ]
             },
             "up": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 10.0, 9.0, 11.5 ]
             },
             "down": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 6.5, 7.0, 8.0, 8.5 ]
             }
           }
@@ -89,27 +89,27 @@
           "rotationZ": -8.0,
           "faces": {
             "north": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.5, 6.5, 9.0, 8.0 ]
             },
             "east": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 14.0, 11.0, 14.5, 12.5 ]
             },
             "south": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 8.0, 8.0, 9.5 ]
             },
             "west": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.0, 6.0, 8.5, 7.5 ]
             },
             "up": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 4.5, 6.5, 5.0, 7.0 ]
             },
             "down": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 3.5, 6.5, 4.0, 7.0 ]
             }
           }
@@ -124,27 +124,27 @@
           "rotationZ": -17.0,
           "faces": {
             "north": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.5, 11.0, 9.0, 12.0 ]
             },
             "east": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 7.5, 8.0, 8.5 ]
             },
             "south": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 10.0, 7.5, 11.0 ]
             },
             "west": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 9.5, 8.5, 10.0, 9.5 ]
             },
             "up": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 12.0, 7.5, 12.5 ]
             },
             "down": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.5, 8.0, 9.0, 8.5 ]
             }
           }
@@ -158,27 +158,27 @@
           "rotationZ": 8.0,
           "faces": {
             "north": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 4.0, 9.5, 5.0, 10.0 ]
             },
             "east": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.0, 7.5, 8.5, 8.0 ]
             },
             "south": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 10.0, 7.0, 11.0, 7.5 ]
             },
             "west": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.0, 7.5, 8.5, 8.0 ]
             },
             "up": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 9.5, 8.5, 10.0 ]
             },
             "down": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 5.0, 8.0, 5.5 ]
             }
           }
@@ -192,27 +192,27 @@
           "rotationZ": 11.0,
           "faces": {
             "north": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 6.0, 8.0, 7.0 ]
             },
             "east": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 8.5, 7.0, 9.5, 8.0 ]
             },
             "south": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 5.5, 8.5, 6.5 ]
             },
             "west": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 4.5, 8.0, 5.5 ]
             },
             "up": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 4.0, 9.0, 5.0, 10.0 ]
             },
             "down": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.0, 7.0, 8.0, 8.0 ]
             }
           }
@@ -223,27 +223,27 @@
           "to": [ 1.6, 2.6, 1.6 ],
           "faces": {
             "north": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 5.0, 8.0, 7.0 ]
             },
             "east": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 11.0, 4.5, 11.5, 6.5 ]
             },
             "south": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 7.0, 8.0, 9.0 ]
             },
             "west": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 7.5, 4.0, 8.0, 6.0 ]
             },
             "up": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 4.5, 6.0, 5.0, 6.5 ]
             },
             "down": {
-              "texture": "#diamond",
+              "texture": "#gem",
               "uv": [ 5.0, 5.0, 5.5, 5.5 ]
             }
           }

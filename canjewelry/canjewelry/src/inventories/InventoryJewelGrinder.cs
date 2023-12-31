@@ -52,7 +52,7 @@ namespace canjewelry.src.inventories
         public override ItemSlot GetAutoPushIntoSlot(BlockFacing atBlockFace, ItemSlot fromSlot) => slots[0];
         public override bool CanContain(ItemSlot sinkSlot, ItemSlot sourceSlot)
         {
-            if (sourceSlot.Itemstack == null || !(sourceSlot.Itemstack.Block is GrindLayerBlock))
+            if (sourceSlot.Itemstack == null || !(sourceSlot.Itemstack.Item is GrindLayerBlock))
             {
                 return false;
             }

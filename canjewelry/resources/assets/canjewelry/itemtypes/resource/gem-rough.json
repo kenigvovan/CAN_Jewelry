@@ -31,7 +31,8 @@
       "*-malachite": "wildCropDropRate",
       "*-olivine_peridot": "armorDurabilityLoss",
       "*-quartz": "oreDropRate",
-      "*-uranium": "healingeffectivness"
+      "*-uranium": "healingeffectivness",
+      "*-ruby": "rangedWeaponsDamage"
     },
     "displaycaseable": true,
     "shelvable": true
@@ -47,11 +48,19 @@
     },
     {
       "code": "gemtype",
-      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine_peridot", "quartz", "uranium" ]
+      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine_peridot", "quartz", "uranium", "ruby" ]
     }
   ],
   "storageFlags": 5,
-  "shape": { "base": "canjewelry:item/gem/{refinestate}/{quality}/{gemtype}" },
+  "shape": { "base": "canjewelry:item/gem/{refinestate}/{quality}/gem" },
+  "texturesByType": {
+    "*-olivine_peridot": {
+      "gem": { "base": "game:block/stone/gem/olivine" }
+    },
+    "*": {
+      "gem": { "base": "game:block/stone/gem/{gemtype}" }
+    }
+  },
   "creativeinventory": {
     "general": [ "*" ],
     "items": [ "*" ],

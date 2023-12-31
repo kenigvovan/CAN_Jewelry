@@ -24,7 +24,7 @@
     "width": 3,
     "height": 3,
     "output": {
-      "type": "block",
+      "type": "item",
       "code": "canjewelry:grindlayeritem-medium",
       "quantity": 1
     }
@@ -59,7 +59,7 @@
       }
     ],
     "output": {
-      "type": "block",
+      "type": "item",
       "code": "canjewelry:grindlayeritem-medium",
       "quantity": 1
     }

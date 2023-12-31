@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Threading.Tasks;
 using canjewelry.src.inventories;
@@ -30,6 +31,8 @@ namespace canjewelry.src.jewelry
             {"quartz", -591214665},
             {"uranium,", -603556450}
         };
+        private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
+        //private ITextureAtlasAPI targetAtlas;
         private ILoadedSound ambientSound;
         internal InventoryJewelGrinder inventory;
         //public float inputGrindTime;
@@ -151,6 +154,7 @@ namespace canjewelry.src.jewelry
             this.inventory.SlotModified += (int sl) => { this.setRenderer(); };
             this.setRenderer();
 
+            
         }
 
         public override void CreateBehaviors(Block block, IWorldAccessor worldForResolve)
@@ -312,6 +316,13 @@ namespace canjewelry.src.jewelry
 
         internal MeshData GenMesh(string type = "base")
         {
+            //this.targetAtlas = targetAtlas;
+            this.tmpTextures.Clear();
+            if (!InputSlot.Empty)
+            {
+                string layerType = InputStack.Collectible.LastCodePart();
+                tmpTextures["layer"] = new AssetLocation("canjewelry:item/grindlayer/" + layerType + ".png");
+            }
             Block block = this.Api.World.BlockAccessor.GetBlock(this.Pos);
             if (block.BlockId == 0)
                 return (MeshData)null;
@@ -345,9 +356,9 @@ namespace canjewelry.src.jewelry
             {
                 return -1;
             }
-            if (this.InputStack.Block.Attributes.KeyExists("cangrindinfo"))
+            if (this.InputStack.Item.Attributes.KeyExists("cangrindinfo"))
             {
-                return this.InputStack.Block.Attributes["cangrindinfo"].AsInt();
+                return this.InputStack.Item.Attributes["cangrindinfo"].AsInt();
             }
             return -1;
         }
@@ -397,14 +408,7 @@ namespace canjewelry.src.jewelry
                 ITreeAttribute itree = player.InventoryManager.ActiveHotbarSlot.Itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
                 if (itree.GetInt("grindtype") == this.getGrindLayerType())
                 {
-                    if (!this.InputStack.Attributes.HasAttribute("durability"))
-                    {
-                        this.InputStack.Attributes.SetInt("durability", this.InputStack.ItemAttributes["durability"].AsInt());
-                    }
-                    else
-                    {
-                        this.InputStack.Collectible.DamageItem(canjewelry.sapi.World, player.Entity, this.InputSlot);
-                    }
+                    this.InputStack.Collectible.DamageItem(canjewelry.sapi.World, player.Entity, this.InputSlot);
                     float grindSpeed = this.GrindSpeed;
                     float num1 = 1f * grindSpeed;
                     float num2 = 5f * grindSpeed;
@@ -468,7 +472,7 @@ namespace canjewelry.src.jewelry
         public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
         {
             //if (blockSel.SelectionBoxIndex == 1)
-             //   return false;
+            //   return false;
             if (this.Api.World is IServerWorldAccessor && byPlayer.Entity.ServerControls.CtrlKey)
             {
                 ((ICoreServerAPI)this.Api).Network.SendBlockEntityPacket((IServerPlayer)byPlayer, this.Pos.X, this.Pos.Y, this.Pos.Z, 1000);
@@ -621,27 +625,44 @@ namespace canjewelry.src.jewelry
             get
             {
                 CompositeTexture compositeTexture;
-                if (textureCode == "steel" && this.inventory[0].Itemstack != null)
+                if (textureCode == "layer" && this.inventory[0].Itemstack != null)
                 {
-                    //this.inventory[0].Itemstack.Item.Textures.TryGetValue("metal", out compositeTexture);
-                   /* if (compositeTexture != null)
-                    {
-                        var f = this.inventory[0].Itemstack.Item.Textures.TryGetValue("metal", out compositeTexture);
-                        var f2 = (this.Api as ICoreClientAPI).BlockTextureAtlas[compositeTexture.Base];
-                       // (this.Api as ICoreClientAPI).Tesselator.GetTexSource
-                    }*/
+                    return this.getOrCreateTexPos(this.tmpTextures[textureCode]);
                 }
                 //var a = this.inventory[0].Itemstack.Item.Textures.TryGetValue(textureCode, out compositeTexture);
                 //var f = (this.Api as ICoreClientAPI).BlockTextureAtlas[compositeTexture.Base];
                 //var c = this.blockTexSource[textureCode];
                 //if(this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Item != null)
                 //textureCode = "metal";
-                return textureCode == "steel" && this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Block.Textures.TryGetValue("metal", out compositeTexture)
-                    ? (this.Api as ICoreClientAPI).BlockTextureAtlas[compositeTexture.Base]
+
+
+                return textureCode == "steel" && this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Item != null && this.inventory[0].Itemstack.Item.Textures.TryGetValue("metal", out compositeTexture)
+                    ? (this.Api as ICoreClientAPI).ItemTextureAtlas[compositeTexture.Base]
                     : this.blockTexSource[textureCode];
             }
         }
-
+        protected TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
+        {
+            TextureAtlasPosition texpos = (this.Api as ICoreClientAPI).BlockTextureAtlas[texturePath];
+            if (texpos == null)
+            {
+                IAsset texAsset = this.Api.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"), true);
+                if (texAsset != null)
+                {
+                    int num;
+                    (this.Api as ICoreClientAPI).BlockTextureAtlas.GetOrInsertTexture(texturePath, out num, out texpos, () => texAsset.ToBitmap(this.Api as ICoreClientAPI), 0.005f);
+                }
+                else
+                {
+                    /*this.Api.World.Logger.Warning("For render in shield {0}, require texture {1}, but no such texture found.", new object[]
+                    {
+                        this.Code,
+                        texturePath
+                    });*/
+                }
+            }
+            return texpos;
+        }
         public override void OnStoreCollectibleMappings(
           Dictionary<int, AssetLocation> blockIdMapping,
           Dictionary<int, AssetLocation> itemIdMapping)
@@ -709,6 +730,14 @@ namespace canjewelry.src.jewelry
         {
             base.OnBlockUnloaded();
             this.renderer?.Dispose();
+        }
+        public string GetMeshCacheKey(ItemStack itemstack)
+        {
+            if (inventory[0].Itemstack != null)
+            {
+                return inventory[0].Itemstack?.Collectible.LastCodePart();
+            }
+            return "-";
         }
     }
 }

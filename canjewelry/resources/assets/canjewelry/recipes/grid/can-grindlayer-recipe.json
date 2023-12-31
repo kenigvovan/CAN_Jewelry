@@ -25,7 +25,7 @@
       }
     ],
     "output": {
-      "type": "block",
+      "type": "item",
       "code": "canjewelry:grindlayeritem-fine",
       "quantity": 1
     }
@@ -55,7 +55,7 @@
       }
     ],
     "output": {
-      "type": "block",
+      "type": "item",
       "code": "canjewelry:grindlayeritem-fine",
       "quantity": 1
     }

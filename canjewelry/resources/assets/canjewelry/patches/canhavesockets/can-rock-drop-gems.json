@@ -69,6 +69,31 @@
             "avg": 0.00005,
             "var": 0
           }
+        },
+
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-ruby",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-ruby",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-ruby",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
         }
       ],
       "rock-whitemarble": [
@@ -201,6 +226,31 @@
         {
           "type": "item",
           "code": "canjewelry:gem-rough-normal-diamond",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        },
+
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-ruby",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-ruby",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-ruby",
           "quantity": {
             "avg": 0.00005,
             "var": 0

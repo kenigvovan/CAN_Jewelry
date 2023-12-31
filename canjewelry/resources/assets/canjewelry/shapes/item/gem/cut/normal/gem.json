@@ -6,7 +6,7 @@
 	"textureWidth": 16,
 	"textureHeight": 16,
 	"textures": {
-		"quartz": "game:block/stone/gem/quartz"
+		"gem": "game:block/stone/gem/gem"
 	},
 	"elements": [
 		{
@@ -28,12 +28,12 @@
 					"from": [ 0.6, 0.7, 0.6 ], 
 					"to": [ 2.6, 1.2, 2.6 ], 
 					"faces": {
-						"north": { "texture": "#quartz", "uv": [ 8.0, 6.5, 10.0, 7.0 ] },
-						"east": { "texture": "#quartz", "uv": [ 9.0, 10.5, 11.0, 11.0 ] },
-						"south": { "texture": "#quartz", "uv": [ 10.5, 7.0, 12.5, 7.5 ] },
-						"west": { "texture": "#quartz", "uv": [ 6.5, 9.0, 8.5, 9.5 ] },
-						"up": { "texture": "#quartz", "uv": [ 9.5, 8.0, 11.5, 10.0 ] },
-						"down": { "texture": "#quartz", "uv": [ 5.0, 6.0, 7.0, 8.0 ] }
+						"north": { "texture": "#gem", "uv": [ 8.0, 6.5, 10.0, 7.0 ] },
+						"east": { "texture": "#gem", "uv": [ 7.5, 8.0, 9.5, 8.5 ] },
+						"south": { "texture": "#gem", "uv": [ 8.5, 6.5, 10.5, 7.0 ] },
+						"west": { "texture": "#gem", "uv": [ 3.5, 8.5, 5.5, 9.0 ] },
+						"up": { "texture": "#gem", "uv": [ 9.5, 8.0, 11.5, 10.0 ] },
+						"down": { "texture": "#gem", "uv": [ 5.0, 6.0, 7.0, 8.0 ] }
 					}
 				},
 				{
@@ -41,12 +41,12 @@
 					"from": [ 0.8, 0.5, 0.8 ], 
 					"to": [ 2.4, 1.4, 2.4 ], 
 					"faces": {
-						"north": { "texture": "#quartz", "uv": [ 3.0, 9.5, 4.5, 10.0 ] },
-						"east": { "texture": "#quartz", "uv": [ 10.5, 9.0, 12.0, 9.5 ] },
-						"south": { "texture": "#quartz", "uv": [ 4.5, 7.5, 6.0, 8.0 ] },
-						"west": { "texture": "#quartz", "uv": [ 5.0, 9.0, 6.5, 9.5 ] },
-						"up": { "texture": "#quartz", "uv": [ 13.0, 11.5, 14.5, 13.0 ] },
-						"down": { "texture": "#quartz", "uv": [ 4.0, 3.0, 5.5, 4.5 ] }
+						"north": { "texture": "#gem", "uv": [ 8.0, 6.5, 9.5, 7.0 ] },
+						"east": { "texture": "#gem", "uv": [ 7.5, 8.0, 9.0, 8.5 ] },
+						"south": { "texture": "#gem", "uv": [ 8.5, 6.5, 10.0, 7.0 ] },
+						"west": { "texture": "#gem", "uv": [ 3.5, 8.5, 5.0, 9.0 ] },
+						"up": { "texture": "#gem", "uv": [ 10.0, 11.0, 11.5, 12.5 ] },
+						"down": { "texture": "#gem", "uv": [ 5.0, 6.0, 6.5, 7.5 ] }
 					}
 				}
 			]

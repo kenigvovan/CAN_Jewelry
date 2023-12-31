@@ -59,6 +59,10 @@
   "item-gem-rough-flawed-uranium": "Medium rough uranium",
   "item-gem-rough-normal-uranium": "Great rough uranium",
 
+  "item-gem-rough-chipped-ruby": "Small rough ruby",
+  "item-gem-rough-flawed-ruby": "Medium rough ruby",
+  "item-gem-rough-normal-ruby": "Great rough ruby",
+
   //Cut gems
 
   "item-gem-cut-exquisite-diamond": "Great cut diamond",
@@ -97,6 +101,10 @@
   "item-gem-cut-exquisite-uranium": "Great cut uranium",
   "item-gem-cut-flawless-uranium": "Medium cut uranium",
   "item-gem-cut-normal-uranium": "Small cut uranium",
+
+  "item-gem-cut-exquisite-ruby": "Great cut ruby",
+  "item-gem-cut-flawless-ruby": "Medium cut ruby",
+  "item-gem-cut-normal-ruby": "Small cut ruby",
 
   "item-crushed-diamond": "Crushed diamond",
 
@@ -162,10 +170,12 @@
   "buff-name-armorDurabilityLoss": "<font color=\"#99c9f9\">armor durability loss</font>",
   "buff-name-oreDropRate": "<font color=\"#99c9f9\">ore drop</font>",
   "buff-name-healingeffectivness": "<font color=\"#99c9f9\">healing effectivness</font>",
+  "buff-name-rangedWeaponsDamage": "<font color=\"#99c9f9\">ranged weapon damage</font>",
 
-  "block-grindlayeritem-rough": "Rough grindlayer",
-  "block-grindlayeritem-medium": "Medium grindlayer",
-  "block-grindlayeritem-fine": "Fine grindlayer",
+
+  "block-grindlayeritem-rough": "Rough grindlayer(old)",
+  "block-grindlayeritem-medium": "Medium grindlayer(old)",
+  "block-grindlayeritem-fine": "Fine grindlayer(old)",
   "exp_tired": "You feel tired, you won't get more experience today.",
   "game:tabname-canjewelry": "CANJewelry",
 
@@ -183,5 +193,8 @@
   "item-canstrap-bismuthbronze": "Bismuth bronze strap",
   "item-canstrap-gold": "Gold strap",
   "block-canpan-steel": "Steel pan",
-  "block-canpan-iron": "Iron pan"
+  "block-canpan-iron": "Iron pan",
+  "item-grindlayeritem-rough": "Rough grindlayer",
+  "item-grindlayeritem-medium": "Medium grindlayer",
+  "item-grindlayeritem-fine": "Fine grindlayer"
 }

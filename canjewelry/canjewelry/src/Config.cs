@@ -18,13 +18,14 @@ namespace canjewelry.src
         (new Dictionary<string, HashSet<string>> {
             {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
             {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace" } },
-            {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
+            {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" } },
             {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace" } },
-            {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
-            {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace" } },
-            {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
-            {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" } },
-            {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" } }
+            {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" } },
+            {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" } },
+            {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" } },
+            {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" } },
+            {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" } },
+            {"ruby",  new HashSet<string>{ "bow" }}
         });
         public Dictionary<string, Dictionary<string, float>> gems_buffs = new Dictionary<string, Dictionary<string, float>>
             (new Dictionary<string, Dictionary<string, float>>  {
@@ -81,6 +82,12 @@ namespace canjewelry.src
                     { "2", 0.1f },
                     { "3", 0.12f }
                     }
+                },
+                { "rangedWeaponsDamage", new Dictionary<string, float>{
+                    { "1", 0.02f },
+                    { "2", 0.04f },
+                    { "3", 0.09f }
+                    }
                 }
             });
 
@@ -135,6 +142,10 @@ namespace canjewelry.src
             { "armor-legs-chain-*", 1 },
             { "armor-body-chain-*", 2 },
 
+            { "armor-head-antique-*", 1 },
+            { "armor-legs-antique-*", 1 },
+            { "armor-body-antique-*", 2 },
+
 
             { "xmelee:xzweihander-meteoriciron", 1 },
             { "xmelee:xzweihander-steel", 2 },
@@ -168,6 +179,10 @@ namespace canjewelry.src
             { "*blade-falx-blackguard-iron", 2 },
             { "*blade-forlorn-iron", 2 },
             { "*blade-longsword-admin", 3 },
+
+            { "bow-simple", 1 },
+            { "bow-recurve", 2 },
+            { "bow-long", 2 },
         });
         public int pan_take_per_use = 8;
     }

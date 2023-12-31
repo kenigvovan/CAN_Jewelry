@@ -9,12 +9,8 @@ using Vintagestory.API.MathTools;
 
 namespace canjewelry.src.blocks
 {
-    public class GrindLayerBlock : Block
+    public class GrindLayerBlock : Item
     {
-        public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
-        {
-            return false;
-        }
         public override int GetItemDamageColor(ItemStack itemstack)
         {
             int maxDurability = GetMaxDurability(itemstack);

@@ -20,7 +20,7 @@
   },
   "shape": { "base": "canjewelry:block/jewelgrinder" },
   "textures": {
-    "steel": {
+    "layer": {
       "base": "game:block/wood/planks/generic"
     },
     "grindlayer": {

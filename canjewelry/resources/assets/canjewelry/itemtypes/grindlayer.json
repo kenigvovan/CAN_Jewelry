@@ -12,6 +12,11 @@
       ]
     }
   ],
+  "durabilitybytype": {
+    "*-rough": 200,
+    "*-medium": 250,
+    "*-fine": 300
+  },
   "attributes": {
     "handbook": {
       "groupBy": [ "crushed-*" ],
@@ -28,11 +33,7 @@
       "*-medium": 1,
       "*-fine": 2
     },
-    "durabilitybytype": {
-      "*-rough": 200,
-      "*-medium": 250,
-      "*-fine": 300
-    },
+
     "displaycaseable": true,
     "shelvable": true,
     "dissolveInWater": true,
@@ -53,7 +54,7 @@
   "shape": { "base": "encrusting/grindlayer" },
   "texturesByType": {
     "*": {
-      "metal": { "base": "canjewelry:item/grindlayer/{metal}" }
+      "layer": { "base": "canjewelry:item/grindlayer/{metal}" }
     }
   },
   "creativeinventory": {

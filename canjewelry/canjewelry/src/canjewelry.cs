@@ -47,7 +47,7 @@ namespace canjewelry.src
             api.RegisterBlockClass("BlockJewelGrinder", typeof(BlockJewelGrinder));
             api.RegisterBlockEntityClass("BEJewelGrinder", typeof(BEJewelGrinder));
 
-            api.RegisterBlockClass("GrindLayerBlock", typeof(GrindLayerBlock));
+            api.RegisterItemClass("GrindLayerBlock", typeof(GrindLayerBlock));
 
             api.RegisterItemClass("ProcessedGem", typeof(ProcessedGem));
             api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
@@ -60,6 +60,7 @@ namespace canjewelry.src
             base.StartClientSide(api);
            
             capi = api;
+            loadConfig(capi);
             harmonyInstance = new Harmony(harmonyID);
 
             //ItemSlot inSlot, double posX, double posY, double posZ, float size, int color, float dt, bool shading = true, bool origRotate = false, bool showStackSize = true
@@ -247,7 +248,7 @@ namespace canjewelry.src
 
             harmonyInstance = new Harmony(harmonyID);
             sapi = api;
-            loadConfig();
+            loadConfig(sapi);
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryPutInto", new[] { typeof(ItemSlot), typeof(ItemStackMoveOperation).MakeByRefType() }), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryPutInto")));
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TakeOut"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TakeOut")));
@@ -289,17 +290,17 @@ namespace canjewelry.src
             }
             ), 10 * 1000);
         }
-        private void loadConfig()
+        private void loadConfig(ICoreAPI api)
         {
             //Try to read old config
             OldConfig oldConfig = null;
             try
             {
-                oldConfig = sapi.LoadModConfig<OldConfig>(this.Mod.Info.ModID + ".json");
+                oldConfig = api.LoadModConfig<OldConfig>(this.Mod.Info.ModID + ".json");
             }
             catch (Exception e)
             {
-                sapi.Logger.Debug("[canjewelry] No old config found.");
+                api.Logger.Debug("[canjewelry] No old config found.");
             }
             //old config was found and we just copy values from it
             if (oldConfig != null)
@@ -312,25 +313,25 @@ namespace canjewelry.src
                 //make copy of the old config and new to old file
                 try
                 {
-                    sapi.StoreModConfig<OldConfig>(oldConfig, this.Mod.Info.ModID + "_old.json");
-                    sapi.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
+                    api.StoreModConfig<OldConfig>(oldConfig, this.Mod.Info.ModID + "_old.json");
+                    api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
                 }
                 catch(Exception e)
                 {
-                    sapi.Logger.Debug("[canjewelry] " + "Saving old config failed." + e);
+                    api.Logger.Debug("[canjewelry] " + "Saving old config failed." + e);
                 }
                 return;
             }
             //no old config, try to load new format
             else
             {
-                config = sapi.LoadModConfig<Config>(this.Mod.Info.ModID + ".json");
+                config = api.LoadModConfig<Config>(this.Mod.Info.ModID + ".json");
                 if(config == null)
                 {
-                    sapi.Logger.Debug("[canjewelry] " + "Config file not found.");
+                    api.Logger.Debug("[canjewelry] " + "Config file not found.");
                     config = new Config();
-                    sapi.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
-                    sapi.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " new config created and stored.");
+                    api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
+                    api.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " new config created and stored.");
                     return;
                 }                
                 return;

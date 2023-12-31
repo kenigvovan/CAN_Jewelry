@@ -31,10 +31,14 @@
       "*-malachite": "wildCropDropRate",
       "*-olivine": "armorDurabilityLoss",
       "*-quartz": "oreDropRate",
-      "*-uranium": "healingeffectivness"
+      "*-uranium": "healingeffectivness",
+      "*-ruby": "rangedWeaponsDamage"
     },
     "displaycaseable": true,
     "shelvable": true
+  },
+  "textures": {
+    "gem": { "base": "game:block/stone/gem/{gemtype}" }
   },
   "variantgroups": [
     {
@@ -47,11 +51,11 @@
     },
     {
       "code": "gemtype",
-      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium" ]
+      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby" ]
     }
   ],
   "storageFlags": 5,
-  "shape": { "base": "canjewelry:item/gem/{refinestate}/{quality}/{gemtype}" },
+  "shape": { "base": "canjewelry:item/gem/{refinestate}/{quality}/gem" },
   "creativeinventory": {
     "general": [ "*" ],
     "items": [ "*" ],

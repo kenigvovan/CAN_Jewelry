@@ -9,7 +9,7 @@
 	"textureSizes": {
 	},
 	"textures": {
-		"metal": "canjewelry:item/grindlayer/rough",
+		"layer": "canjewelry:item/grindlayer/rough",
 		"wood": "game:item/tool/material/wood"
 	},
 	"elements": [
@@ -20,27 +20,27 @@
 			"rotationOrigin": [ 3.0, 0.0, 3.0 ],
 			"faces": {
 				"north": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
 				},
 				"east": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
 				},
 				"south": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
 				},
 				"west": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 10.0, 1.0 ]
 				},
 				"up": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 10.0, 10.0 ]
 				},
 				"down": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 10.0, 10.0 ]
 				}
 			}
@@ -52,27 +52,27 @@
 			"rotationOrigin": [ 6.0, 1.0, 6.0 ],
 			"faces": {
 				"north": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
 				},
 				"east": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
 				},
 				"south": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
 				},
 				"west": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 4.0, 1.0 ]
 				},
 				"up": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 4.0, 4.0 ]
 				},
 				"down": {
-					"texture": "#metal",
+					"texture": "#layer",
 					"uv": [ 0.0, 0.0, 4.0, 4.0 ]
 				}
 			}
