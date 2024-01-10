@@ -66,7 +66,7 @@
     "variantGroups": {
       "loop": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
       "socket": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
-      "gem": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium" ]
+      "gem": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby" ]
     },
     "allowedVariants": [
       {

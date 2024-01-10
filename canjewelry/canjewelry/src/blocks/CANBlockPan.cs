@@ -167,7 +167,7 @@ namespace canjewelry.src.blocks
                 return;
             }
             string key = "canjewelry:pan-filled-" + blockMaterialCode + target.ToString();
-            renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MeshRef>(capi, key, delegate
+            renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, key, delegate
             {
                 AssetLocation shapeloc = new AssetLocation("canjewelry:shapes/block/filled.json");
                 Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, shapeloc);
@@ -177,7 +177,7 @@ namespace canjewelry.src.blocks
                 this.ownTextureSource = capi.Tesselator.GetTextureSource(this, 0, false);
                 MeshData meshdata;
                 capi.Tesselator.TesselateShape("filledpan", shape, out meshdata, this, null, 0, 0, 0, null, null);
-                return capi.Render.UploadMesh(meshdata);
+                return capi.Render.UploadMultiTextureMesh(meshdata);
             });
         }
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)

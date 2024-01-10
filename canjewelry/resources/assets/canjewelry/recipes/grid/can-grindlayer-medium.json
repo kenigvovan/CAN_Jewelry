@@ -1,6 +1,6 @@
 ﻿[
   {
-
+    "enabled": false,
     "ingredientPattern": "_T_,TPT,DDD",
     "ingredients": {
       "P": {
@@ -30,7 +30,7 @@
     }
   },
   {
-
+    "enabled": false,
     "ingredientPattern": "_T_,TPT,DDD",
     "ingredients": {
       "P": {
@@ -53,11 +53,6 @@
     "name": "cangrindlayer-medium-bl",
     "width": 3,
     "height": 3,
-    "dependsOn": [
-      {
-        "modid": "necessaries"
-      }
-    ],
     "output": {
       "type": "item",
       "code": "canjewelry:grindlayeritem-medium",

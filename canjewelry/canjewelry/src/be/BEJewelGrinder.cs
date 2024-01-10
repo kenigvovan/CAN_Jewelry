@@ -29,7 +29,8 @@ namespace canjewelry.src.jewelry
             {"diamond", -603535372},
             {"malachite", -597371700},
             {"quartz", -591214665},
-            {"uranium,", -603556450}
+            {"uranium,", -603556450},
+            {"ruby", -590997970}
         };
         private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
         //private ITextureAtlasAPI targetAtlas;

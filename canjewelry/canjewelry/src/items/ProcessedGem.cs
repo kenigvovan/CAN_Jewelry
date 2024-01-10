@@ -64,11 +64,11 @@ namespace canjewelry.src.jewelry
                 return this.targetAtlas.Size;
             }
         }
-        private Dictionary<int, MeshRef> meshrefs
+        private Dictionary<int, MultiTextureMeshRef> meshrefs
         {
             get
             {
-                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MeshRef>>(this.api, "processedmeshrefs", () => new Dictionary<int, MeshRef>());
+                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "processedmeshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
             }
         }
         public string Construction
@@ -130,7 +130,7 @@ namespace canjewelry.src.jewelry
             return jsonItemStack;
         }
         public static Dictionary<string, int> gemSizeToInt = new Dictionary<string, int>{ {"normal", 100 }, { "flawed", 200 }, { "chipped", 300 } };
-        public static Dictionary<string, int> gemBaseToInt = new Dictionary<string, int> { { "olivine_peridot", 10 }, { "corundum", 20 }, { "diamond", 30 }, { "emerald", 40 }, { "fluorite", 50 }, { "lapislazuli", 60 }, { "malachite", 70 }, { "quartz", 80 }, { "uranium", 90 } };
+        public static Dictionary<string, int> gemBaseToInt = new Dictionary<string, int> { { "olivine_peridot", 10 }, { "corundum", 20 }, { "diamond", 30 }, { "emerald", 40 }, { "fluorite", 50 }, { "lapislazuli", 60 }, { "malachite", 70 }, { "quartz", 80 }, { "uranium", 90 }, { "ruby", 100 } };
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             if (target == EnumItemRenderTarget.HandFp)
@@ -155,7 +155,7 @@ namespace canjewelry.src.jewelry
             if (meshrefid == 0 || !this.meshrefs.TryGetValue(meshrefid, out renderinfo.ModelRef))
             {
                 int id = meshrefid;
-                MeshRef modelref = capi.Render.UploadMesh(this.GenMesh(itemstack, capi.ItemTextureAtlas));
+                MultiTextureMeshRef modelref = capi.Render.UploadMultiTextureMesh(this.GenMesh(itemstack, capi.ItemTextureAtlas));
                
                 renderinfo.ModelRef = (this.meshrefs[id] = modelref);
                 itemstack.TempAttributes.SetInt("meshRefId", id);

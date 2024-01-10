@@ -65,8 +65,8 @@ namespace canjewelry.src
 
             //ItemSlot inSlot, double posX, double posY, double posZ, float size, int color, float dt, bool shading = true, bool origRotate = false, bool showStackSize = true
             harmonyInstance.Patch(typeof(Vintagestory.API.Client.GuiElementItemSlotGridBase).GetMethod("ComposeSlotOverlays", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage")));
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.EntityAgent).GetMethod("addGearToShape",
-                BindingFlags.NonPublic | BindingFlags.Instance, new[] { typeof(ItemSlot), typeof(Shape), typeof(string) }), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_addGearToShape")));
+           // harmonyInstance.Patch(typeof(Vintagestory.API.Common.EntityAgent).GetMethod("addGearToShape",
+            //    BindingFlags.NonPublic | BindingFlags.Instance, new[] { typeof(ItemSlot), typeof(Shape), typeof(string) }), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_addGearToShape")));
              harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));

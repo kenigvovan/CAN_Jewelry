@@ -13,20 +13,21 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace canjewelry.src.items
 {
-    public class CANItemSimpleNecklace : CANItemWearable
+    public class CANItemSimpleNecklace : CANItemWearable, IWearableShapeSupplier
     {
 
         public override Size2i AtlasSize => curAtlas.Size;
 
-        private Dictionary<int, MeshRef> meshrefs
+        private Dictionary<int, MultiTextureMeshRef> meshrefs
         {
             get
             {
-                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MeshRef>>(this.api, "canneckmeshrefs", () => new Dictionary<int, MeshRef>());
+                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "canneckmeshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
             }
         }
 
@@ -46,6 +47,10 @@ namespace canjewelry.src.items
         {
             get
             {
+                if(!textureCode.Equals("seraph"))
+                {
+                    var c = 3;
+                }
                 if(this.tmpTextures.TryGetValue(textureCode, out var res))
                 {
                     return this.getOrCreateTexPos(res);
@@ -239,7 +244,7 @@ namespace canjewelry.src.items
             if (meshrefid == 0 || !this.meshrefs.TryGetValue(meshrefid, out renderinfo.ModelRef))
             {
                 int id = this.meshrefs.Count + 1;
-                MeshRef modelref = capi.Render.UploadMesh(this.GenMesh(itemstack, capi.ItemTextureAtlas));
+                MultiTextureMeshRef modelref = capi.Render.UploadMultiTextureMesh(this.GenMesh(itemstack, capi.ItemTextureAtlas));
                 renderinfo.ModelRef = (this.meshrefs[id] = modelref);
                 itemstack.TempAttributes.SetInt("meshRefId", id);
             }
@@ -499,6 +504,91 @@ namespace canjewelry.src.items
                 "-",
                 gem
             });
+        }
+
+        public Shape GetShape(ItemStack stack, EntityAgent forEntity, string texturePrefixCode)
+        {
+            
+            JsonObject attributes = stack.Collectible.Attributes;
+            EntityProperties entityType = capi.World.GetEntityType(new AssetLocation("player"));
+            Shape loadedShape = entityType.Client.LoadedShape;
+            AssetLocation @base = entityType.Client.Shape.Base;
+            Shape shape = new Shape
+            {
+                Elements = loadedShape.CloneElements(),
+                Animations = loadedShape.Animations,
+                AnimationsByCrc32 = loadedShape.AnimationsByCrc32,
+                AttachmentPointsByCode = loadedShape.AttachmentPointsByCode,
+                JointsById = loadedShape.JointsById,
+                TextureWidth = loadedShape.TextureWidth,
+                TextureHeight = loadedShape.TextureHeight,
+                Textures = null
+            };
+            CompositeShape compositeShape = (attributes["attachShape"].Exists ? attributes["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain) : ((stack.Class == EnumItemClass.Item) ? stack.Item.Shape : stack.Block.Shape));
+
+            AssetLocation assetLocation = compositeShape.Base.CopyWithPath("shapes/" + compositeShape.Base.Path + ".json");
+            Shape shape2 = Vintagestory.API.Common.Shape.TryGet(capi, assetLocation);
+           // this.capi.EntityTextureAtlas
+            //(stack.Class == EnumItemClass.Item ? stack.Item.Shape : stack.Block.Shape) : attrObj["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain);
+            //this.Attributes["unfoldShapeStep1"].AsObject<CompositeShape>(null).Base.WithPathAppendixOnce(".json").WithPathPrefixOnce("shapes/");
+            //var sh = Vintagestory.API.Common.Shape.TryGet(api, this.Attributes["unfoldShapeStep1"].AsObject<CompositeShape>(null).Base.WithPathAppendixOnce(".json").WithPathPrefixOnce("shapes/"));
+            Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
+            string loop = stack.Attributes.GetString("loop", null);
+            string socket = stack.Attributes.GetString("socket", null);
+            string gem = stack.Attributes.GetString("gem", null);
+
+            //new AssetLocation("canjewelry:item/gem/notvis.png");
+            newdict["loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
+            newdict["socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
+            if (gem == "none")
+            {
+                newdict["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+            }
+            else
+            {
+                newdict["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
+            }
+
+
+            foreach (var val in newdict)
+            {
+                CompositeTexture ctex = new CompositeTexture() { Base = val.Value };
+
+                ICoreClientAPI capi = this.capi as ICoreClientAPI;
+
+                AssetLocation armorTexLoc = val.Value;
+
+                // Weird backreference to the shaperenderer. Should be refactored.
+
+                BakedCompositeTexture bakedCtex;
+
+                
+
+                
+                {
+                    int textureSubId = 0;
+                    TextureAtlasPosition texpos;
+
+                    capi.EntityTextureAtlas.GetOrInsertTexture(armorTexLoc, out textureSubId, out texpos, () =>
+                    {
+                        IAsset texAsset = this.capi.Assets.TryGet(armorTexLoc.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
+                        if (texAsset != null)
+                        {
+                            return texAsset.ToBitmap(capi);
+                        }
+
+                        //capi.World.Logger.Warning("Entity armor shape {0} defined texture {1}, no such texture found.", shapePath, armorTexLoc);
+                        return null;
+                    });
+
+                    ctex.Baked = new BakedCompositeTexture() { BakedName = armorTexLoc, TextureSubId = textureSubId };
+
+                    ((EntityClientProperties)forEntity.SidedProperties).Textures[val.Key] = ctex;
+                }
+      
+            }
+
+            return shape2;
         }
 
         // Token: 0x040005F4 RID: 1524

@@ -780,36 +780,6 @@ namespace canjewelry.src
             }
         }
 
-
-        //NOT USED
-        public static void addSocketsOverlays(Context context, ItemSlot slot, int slotId, int slotIndex, ElementBounds[] slotBounds)
-        {
-            return;           
-        }
-        //NOT USED
-        public static IEnumerable<CodeInstruction> Transpiler_ComposeSlotOverlays_Add_Socket_Overlays(IEnumerable<CodeInstruction> instructions)
-        {
-            bool found = false;
-            var codes = new List<CodeInstruction>(instructions);
-            var proxyMethod = AccessTools.Method(typeof(harmPatch), "addSocketsOverlays");
-
-            for (int i = 0; i < codes.Count; i++)
-            {
-                if (!found &&
-                    codes[i].opcode == OpCodes.Ldarg_0 && codes[i + 1].opcode == OpCodes.Ldloc_1 && codes[i + 2].opcode == OpCodes.Ldarg_0 && codes[i - 1].opcode == OpCodes.Call)
-                {
-                    yield return new CodeInstruction(OpCodes.Ldloc_2);
-                    yield return new CodeInstruction(OpCodes.Ldarg_1);
-                    yield return new CodeInstruction(OpCodes.Ldarg_2);
-                    yield return new CodeInstruction(OpCodes.Ldarg_3);
-                    yield return new CodeInstruction(OpCodes.Ldarg_0);
-                    yield return new CodeInstruction(OpCodes.Ldfld, ElementBoundsSlotGrid);
-                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
-                    found = true;
-                }
-                yield return codes[i];
-            }
-        }
         private static LoadedTexture zoomed = new LoadedTexture(canjewelry.capi);
         static MethodInfo dynMethodGenContext = typeof(GuiElementItemSlotGridBase).GetMethod("genContext",
                    BindingFlags.NonPublic | BindingFlags.Instance);
@@ -890,11 +860,15 @@ namespace canjewelry.src
                 return true;
             }
             Shape armorShape = null;
+            string texturePrefixCode = stack.Collectible.Code.ToShortString();
             AssetLocation shapePath = null;
             CompositeShape compArmorShape = null;
             if (stack.Collectible is IWearableShapeSupplier iwss)
             {
-                armorShape = iwss.GetShape(stack, __instance);
+                if (iwss != null)
+                {
+                    armorShape = iwss.GetShape(stack, __instance, texturePrefixCode);
+                }
             }
 
             if (armorShape == null)
@@ -960,8 +934,8 @@ namespace canjewelry.src
                 string gem = slot.Itemstack.Attributes.GetString("gem", null);
 
                 //new AssetLocation("canjewelry:item/gem/notvis.png");
-                newdict[stack.Collectible.Code + "-" + "loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
-                newdict[stack.Collectible.Code + "-" + "socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
+                newdict[stack.Collectible.Code + "-" + "loop"] = new AssetLocation("game:block/metal/sheet/" + loop + "1.png");
+                newdict[stack.Collectible.Code + "-" + "socket"] = new AssetLocation("game:block/metal/plate/" + socket + ".png");
                 if (gem == "none")
                 {
                     newdict[stack.Collectible.Code + "-" + "gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
