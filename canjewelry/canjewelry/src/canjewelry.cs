@@ -270,6 +270,8 @@ namespace canjewelry.src
             serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             api.Event.PlayerNowPlaying += sendNewValues;
             api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, rr);         
+
+            commands.RegisterCommands.registerServerCommands(sapi);
         }
         public void rr()
         {
