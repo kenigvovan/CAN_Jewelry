@@ -12,7 +12,7 @@ namespace canjewelry.src.inventories
     public class InventoryJewelerSet : InventoryBase, ISlotProvider
     {
         private ItemSlot[] slots;
-        public int invSize = 5;
+        public int invSize = 9;
         public InventoryJewelerSet(string className, string instanceID, ICoreAPI api) : base(className, instanceID, api)
         {
             slots = GenEmptySlots(invSize);
@@ -21,6 +21,10 @@ namespace canjewelry.src.inventories
          : base(inventoryID, api)
         {
             slots = GenEmptySlots(invSize);
+            foreach(var slot in slots) 
+            {
+                slot.MaxSlotStackSize = 1;
+            }
             // this.outputSlot = new ItemSlotCraftingTableOutput((InventoryBase)this);
             // this.InvNetworkUtil = (IInventoryNetworkUtil)new CraftingInventoryNetworkUtil((InventoryBase)this, api);
         }

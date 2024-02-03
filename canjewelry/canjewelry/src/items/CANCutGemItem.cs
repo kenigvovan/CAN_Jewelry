@@ -23,7 +23,8 @@ namespace canjewelry.src.jewelry
             {
                 float buffValue = canjewelry.config.gems_buffs[buffName][inSlot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()] * 100;
                 dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName));
-                dsc.Append(buffValue > 0 ? " +" + buffValue + "%" : " " + buffValue + "%");
+                var c =    Math.Round(buffValue);
+                dsc.Append(buffValue > 0 ? " +" + Math.Round(buffValue) + "%" : " " + Math.Round(buffValue) + "%");
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Cairo;
+using canjewelry.src.CB;
 using canjewelry.src.items;
 using HarmonyLib;
 
@@ -24,152 +25,20 @@ namespace canjewelry.src
 {
     [HarmonyPatch]
     public class harmPatch
-    {         
-        public static MeshRef quadModel;
-        public static float[] pMatrix = Mat4f.Create();
-       
-        public static void Prefix_AsyncRecompose(Vintagestory.API.Client.GuiElementItemstackInfo __instance)
-        {
+    {
 
-            if(__instance.curSlot == null || __instance.curSlot.Itemstack == null)
-            {
-                return;
-            }
-            
-            
-            ITreeAttribute encrustTree = __instance.curSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-            if (encrustTree == null)
-            {
-                return;
-            }
-            
-            ImageSurface textSurface = new ImageSurface(0, (int)GuiElement.scaled(180), (int)GuiElement.scaled(180));
-            Context context = new Context(textSurface);
-            double tr = GuiElement.scaledi(21);
-            for (int p = 0; p < encrustTree.GetInt("socketsnumber"); p++)
-            {
-                int j = 0;
-                int i = p;
-                if (i > 1)
-                {
-                    j = 1;
-                    i = 0;
-                }
-                ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/socket-" + socketSlot.GetInt("sockettype") + ".png").Location, 255);
+        /***
+          
+         Comment were mostly written after some time after code was added, so at some points I had to guess what I meant before or rewrite some too hideous parts.
+         Enter at your own risk.
+         
+         ***/
 
-
-                context.NewPath();
-                context.LineTo(GuiElement.scaledi(3) + i * (tr), (int)GuiElement.scaled(12) + j * tr);
-                context.LineTo(GuiElement.scaledi(12) + i * (tr), (int)GuiElement.scaled(3) + j * tr);
-                context.LineTo(GuiElement.scaledi(21) + i * (tr), (int)GuiElement.scaled(12) + j * tr);
-                context.LineTo(GuiElement.scaledi(12) + i * (tr), (int)GuiElement.scaled(21) + j * tr);
-                // tr += 10;
-                //context.Translate(tr * i, tr * j);
-                context.ClosePath();
-               // context.Translate(0, -5);
-                context.SetSourceSurface(socketSurface, 0, 0);
-
-                context.FillPreserve();
-                context.Dispose();
-            }
-            LoadedTexture texture = new LoadedTexture(canjewelry.capi);
-            canjewelry.capi.Gui.LoadOrUpdateCairoTexture(textSurface, true, ref __instance.texture);
-            //canmods.capi.Render.Render2DLoadedTexture(texture, (int)__instance.Bounds.renderX, (int)__instance.Bounds.renderY , 0);
-            context.Dispose();
-            texture.Dispose();
-            textSurface.Dispose();
-            return;
-        }
-        public static void Postfix_ItemSlot_ActivateSlotRightClick(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
-        {
-            Postfix_ItemSlot_ActivateSlotLeftClick(__instance, sourceSlot, ref op);
-        }
-
-        public static void Postfix_ItemSlot_ActivateSlotLeftClick(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
-        {
-            /*if(!__result)
-            {
-                return;
-            }*/
-            if (__instance.Inventory.Api.Side == EnumAppSide.Client)
-            {
-                return;
-            }
-            if (__instance.Itemstack == null)
-            {
-                return;
-            }
-            //wth
-            if(op.MovedQuantity > 0)
-            {
-                //var c = 3;
-                //return;
-            }
-            else
-            {
-                //var c = 3;
-                return;
-            }
-            if (__instance.Itemstack != null && sourceSlot.Itemstack != null)
-            {
-                if (sourceSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
-                {
-                    if (__instance.Inventory.ClassName.Equals("character") && sourceSlot.Inventory.ClassName.Equals("mouse"))
-                    {
-                        ITreeAttribute encrustTreeHere = sourceSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                        for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
-                        {
-                            ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                            applyBuffFromItemStack(socketSlot, (sourceSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
-                        }
-                    }
-                    return;
-                }
-            }
-            if (!__instance.Inventory.ClassName.Equals("hotbar") && !__instance.Inventory.ClassName.Equals("character"))
-            {
-                return;
-            }
-            if (__instance.Itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                if (__instance.Inventory.ClassName.Equals("hotbar"))
-                {
-                    if (__instance.Inventory.GetSlotId(__instance) == (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber)
-                    {
-                        if (!(__instance.Itemstack.Item != null && __instance.Itemstack.Item is ItemWearable))
-                        {
-                            ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                            for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
-                            {
-                                ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
-                            }
-                        }
-                    }
-                }
-                else if(__instance.Inventory.ClassName.Equals("character"))
-                {
-                    ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
-                    {
-                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
-                    }
-                }
-                else
-                {
-                    ITreeAttribute encrustTree = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
-                    {
-                        ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
-                        // (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value - socketSlot.GetFloat("attributeBuffValue"), true);
-                    }
-                }
-            }
-        }
-
+        /*
+          
+         Add or remove buff on player, buff type and value are taken from tree attribute and applied on ep.
+          
+         */
         public static void applyBuffFromItemStack(ITreeAttribute socketSlot, EntityPlayer ep, bool add)
         {
             if (!socketSlot.HasAttribute("attributeBuff"))
@@ -178,6 +47,7 @@ namespace canjewelry.src
             }
             if (add)
             {
+                //(ep.Player as IServerPlayer).ServerData.CustomPlayerData.TryGetValue();
                 if (ep.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey.ContainsKey("canencrusted"))
                 {
                     ep.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", ep.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value + socketSlot.GetFloat("attributeBuffValue"), true);
@@ -198,56 +68,68 @@ namespace canjewelry.src
                     ep.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", 0, true);
                 }
             }
+
+
+
+            //canjewelry.sapi.SendMessage(ep.Player, 0, add.ToString() + ep.Stats[socketSlot.GetString("attributeBuff")].GetBlended().ToString() + socketSlot.GetString("attributeBuff"), EnumChatType.Notification);
         }
-        //Something dropped from inventory if it s hotbar we change only if it was activeslot, if there is character inventory we "-" buff, if another inventory we just ignore
-        public static void Postfix_ItemSlot_TryFlipWith(Vintagestory.API.Common.ItemSlot __instance, ItemSlot itemSlot, ref bool __result)
+
+        /*
+         
+         Handle right/left click on slot.
+
+         */
+        public static void Postfix_ItemSlot_ActivateSlotRightClick(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
         {
-            //__instance from
-            //itemSlot to
-
-
-            /*
-             * we get from armor slot
-             * itemSlot(character) is null and __instance(hotbar) has item
-             * 
-             * we get from hotbar
-             * itemSlot has item and __instance is null
-            //<--0
-            /*if(!__result)
-            {
-                return;
-            }*/
             if (__instance.Inventory.Api.Side == EnumAppSide.Client)
             {
                 return;
             }
-    
-            //__instance - source
-            //itemSlot - sink
 
-            //we are interested only in armor slots and hotbar
-            if(!__instance.Inventory.ClassName.Equals("hotbar") && !__instance.Inventory.ClassName.Equals("character"))
+            //Because if two of them are present then tryFlip is called and we buff/debuff 2 times
+            if(__instance.Itemstack != null && sourceSlot.Itemstack != null)
             {
                 return;
             }
-
-            //if we get item with buff
-            if(itemSlot.Inventory.ClassName.Equals("character") && itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
+            if (__instance.Itemstack == null)
             {
-                ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                return;
+            }
+           /* if(sourceSlot.Itemstack == null)
+            {
+                return;
+            }*/
+
+            if (__instance.Itemstack != null && sourceSlot.Itemstack != null)
+            {
+                if (sourceSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
                 {
-                    ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                    if (__instance.Inventory.ClassName.Equals("character") && sourceSlot.Inventory.ClassName.Equals("mouse"))
+                    {
+                        ITreeAttribute encrustTreeHere = sourceSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                        for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                        {
+                            ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                            if (socketSlot != null)
+                            {
+                                applyBuffFromItemStack(socketSlot, (sourceSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                            }
+                        }
+                    }
+                    return;
                 }
             }
-            else if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
+            if (!__instance.Inventory.ClassName.Equals("hotbar") && !__instance.Inventory.ClassName.Equals("character"))
+            {
+                return;
+            }
+            if (__instance.Itemstack.Attributes.HasAttribute("canencrusted"))
             {
                 if (__instance.Inventory.ClassName.Equals("hotbar"))
                 {
-                    if (!(__instance.Itemstack.Item != null && __instance.Itemstack.Item is ItemWearable))
+                    if (__instance.Inventory.GetSlotId(__instance) == (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber)
                     {
-                        if (__instance.Inventory.GetSlotId(__instance) == (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber)
+                        if (!(__instance.Itemstack.Item != null && (__instance.Itemstack.Item is ItemWearable || __instance.Itemstack.Item is CANItemWearable)))
                         {
                             ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
                             for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
@@ -258,14 +140,16 @@ namespace canjewelry.src
                         }
                     }
                 }
-                //????
-                else if(__instance.Inventory.ClassName.Equals("character"))
+                else if (__instance.Inventory.ClassName.Equals("character"))
                 {
                     ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
                     for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
                     }
                 }
                 else
@@ -274,245 +158,219 @@ namespace canjewelry.src
                     for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
-                        // (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value - socketSlot.GetFloat("attributeBuffValue"), true);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
                     }
                 }
             }
+        }
 
-            //we can flip with empty slot and take armor from slot
-            if(itemSlot.Inventory.ClassName.Equals("character") && __instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
+        public static void Postfix_ItemSlot_ActivateSlotLeftClick(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sourceSlot, ref ItemStackMoveOperation op)
+        {
+            if (!(op.MovedQuantity > 0))
             {
-                ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
-                {
-                    ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
-                }
+                return;
+            }
+            Postfix_ItemSlot_ActivateSlotRightClick(__instance, sourceSlot, ref op);
+        }
+
+       
+        //Something dropped from inventory if it s hotbar we change only if it was activeslot, if there is character inventory we "-" buff, if another inventory we just ignore
+
+        /*
+
+         Triggered when we have item in mouse slot and click on another slot, point with mouse on one slot and press hotbar button (even active one)
+
+        */
+        public static void Postfix_ItemSlot_TryFlipWith(Vintagestory.API.Common.ItemSlot __instance, ItemSlot itemSlot, ref bool __result)
+        {
+            //__instance from
+            //itemSlot to
+            if(!__result)
+            {
+                return;
+            }
+
+            if (__instance.Inventory.Api.Side == EnumAppSide.Client)
+            {
                 return;
             }
 
 
-            //buff is taken from us
-            if(itemSlot.Itemstack == null || !itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
+            //in - itemSlot
+            //out - __instance
+
+            if (!__instance.Inventory.ClassName.Equals("character") && !__instance.Inventory.ClassName.Equals("hotbar") && !itemSlot.Inventory.ClassName.Equals("character") && !itemSlot.Inventory.ClassName.Equals("hotbar"))
             {
                 return;
             }
 
-            if (itemSlot.Inventory.ClassName.Equals("hotbar"))
+            int newItemInSlotId = itemSlot.Inventory.GetSlotId(itemSlot);
+            int oldItemInSlotId = __instance.Inventory.GetSlotId(__instance);
+            /*int activeSlotId = (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
+            bool newItemBuffApplied = false;*/
+
+
+            //we got new item in wearable slot of character
+            if (itemSlot.Inventory.ClassName.Equals("character"))
             {
-                if (itemSlot.Inventory.GetSlotId(itemSlot) == (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber)
+                if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
                 {
                     ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
                     for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
+                    }
+                }
+                if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
+                {
+                    ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
+                    }
+                }
+            }
+            else if (__instance.Inventory.ClassName.Equals("character"))
+            {
+                if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
+                {
+                    ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
+                    }
+                }
+                if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
+                {
+                    ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
+                    }
+                }
+            }
+            //click with item in mouse on slot in hotbar
+            else if (itemSlot.Inventory.ClassName.Equals("mouse") && __instance.Inventory.ClassName.Equals("hotbar"))
+            {
+                int activeSlotId = (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
+                if (activeSlotId == oldItemInSlotId)
+                {
+                    if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted") && !(itemSlot.Itemstack.Item is ItemWearable || itemSlot.Itemstack.Item is CANItemWearable))
+                    {
+                        ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                        for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                        {
+                            ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                            applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
+                    }
+                    if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted") && !(__instance.Itemstack.Item is ItemWearable || __instance.Itemstack.Item is CANItemWearable))
+                    {
+                        ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                        for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                        {
+                            ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
+                    }
+                }
+            }
+
+            else if (itemSlot.Inventory.ClassName.Equals("mouse"))
+            {
+                if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
+                {
+                    ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                    }
+                }
+                if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
+                {
+                    ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                    }
+                }
+            }
+            else if (itemSlot.Inventory.ClassName.Equals("hotbar"))
+            {
+                if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted") && !(itemSlot.Itemstack.Item is ItemWearable || itemSlot.Itemstack.Item is CANItemWearable))
+                {
+                    ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                    }
+                }
+                if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted") && !(__instance.Itemstack.Item is ItemWearable || __instance.Itemstack.Item is CANItemWearable))
+                {
+                    ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                    }
+                }
+            }
+            else if (__instance.Inventory.ClassName.Equals("hotbar"))
+            {
+                if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
+                {
+                    ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                    {
+                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                        //if it is chect there is no player there
                         applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
                     }
                 }
-                return;
-            }
-
-            if (!(itemSlot.Itemstack.Item != null && itemSlot.Itemstack.Item is ItemWearable))
-            {
-                ITreeAttribute encrustTreeEncrusted = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                for (int i = 0; i < encrustTreeEncrusted.GetInt("socketsnumber"); i++)
+                if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
                 {
-                    ITreeAttribute socketSlot = encrustTreeEncrusted.GetTreeAttribute("slot" + i.ToString());
-                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
-                    // (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value - socketSlot.GetFloat("attributeBuffValue"), true);
-                }
-            }
-
-            /////////////################
-            /*if (itemSlot.Itemstack == null || !itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                return;
-            }
-            if(!(itemSlot.Inventory.ClassName.Equals("hotbar")))
-            {
-                return;
-            }
-
-            if (!(itemSlot.Inventory.ClassName.Equals("hotbar") && !itemSlot.Inventory.ClassName.Equals("character")))
-            {
-                return;
-            }
-
-            if (!itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                return;
-            }
-            if (itemSlot.Inventory.ClassName.Equals("hotbar"))
-            {
-                if (itemSlot.Inventory.GetSlotId(itemSlot) == (itemSlot.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber)
-                {
-                    ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                    ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
                     for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
                     }
                 }
-                return;
             }
-            ITreeAttribute encrustTree = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-            for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
-            {
-                ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
-                // (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value - socketSlot.GetFloat("attributeBuffValue"), true);
-            }*/
-        }
-
-        //Move item little bit futher in slotGrid to be able to draw our own texture which we want to be in front of item texture
-        public static Matrixf myReverseMul(Matrixf instance, float[] matrix, ItemSlot slot)
-        {
-            if(slot.Itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                matrix[14] -= 40;
-            }
-           
-            return instance.ReverseMul(matrix);
-        }
-
-        //We call our myReverseMul to be able move texture
-        public static IEnumerable<CodeInstruction> Transpiler_RenderToGui(IEnumerable<CodeInstruction> instructions)
-        {
-            bool found = false;
-            bool found2 = false;
-            var codes = new List<CodeInstruction>(instructions);
-            var proxyMethod = AccessTools.Method(typeof(harmPatch), "myReverseMul");
-
-            int c = 0;
-            for (int i = 0; i < codes.Count; i++)
-            {
-                
-                if (!found &&
-                    codes[i].opcode == OpCodes.Callvirt && codes[i + 1].opcode == OpCodes.Ldfld && codes[i + 2].opcode == OpCodes.Callvirt && codes[i + 3].opcode == OpCodes.Ldarg_0 && codes[i - 1].opcode == OpCodes.Callvirt)
-                {
-                    found = true;
-                    c++;
-                    yield return new CodeInstruction(OpCodes.Ldarg_1);
-                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
-                    continue;                  
-                }
-                if (!found2 &&
-                   codes[i].opcode == OpCodes.Ldarg_0 && codes[i + 1].opcode == OpCodes.Ldfld && codes[i + 2].opcode == OpCodes.Ldfld && codes[i + 3].opcode == OpCodes.Ldc_I4_1 && codes[i - 1].opcode == OpCodes.Callvirt)
-                {
-                    found2 = true;
-                    c++;
-                }
-                yield return codes[i];
-            }
-        }
-        //In RenderItemstackToGui we draw our own sockets textures if attribute is set
-        public static void Transpiler_RenderInteractiveElements(Vintagestory.Client.NoObf.InventoryItemRenderer __instance, ItemSlot inSlot,
-         double posX,
-         double posY,
-         double posZ,
-         float size)
-        {
-            if(size > GuiElement.scaled(60))
-            {
-                return;
-            }
-            ImageSurface textSurface = new ImageSurface(0, (int)GuiElement.scaled(80), (int)GuiElement.scaled(80));
-            Context context = new Context(textSurface);
-            ITreeAttribute encrustTree = inSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-            if (encrustTree == null)
-            {
-                return;
-            }
-            double width = 48 - GuiElement.scaled(8.0);
-            double height = 48;
-            double tr = GuiElement.scaledi(21);
-            for (int p = 0; p < encrustTree.GetInt("socketsnumber"); p++)
-            {
-                int j = 0;
-                int i = p;
-                if (i > 1)
-                {
-                    j = 1;
-                    i = 0;
-                }
-                ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("canjewelry:textures/item/gem/socket-" + socketSlot.GetInt("sockettype") + ".png").Location, 255);
 
 
-                context.NewPath();
-                context.LineTo(GuiElement.scaledi(3) + i * (tr), (int)GuiElement.scaled(12) + j * tr);
-                context.LineTo(GuiElement.scaledi(12) + i * (tr), (int)GuiElement.scaled(3) + j * tr);
-                context.LineTo(GuiElement.scaledi(21) + i * (tr), (int)GuiElement.scaled(12) + j * tr);
-                context.LineTo(GuiElement.scaledi(12) + i * (tr), (int)GuiElement.scaled(21) + j * tr);
-               // tr += 10;
-                context.Translate(tr * i, tr * j);
-                context.ClosePath();
-                context.SetSourceSurface(socketSurface, 0, 0);
-
-                context.FillPreserve();
-                context.Translate(-tr * i, -tr * j);
-                if (socketSlot.GetInt("size") > 0)
-                {
-                    if (socketSlot.GetInt("size") == 2)
-                    {
-
-                        context.NewPath();
-                        context.Arc((int)GuiElement.scaled(12) + i * (tr), (int)GuiElement.scaled(12) + j * tr, (int)GuiElement.scaled(4), 0, 2 * 3.14);
-                        context.ClosePath();
-
-                        context.Translate(tr * i, tr * j);
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
-                        context.SetSourceSurface(gemSurface, 0, 0);
-
-                        context.Translate(-(tr * i), -tr * j);
-                    }
-                    else if (socketSlot.GetInt("size") == 1)
-                    {
-                        context.NewPath();
-                        context.LineTo((int)GuiElement.scaled(7) + i * (tr), (int)GuiElement.scaled(15) + j * tr);
-                        context.LineTo((int)GuiElement.scaled(12) + i * (tr), (int)GuiElement.scaled(7) + j * tr);
-                        context.LineTo((int)GuiElement.scaled(17) + i * (tr), (int)GuiElement.scaled(15) + j * tr);
-                        context.ClosePath();
-                        context.Translate(i * tr, tr * j);
-
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:texture/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
-                        context.SetSourceSurface(gemSurface, 0, 0);
-
-                        context.Translate(-i * tr, -tr * j);
-                    }
-                    else if (socketSlot.GetInt("size") == 3)
-                    {
-                        context.NewPath();
-                        context.LineTo((int)GuiElement.scaled(8) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(8) + j * tr);
-                        context.LineTo((int)GuiElement.scaled(15) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(8) + j * tr);
-                        context.LineTo((int)GuiElement.scaled(15) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(15) + j * tr);
-                        context.LineTo((int)GuiElement.scaled(8) + i * (int)GuiElement.scaled(tr), (int)GuiElement.scaled(15) + j * tr);
-                        context.ClosePath();
-                        context.Translate(i * tr, tr * j);
-
-                        var gemSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
-                        context.SetSourceSurface(gemSurface, 0, 0);
-
-                        context.Translate(-i * tr, -tr * j);
-                    }
-                    context.FillPreserve();
-
-                }
-            }
-            if (!inSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                return;
-            }
-            LoadedTexture texture = new LoadedTexture(canjewelry.capi);
-            canjewelry.capi.Gui.LoadOrUpdateCairoTexture(textSurface, true, ref texture);
-            canjewelry.capi.Render.Render2DLoadedTexture(texture, (float)(int)(posX - GuiElement.scaledi(22)), (float)(int)(posY - GuiElement.scaledi(22)), (float)((int)posZ));
-            context.Dispose();
-            texture.Dispose();
-            textSurface.Dispose();
             return;
         }
+
         //Active slot item can have canecrusted attribute and buffs player, so we need to know when he change holding item
+
+        /*
+        
+         Catch active slot changed, also it catches moment when active change and we also flip slots. At that moment try_flip patch called as well
+        
+         */
         public static void Postfix_TriggerAfterActiveSlotChanged(Vintagestory.Server.CoreServerEventManager __instance, IServerPlayer player,
             int fromSlot,
             int toSlot)
@@ -528,7 +386,7 @@ namespace canjewelry.src
             }
             if (fromSlot < 11 && playerHotbar[fromSlot].Itemstack != null && playerHotbar[fromSlot].Itemstack.Attributes.HasAttribute("canencrusted"))
             {              
-                if (!(playerHotbar[fromSlot].Itemstack.Item != null && playerHotbar[fromSlot].Itemstack.Item is ItemWearable))
+                if (!(playerHotbar[fromSlot].Itemstack.Item != null && (playerHotbar[fromSlot].Itemstack.Item is ItemWearable || playerHotbar[fromSlot].Itemstack.Item is CANItemWearable)))
                 {
                     ITreeAttribute encrustTreeHere = playerHotbar[fromSlot].Itemstack.Attributes.GetTreeAttribute("canencrusted");
                     if (encrustTreeHere == null)
@@ -538,13 +396,16 @@ namespace canjewelry.src
                     for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, player.Entity, false);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, player.Entity, false);
+                        }
                     }
                 }
             }
             if(toSlot < 11 && playerHotbar[toSlot].Itemstack != null && playerHotbar[toSlot].Itemstack.Attributes.HasAttribute("canencrusted"))
             {
-                if (!(playerHotbar[toSlot].Itemstack.Item != null && playerHotbar[toSlot].Itemstack.Item is ItemWearable))
+                if (!(playerHotbar[toSlot].Itemstack.Item != null && (playerHotbar[toSlot].Itemstack.Item is ItemWearable || playerHotbar[toSlot].Itemstack.Item is CANItemWearable)))
                 {
                     ITreeAttribute encrustTree = playerHotbar[toSlot].Itemstack.Attributes.GetTreeAttribute("canencrusted");
                     if (encrustTree == null)
@@ -554,14 +415,23 @@ namespace canjewelry.src
                     for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, player.Entity, true);
-                        //player.Entity.WatchedAttributes.MarkPathDirty("stats");
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, player.Entity, true);
+                        }
                     }
                 }
             }
         }
-        
+
         //Something dropped from inventory if it s hotbar we change only if it was activeslot, if there is character inventory we "-" buff, if another inventory we just ignore
+        /*
+         
+         Catch droped item event or taken from slot.
+         If it s hotbar we change only if it was activeslot
+         If there is character inventory we "-" buff, if another inventory we just ignore
+
+         */
         public static void Postfix_ItemSlot_TakeOut(Vintagestory.API.Common.ItemSlot __instance, int quantity)
         {
             //<--0
@@ -586,7 +456,7 @@ namespace canjewelry.src
             if (__instance.Inventory.ClassName.Equals("hotbar"))
             {
 
-                if (!(__instance.Itemstack.Item != null && __instance.Itemstack.Item is ItemWearable))
+                if (!(__instance.Itemstack.Item != null && (__instance.Itemstack.Item is ItemWearable || __instance.Itemstack.Item is CANItemWearable)))
                 {
                     if (__instance.Inventory.GetSlotId(__instance) == (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber)
                     {
@@ -604,14 +474,23 @@ namespace canjewelry.src
             for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
             {
                 ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                if (socketSlot != null)
+                {
+                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                }
                 // (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value - socketSlot.GetFloat("attributeBuffValue"), true);
             }
         }
-        //We took new itemstack and check the same way, hotbar for activeslot, character invetory
+
+
+        /*
+
+         We took new itemstack and check the same way as for Postfix_ItemSlot_TakeOut, hotbar for activeslot, character invetory
+
+        */
         public static void Postfix_ItemSlot_TryPutInto(Vintagestory.API.Common.ItemSlot __instance, ItemSlot sinkSlot, ref ItemStackMoveOperation op)
         {
-            //-->0
+
             if(sinkSlot.Inventory == null)
             {
                 return;
@@ -621,7 +500,9 @@ namespace canjewelry.src
                 return;
             }
             if(sinkSlot.Itemstack == null)
-            { return; }
+            { 
+                return; 
+            }
             //if slot == null - was taken away
             // slot has item stack - got new item
             if (sinkSlot != null && sinkSlot.Inventory != null && (sinkSlot.Inventory.ClassName.Equals("hotbar") || sinkSlot.Inventory.ClassName.Equals("character")))
@@ -638,61 +519,66 @@ namespace canjewelry.src
                     }
                 }
 
-                if (!(sinkSlot.Itemstack.Item != null && sinkSlot.Itemstack.Item is ItemWearable))
+                if (!(sinkSlot.Itemstack.Item != null && (sinkSlot.Itemstack.Item is ItemWearable || sinkSlot.Itemstack.Item is CANItemWearable)))
                 {
                     ITreeAttribute encrustTree = sinkSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
                     for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-
-                        applyBuffFromItemStack(socketSlot, (sinkSlot.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (sinkSlot.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
                     }
                 }
             }
         }
 
-        //NOT USED
+        /*
+        
+         Used in transplier Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage for GuiElementItemSlotGridBase.ComposeSlotOverlays()
+         to draw color rhombus
+        
+         */
         public static void addSocketsOverlaysNotDrawItemDamage(ElementBounds[] slotBounds, int slotIndex, ItemSlot slot, LoadedTexture[] slotQuantityTextures, ImageSurface textSurface, Context context)
         {
-            //memory leak
             var unsSlotSize = GuiElementPassiveItemSlot.unscaledSlotSize;
             if(textSurface == null)
             {
                 textSurface = new ImageSurface(0, (int)slotBounds[slotIndex].InnerWidth, (int)slotBounds[slotIndex].InnerHeight);
                 context = new Context(textSurface);
             }
-            //ImageSurface textSurface = new ImageSurface(0, (int)slotBounds[slotIndex].InnerWidth, (int)slotBounds[slotIndex].InnerHeight);
-           // Context context = new Context(textSurface);
+            
             ITreeAttribute encrustTree = slot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
             if (encrustTree == null)
             {
                 return;
             }
-            double width = slotBounds[slotIndex].InnerWidth - GuiElement.scaled(8.0);
-            double height = slotBounds[slotIndex].InnerHeight;
-            //context.Scale(GuiElement.scaled(0.5), GuiElement.scaled(0.5));
-            for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
+
+            for (int i = 0; i < slot.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
             {
                 
                 ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                if (socketSlot.GetString("gemtype").Equals(""))
+                if (socketSlot == null || socketSlot.GetString("gemtype").Equals(""))
                 {
                     continue;
                 }
-                    //i++;
+  
                 var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
-                //context.Rotate(0.9);
+
                 double tr = unsSlotSize / 4;
                 
                 context.NewPath();
+                
                 context.LineTo((int)GuiElement.scaled(0), (int)GuiElement.scaled(unsSlotSize / 8) + i * (int)GuiElement.scaled(tr));
                 context.LineTo((int)GuiElement.scaled(unsSlotSize / 8), (int)GuiElement.scaled(0) + i * (int)GuiElement.scaled(tr));
                 context.LineTo((int)GuiElement.scaled(unsSlotSize / 4), (int)GuiElement.scaled(unsSlotSize/ 8) + i * (int)GuiElement.scaled(tr));
                 context.LineTo((int)GuiElement.scaled(unsSlotSize / 8), (int)GuiElement.scaled(unsSlotSize / 4) + i * (int)GuiElement.scaled(tr));
-                //context.Translate(tr * i, 0);
+               
                 context.ClosePath();
-                context.SetSourceSurface(socketSurface, 0, 0);
                 
+                context.SetSourceSurface(socketSurface, 0, (int)tr * i);
+
                 context.FillPreserve();
                 socketSurface.Dispose();
             }
@@ -701,56 +587,51 @@ namespace canjewelry.src
             textSurface.Dispose();
             return;
         }
+       
         public static MethodInfo GetItemStackFromItemSlot = typeof(ItemSlot).GetMethod("get_Itemstack");
         public static MethodInfo GetAttributesFromItemStack = typeof(ItemStack).GetMethod("get_Attributes");
         public static MethodInfo HasAttributeITreeAttribute = typeof(ITreeAttribute).GetMethod("HasAttribute");
 
         public static FieldInfo ElementBoundsSlotGrid = typeof(GuiElementItemSlotGridBase).GetField("slotBounds", BindingFlags.NonPublic | BindingFlags.Instance);
-        //slotQuantityTextures
+        
         public static FieldInfo slotQuantityTexturesSlotGrid = typeof(GuiElementItemSlotGridBase).GetField("slotQuantityTextures", BindingFlags.NonPublic | BindingFlags.Instance);
-        //NOT USED
+        
         public static IEnumerable<CodeInstruction> Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             bool found = false;
             bool foundSec = false;
-            bool foundRet = false;
             var codes = new List<CodeInstruction>(instructions);
             var proxyMethod = AccessTools.Method(typeof(harmPatch), "addSocketsOverlaysNotDrawItemDamage");
             Label returnLabelNoAttribute = il.DefineLabel();
             Label returnLabelNoAttribute2 = il.DefineLabel();
             for (int i = 0; i < codes.Count; i++)
             {
-                /*if(!foundRet && codes[i].opcode == OpCodes.Ldc_I4_0 && codes[i + 1].opcode == OpCodes.Ldarg_0 && codes[i + 2].opcode == OpCodes.Ldfld && codes[i - 1].opcode == OpCodes.Ret)
-                {
-                    codes[i].labels.Add(returnLabelNoAttribute);
-                    foundRet = true;
-                }*/
-                //!draw
-            if (!found && 
-                    codes[i].opcode == OpCodes.Ldc_I4_1 && codes[i + 1].opcode == OpCodes.Ret && codes[i + 2].opcode == OpCodes.Ldc_I4_0 && codes[i - 1].opcode == OpCodes.Stelem_Ref)
-                {
-                    yield return new CodeInstruction(OpCodes.Ldarg_1);
-                    yield return new CodeInstruction(OpCodes.Callvirt, GetItemStackFromItemSlot);
-                    yield return new CodeInstruction(OpCodes.Callvirt, GetAttributesFromItemStack);
-                    yield return new CodeInstruction(OpCodes.Ldstr, "canencrusted");
-                    yield return new CodeInstruction(OpCodes.Callvirt, HasAttributeITreeAttribute);
-                    yield return new CodeInstruction(OpCodes.Brfalse_S, returnLabelNoAttribute);
+ 
+                if (!found && 
+                        codes[i].opcode == OpCodes.Ldc_I4_1 && codes[i + 1].opcode == OpCodes.Ret && codes[i + 2].opcode == OpCodes.Ldc_I4_0 && codes[i - 1].opcode == OpCodes.Stelem_Ref)
+                    {
+                        yield return new CodeInstruction(OpCodes.Ldarg_1);
+                        yield return new CodeInstruction(OpCodes.Callvirt, GetItemStackFromItemSlot);
+                        yield return new CodeInstruction(OpCodes.Callvirt, GetAttributesFromItemStack);
+                        yield return new CodeInstruction(OpCodes.Ldstr, "canencrusted");
+                        yield return new CodeInstruction(OpCodes.Callvirt, HasAttributeITreeAttribute);
+                        yield return new CodeInstruction(OpCodes.Brfalse_S, returnLabelNoAttribute);
 
                    
-                    yield return new CodeInstruction(OpCodes.Ldarg_0);
-                    yield return new CodeInstruction(OpCodes.Ldfld, ElementBoundsSlotGrid);
-                    yield return new CodeInstruction(OpCodes.Ldarg_3);
-                    yield return new CodeInstruction(OpCodes.Ldarg_1);
-                    yield return new CodeInstruction(OpCodes.Ldarg_0);
-                    yield return new CodeInstruction(OpCodes.Ldfld, slotQuantityTexturesSlotGrid);
-                    yield return new CodeInstruction(OpCodes.Ldloc_1);
-                    yield return new CodeInstruction(OpCodes.Ldloc_2);
-                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
-                    yield return new CodeInstruction(OpCodes.Ldc_I4_1);
-                    yield return new CodeInstruction(OpCodes.Ret);
-                    codes[i].labels.Add(returnLabelNoAttribute);
-                    found = true;
-                }
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Ldfld, ElementBoundsSlotGrid);
+                        yield return new CodeInstruction(OpCodes.Ldarg_3);
+                        yield return new CodeInstruction(OpCodes.Ldarg_1);
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Ldfld, slotQuantityTexturesSlotGrid);
+                        yield return new CodeInstruction(OpCodes.Ldloc_1);
+                        yield return new CodeInstruction(OpCodes.Ldloc_2);
+                        yield return new CodeInstruction(OpCodes.Call, proxyMethod);
+                        yield return new CodeInstruction(OpCodes.Ldc_I4_1);
+                        yield return new CodeInstruction(OpCodes.Ret);
+                        codes[i].labels.Add(returnLabelNoAttribute);
+                        found = true;
+                    }
 
                 if (!foundSec &&
                         codes[i].opcode == OpCodes.Ldloc_2 && codes[i + 1].opcode == OpCodes.Callvirt && codes[i + 2].opcode == OpCodes.Ldloc_1 && codes[i - 1].opcode == OpCodes.Call)
@@ -780,12 +661,6 @@ namespace canjewelry.src
             }
         }
 
-        private static LoadedTexture zoomed = new LoadedTexture(canjewelry.capi);
-        static MethodInfo dynMethodGenContext = typeof(GuiElementItemSlotGridBase).GetMethod("genContext",
-                   BindingFlags.NonPublic | BindingFlags.Instance);
-        static MethodInfo dynMethodGenerateTexture = typeof(GuiElementItemSlotGridBase).GetMethod("generateTexture",
-                  BindingFlags.NonPublic | BindingFlags.Instance, null,  new Type[] { typeof(ImageSurface), typeof(LoadedTexture).MakeByRefType(), typeof(bool) }, null);
-
         public static void Postfix_GetHeldItemInfo(Vintagestory.API.Common.CollectibleObject __instance, ItemSlot inSlot,
         StringBuilder dsc,
         IWorldAccessor world,
@@ -801,9 +676,13 @@ namespace canjewelry.src
                     dsc.Append(Lang.Get("canjewelry:item-can-have-n-sockets", canHaveNsocketsMore)).Append("\n");
                 }
                 
-                for (int i = 0; i < tree.GetInt("socketsnumber"); i++)
+                for (int i = 0; i < itemstack.ItemAttributes["canhavesocketsnumber"].AsInt(); i++)
                 {
                     var treeSlot = tree.GetTreeAttribute("slot" + i);
+                    if(treeSlot == null)
+                    {
+                        continue;
+                    }
                     dsc.Append(Lang.Get("canjewelry:item-socket-tier", treeSlot.GetAsInt("sockettype")));
                     dsc.Append("\n");
                     if(treeSlot.GetString("gemtype") != "")
@@ -816,6 +695,7 @@ namespace canjewelry.src
                         {
                             dsc.Append(Lang.Get("canjewelry:socket-has-attribute-percent", i, treeSlot.GetFloat("attributeBuffValue") * 100)).Append(Lang.Get("canjewelry:buff-name-" + treeSlot.GetString("attributeBuff")));
                         }
+                        ;
                         dsc.Append('\n');
                     }
                 }
@@ -828,189 +708,6 @@ namespace canjewelry.src
             }
 
             return;
-        }
-
-
-        public static bool Prefix_addGearToShape(EntityAgent __instance, ItemSlot slot, Shape entityShape, string shapePathForLogging, ICoreAPI ___Api, ref Shape __result)
-        {
-            if (slot.Empty)
-            {
-                __result = entityShape;
-                return false;
-            }
-            if(!(slot.Itemstack.Item is CANItemWearable))
-            {
-                return true;
-            }
-            ItemStack stack = slot.Itemstack;
-            JsonObject attrObj = stack.Collectible.Attributes;
-
-            string[] disableElements = attrObj?["disableElements"]?.AsArray<string>(null);
-            if (disableElements != null)
-            {
-                foreach (var val in disableElements)
-                {
-                    entityShape.RemoveElementByName(val);
-                }
-            }
-
-            if (attrObj?["wearableAttachment"].Exists != true)
-            {
-                __result = entityShape;
-                return true;
-            }
-            Shape armorShape = null;
-            string texturePrefixCode = stack.Collectible.Code.ToShortString();
-            AssetLocation shapePath = null;
-            CompositeShape compArmorShape = null;
-            if (stack.Collectible is IWearableShapeSupplier iwss)
-            {
-                if (iwss != null)
-                {
-                    armorShape = iwss.GetShape(stack, __instance, texturePrefixCode);
-                }
-            }
-
-            if (armorShape == null)
-            {
-                compArmorShape = !attrObj["attachShape"].Exists ? (stack.Class == EnumItemClass.Item ? stack.Item.Shape : stack.Block.Shape) : attrObj["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain);
-                shapePath = shapePath = compArmorShape.Base.CopyWithPath("shapes/" + compArmorShape.Base.Path + ".json");
-                armorShape = Shape.TryGet(___Api, shapePath);
-                if (armorShape == null)
-                {
-                    ___Api.World.Logger.Warning("Entity armor shape {0} defined in {1} {2} not found or errored, was supposed to be at {3}. Armor piece will be invisible.", compArmorShape.Base, stack.Class, stack.Collectible.Code, shapePath);
-                    __result = null;
-                    return true;
-                }
-            }
-
-
-            bool added = false;
-            foreach (var val in armorShape.Elements)
-            {
-                ShapeElement elem;
-
-                if (val.StepParentName != null)
-                {
-                    elem = entityShape.GetElementByName(val.StepParentName, StringComparison.InvariantCultureIgnoreCase);
-                    if (elem == null)
-                    {
-                       ___Api.World.Logger.Warning("Entity gear shape {0} defined in {1} {2} requires step parent element with name {3}, but no such element was found in shape {4}. Will not be visible.", compArmorShape.Base, slot.Itemstack.Class, slot.Itemstack.Collectible.Code, val.StepParentName, shapePathForLogging);
-                        continue;
-                    }
-                }
-                else
-                {
-                    ___Api.World.Logger.Warning("Entity gear shape element {0} in shape {1} defined in {2} {3} did not define a step parent element. Will not be visible.", val.Name, compArmorShape.Base, slot.Itemstack.Class, slot.Itemstack.Collectible.Code);
-                    continue;
-                }
-
-                if (elem.Children == null)
-                {
-                    elem.Children = new ShapeElement[] { val };
-                }
-                else
-                {
-                    elem.Children = elem.Children.Append(val);
-                }
-
-                val.SetJointIdRecursive(elem.JointId);
-                val.WalkRecursive((el) =>
-                {
-                    foreach (var face in el.FacesResolved)
-                    {
-                        if (face != null) face.Texture = stack.Collectible.Code + "-" + face.Texture;
-                    }
-                });
-
-                added = true;
-            }
-
-            if (added && armorShape.Textures != null)
-            {
-                Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
-                string loop = slot.Itemstack.Attributes.GetString("loop", null);
-                string socket = slot.Itemstack.Attributes.GetString("socket", null);
-                string gem = slot.Itemstack.Attributes.GetString("gem", null);
-
-                //new AssetLocation("canjewelry:item/gem/notvis.png");
-                newdict[stack.Collectible.Code + "-" + "loop"] = new AssetLocation("game:block/metal/sheet/" + loop + "1.png");
-                newdict[stack.Collectible.Code + "-" + "socket"] = new AssetLocation("game:block/metal/plate/" + socket + ".png");
-                if (gem == "none")
-                {
-                    newdict[stack.Collectible.Code + "-" + "gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                else
-                {
-                    newdict[stack.Collectible.Code + "-" + "gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
-                }
-                
-                /*foreach (var val in armorShape.Textures)
-                {
-                    newdict[stack.Collectible.Code + "-" + val.Key] = val.Value;
-                }
-
-                // Item overrides
-                var collDict = stack.Class == EnumItemClass.Block ? stack.Block.Textures : stack.Item.Textures;
-                foreach (var val in collDict)
-                {
-                    newdict[stack.Collectible.Code + "-" + val.Key] = val.Value.Base;
-                }*/
-
-                armorShape.Textures = newdict;
-
-                foreach (var val in armorShape.Textures)
-                {
-                    CompositeTexture ctex = new CompositeTexture() { Base = val.Value };
-
-                    entityShape.TextureSizes[val.Key] = new int[] { armorShape.TextureWidth, armorShape.TextureHeight };
-
-                    AssetLocation armorTexLoc = val.Value;
-
-                    // Weird backreference to the shaperenderer. Should be refactored.
-                    var texturesByLoc = ObjectCacheUtil.GetOrCreate(___Api, "entityShapeExtraTexturesByLoc", () => new Dictionary<AssetLocation, BakedCompositeTexture>());
-                    var texturesByName = ObjectCacheUtil.GetOrCreate(___Api, "entityShapeExtraTexturesByName", () => new Dictionary<string, CompositeTexture>());
-
-                    BakedCompositeTexture bakedCtex;
-
-                    ICoreClientAPI capi = ___Api as ICoreClientAPI;
-
-                    if (!texturesByLoc.TryGetValue(armorTexLoc, out bakedCtex))
-                    {
-                        int textureSubId = 0;
-                        TextureAtlasPosition texpos;
-
-                        capi.EntityTextureAtlas.GetOrInsertTexture(armorTexLoc, out textureSubId, out texpos, () =>
-                        {
-                            IAsset texAsset = ___Api.Assets.TryGet(armorTexLoc.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
-                            if (texAsset != null)
-                            {
-                                return texAsset.ToBitmap(capi);
-                            }
-
-                            capi.World.Logger.Warning("Entity armor shape {0} defined texture {1}, no such texture found.", shapePath, armorTexLoc);
-                            return null;
-                        });
-
-                        ctex.Baked = new BakedCompositeTexture() { BakedName = armorTexLoc, TextureSubId = textureSubId };
-
-                        texturesByName[val.Key] = ctex;
-                        texturesByLoc[armorTexLoc] = ctex.Baked;
-                    }
-                    else
-                    {
-                        ctex.Baked = bakedCtex;
-                        texturesByName[val.Key] = ctex;
-                    }
-                }
-
-                foreach (var val in armorShape.TextureSizes)
-                {
-                    entityShape.TextureSizes[val.Key] = val.Value;
-                }
-            }
-            __result = entityShape;
-            return false;
         }
     }
 }

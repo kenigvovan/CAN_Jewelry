@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.Linq;
-using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
@@ -13,12 +11,12 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
-using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
+using static HarmonyLib.Code;
 
 namespace canjewelry.src.items
 {
-    public class CANItemSimpleNecklace : CANItemWearable, IWearableShapeSupplier
+    public class CANItemTiara: CANItemWearable, IWearableShapeSupplier
     {
         public override Size2i AtlasSize => curAtlas.Size;
 
@@ -26,7 +24,7 @@ namespace canjewelry.src.items
         {
             get
             {
-                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "canneckmeshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
+                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "cantiarameshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
             }
         }
 
@@ -62,16 +60,16 @@ namespace canjewelry.src.items
         {
             get
             {
-                if(!textureCode.Equals("seraph"))
+                if (!textureCode.Equals("seraph"))
                 {
                     var c = 3;
                 }
-                if(this.tmpTextures.TryGetValue(textureCode, out var res))
+                if (this.tmpTextures.TryGetValue(textureCode, out var res))
                 {
                     return this.getOrCreateTexPos(res);
                 }
-                 
-               
+
+
                 AssetLocation value = null;
                 if (Textures.TryGetValue(textureCode, out var value2))
                 {
@@ -158,15 +156,15 @@ namespace canjewelry.src.items
 
         public override void OnCreatedByCrafting(ItemSlot[] inSlots, ItemSlot outputSlot, GridRecipe byRecipe)
         {
-            base.OnCreatedByCrafting (inSlots, outputSlot, byRecipe);
-            /*int socketLevel = 1;
+            base.OnCreatedByCrafting(inSlots, outputSlot, byRecipe);
+           /* int socketLevel = 1;
             if (inSlots[4].Itemstack != null && inSlots[4].Itemstack.Collectible.Attributes.KeyExists("levelOfSocket"))
             {
                 socketLevel = inSlots[4].Itemstack.Collectible.Attributes["levelOfSocket"].AsInt();
             }
-            ITreeAttribute socketSlotTree = new TreeAttribute();
+            ITreeAttribute socketSlotTree = new TreeAttribute();*/
 
-            socketSlotTree.SetInt("size", 0);
+            /*socketSlotTree.SetInt("size", 0);
             socketSlotTree.SetString("gemtype", "");
             socketSlotTree.SetInt("sockettype", socketLevel);
 
@@ -176,21 +174,21 @@ namespace canjewelry.src.items
             outputSlot.Itemstack.Attributes["canencrusted"] = socketEncrusted;*/
             //add socket for gem with tier 3
         }
-          
+
         public void AddAllTypesToCreativeInventory()
         {
             List<JsonItemStack> stacks = new List<JsonItemStack>();
             Dictionary<string, string[]> vg = this.Attributes["variantGroups"].AsObject<Dictionary<string, string[]>>(null);
-            foreach (string loop in vg["loop"])
+            //foreach (string loop in vg["loop"])
             {
                 string construction = this.Construction;
-                if (construction == "normal-neck")
+               // if (construction == "normal-neck")
                 {
-                    foreach (string socket in vg["socket"])
+                    foreach (string carcassus in vg["carcassus"])
                     {
                         //foreach (string gem in vg["gem"])
                         {
-                            stacks.Add(this.genJstack(string.Format("{{ loop: \"{0}\", socket: \"{1}\", gem: \"none\" }}", loop, socket)));
+                            stacks.Add(this.genJstack(string.Format("{{ carcassus: \"{0}\", gem_1: \"none\", gem_2: \"none\", gem_3: \"none\" }}", carcassus)));
                         }
                     }
                 }
@@ -216,7 +214,7 @@ namespace canjewelry.src.items
             jsonItemStack.Code = this.Code;
             jsonItemStack.Type = EnumItemClass.Item;
             jsonItemStack.Attributes = new JsonObject(JToken.Parse(json));
-            jsonItemStack.Resolve(this.api.World, "canneck type", true);
+            jsonItemStack.Resolve(this.api.World, "cantiara type", true);
             return jsonItemStack;
         }
 
@@ -242,7 +240,7 @@ namespace canjewelry.src.items
         }
 
         private MeshData genMesh(ICoreClientAPI capi, ItemStack itemstack, ITexPositionSource texSource)
-        {          
+        {
             JsonObject attributes = itemstack.Collectible.Attributes;
             EntityProperties entityType = capi.World.GetEntityType(new AssetLocation("player"));
             Shape loadedShape = entityType.Client.LoadedShape;
@@ -261,17 +259,17 @@ namespace canjewelry.src.items
             CompositeShape compositeShape = (attributes["attachShape"].Exists ? attributes["attachShape"].AsObject<CompositeShape>(null, itemstack.Collectible.Code.Domain) : ((itemstack.Class == EnumItemClass.Item) ? itemstack.Item.Shape : itemstack.Block.Shape));
 
             string construction = this.Construction;
-            string loop = itemstack.Attributes.GetString("loop", null);
-            string socket = itemstack.Attributes.GetString("socket", null);
-            
-            string gem = itemstack.Attributes.GetString("gem", null);
+            string carcassus = itemstack.Attributes.GetString("carcassus", null);
+            string gem_1 = itemstack.Attributes.GetString("gem_1", null);
+            string gem_2 = itemstack.Attributes.GetString("gem_2", null);
+            string gem_3 = itemstack.Attributes.GetString("gem_3", null);
 
             if (compositeShape == null)
             {
                 capi.World.Logger.Warning("Entity armor {0} {1} does not define a shape through either the shape property or the attachShape Attribute. Armor pieces will be invisible.", itemstack.Class, itemstack.Collectible.Code);
                 return null;
             }
-            
+
             AssetLocation assetLocation = compositeShape.Base.CopyWithPath("shapes/" + compositeShape.Base.Path + ".json");
             Shape shape2 = Vintagestory.API.Common.Shape.TryGet(capi, assetLocation);
             if (shape2 == null)
@@ -280,32 +278,47 @@ namespace canjewelry.src.items
                 return null;
             }
             this.tmpTextures.Clear();
-            if (construction == "normal-neck")
+            //if (construction == "normal-tiara")
             {
                 //new AssetLocation("canjewelry:item/gem/notvis.png");
-                tmpTextures["loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
-                tmpTextures["socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
-                if (gem == "none")
+                tmpTextures["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
+                if (gem_1 == "none")
                 {
-                    tmpTextures["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                    tmpTextures["1_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
                 }
                 else
                 {
-                    tmpTextures["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
+                    tmpTextures["1_gem"] = new AssetLocation("game:block/stone/gem/" + gem_1 + ".png");
                 }
-                itemstack.Item.Textures.TryGetValue("loop", out var compositeTexture);
-                var c =  api.Assets.TryGet("game:textures/block/stone/gem/emerald.png");
-                //CompositeTexture
 
-                itemstack.Item.Textures["gem"] = compositeTexture;
-                //this.Textures["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
-                //tmpTextures["gem"] = new AssetLocation("game:block/stone/gem/emerald.png");
+                if (gem_2 == "none")
+                {
+                    tmpTextures["2_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    tmpTextures["2_gem"] = new AssetLocation("game:block/stone/gem/" + gem_2 + ".png");
+                }
+
+                if (gem_3 == "none")
+                {
+                    tmpTextures["3_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    tmpTextures["3_gem"] = new AssetLocation("game:block/stone/gem/" + gem_3 + ".png");
+                }
+
+                //itemstack.Item.Textures.TryGetValue("carcassus", out var compositeTexture);
+
+
+                //itemstack.Item.Textures["gem"] = compositeTexture;
             }
-            
+
 
             shape.Textures = shape2.Textures;
-           
-            
+
+
             if (shape2.Textures.Count > 0 && shape2.TextureSizes.Count < shape2.Textures.Count)
             {
                 shape2.TextureSizes.Clear();
@@ -353,39 +366,37 @@ namespace canjewelry.src.items
 
         public override string GetHeldItemName(ItemStack itemStack)
         {
-           /* string loop = itemStack.Attributes.GetString("loop", null);
-            string socket = itemStack.Attributes.GetString("socket", null);*/
-            string gem = itemStack.Attributes.GetString("gem", null);
+            string gem = itemStack.Attributes.GetString("1_gem", null);
 
             if (gem != "none")
             {
-                return "Necklace with encrusted " + gem;
+                return "Tiara" + gem;
             }
             else
             {
-                return "Necklace without encrustion";
+                return "Tiara";
             }
 
 
-            
+
         }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
 
-            string loop = inSlot.Itemstack.Attributes.GetString("loop", null);
+           /* string loop = inSlot.Itemstack.Attributes.GetString("loop", null);
             string socket = inSlot.Itemstack.Attributes.GetString("socket", null);
-            string gem = inSlot.Itemstack.Attributes.GetString("gem", null);
-        
-            if (gem != "none")
+            string gem = inSlot.Itemstack.Attributes.GetString("gem", null);*/
+
+            /*if (gem != "none")
             {
                 dsc.AppendLine(Lang.Get("canjewelry:necklace-parts-with-gem-held-info", Lang.Get("material-" + loop), Lang.Get("material-" + socket), gem));
             }
             else
             {
                 dsc.AppendLine(Lang.Get("canjewelry:necklace-parts-without-gem-held-info", Lang.Get("material-" + loop), Lang.Get("material-" + socket)));
-            }
+            }*/
             if ((api as ICoreClientAPI).Settings.Bool["extendedDebugInfo"])
             {
                 if (DressType == EnumCharacterDressType.Unknown)
@@ -397,7 +408,7 @@ namespace canjewelry.src.items
                     dsc.AppendLine(Lang.Get("Cloth Category: {0}", Lang.Get("clothcategory-" + inSlot.Itemstack.ItemAttributes["clothescategory"].AsString())));
                 }
             }
-            
+
         }
 
         public override MeshData GenMesh(ItemStack itemstack, ITextureAtlasAPI targetAtlas, BlockPos forBlockPos = null)
@@ -424,24 +435,28 @@ namespace canjewelry.src.items
 
         public override string GetMeshCacheKey(ItemStack itemstack)
         {
-            string loop = itemstack.Attributes.GetString("loop", null);
-            string socket = itemstack.Attributes.GetString("socket", null);
-            string gem = itemstack.Attributes.GetString("gem", null);
+            string carcassus = itemstack.Attributes.GetString("carcassus", null);
+            string gem_1 = itemstack.Attributes.GetString("gem_1", null);
+            string gem_2 = itemstack.Attributes.GetString("gem_2", null);
+            string gem_3 = itemstack.Attributes.GetString("gem_3", null);
+
             return string.Concat(new string[]
             {
                 this.Code.ToShortString(),
                 "-",
-                loop,
+                carcassus,
                 "-",
-                socket,
+                gem_1,
                 "-",
-                gem
+                gem_2,
+                "-",
+                gem_3
             });
         }
 
         public Shape GetShape(ItemStack stack, EntityAgent forEntity, string texturePrefixCode)
         {
-            
+
             JsonObject attributes = stack.Collectible.Attributes;
             EntityProperties entityType = capi.World.GetEntityType(new AssetLocation("player"));
             Shape loadedShape = entityType.Client.LoadedShape;
@@ -461,23 +476,53 @@ namespace canjewelry.src.items
 
             AssetLocation assetLocation = compositeShape.Base.CopyWithPath("shapes/" + compositeShape.Base.Path + ".json");
             Shape shape2 = Vintagestory.API.Common.Shape.TryGet(capi, assetLocation);
-          
+
 
             Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
-            string loop = stack.Attributes.GetString("loop", null);
-            string socket = stack.Attributes.GetString("socket", null);
-            string gem = stack.Attributes.GetString("gem", null);
 
-            newdict["loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
-            newdict["socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
-            if (gem == "none")
+            string carcassus = stack.Attributes.GetString("carcassus", null);
+            string gem_1 = stack.Attributes.GetString("gem_1", null);
+            string gem_2 = stack.Attributes.GetString("gem_2", null);
+            string gem_3 = stack.Attributes.GetString("gem_3", null);
+
+
+
+            newdict["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
+            /*if (gem == "none")
             {
                 newdict["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
             }
             else
             {
                 newdict["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
+            }*/
+            if (gem_1 == "none")
+            {
+                newdict["1_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
             }
+            else
+            {
+                newdict["1_gem"] = new AssetLocation("game:block/stone/gem/" + gem_1 + ".png");
+            }
+
+            if (gem_2 == "none")
+            {
+                newdict["2_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+            }
+            else
+            {
+                newdict["2_gem"] = new AssetLocation("game:block/stone/gem/" + gem_2 + ".png");
+            }
+
+            if (gem_3 == "none")
+            {
+                newdict["3_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+            }
+            else
+            {
+                newdict["3_gem"] = new AssetLocation("game:block/stone/gem/" + gem_3 + ".png");
+            }
+
 
 
             foreach (var val in newdict)
@@ -508,7 +553,5 @@ namespace canjewelry.src.items
 
             return shape2;
         }
-
     }
 }
-

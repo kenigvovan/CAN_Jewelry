@@ -63,6 +63,10 @@
   "item-gem-rough-flawed-ruby": "Medium rough ruby",
   "item-gem-rough-normal-ruby": "Great rough ruby",
 
+  "item-gem-rough-chipped-citrine": "Small rough citrine",
+  "item-gem-rough-flawed-citrine": "Medium rough citrine",
+  "item-gem-rough-normal-citrine": "Great rough citrine",
+
   //Cut gems
 
   "item-gem-cut-exquisite-diamond": "Great cut diamond",
@@ -106,12 +110,16 @@
   "item-gem-cut-flawless-ruby": "Medium cut ruby",
   "item-gem-cut-normal-ruby": "Small cut ruby",
 
+  "item-gem-cut-exquisite-citrine": "Great cut citrine",
+  "item-gem-cut-flawless-citrine": "Medium cut citrine",
+  "item-gem-cut-normal-citrine": "Small cut citrine",
+
   "item-crushed-diamond": "Crushed diamond",
 
-  "item-can-have-n-sockets": "Can have ({0}) sockets",
+  "item-can-have-n-sockets": "<icon name=select></icon>Can have ({0}) sockets",
   "item-socket-tier": "Socket tier: {0}",
-  "socket-has-attribute": "S.{0} <font color=\"#99c9f9\"> {1} </font>",
-  "socket-has-attribute-percent": "S.{0} <font color=\"#99c9f9\"> {1}% </font>",
+  "socket-has-attribute": "{0} <font color=\"#99c9f9\"> {1} </font>",
+  "socket-has-attribute-percent": "{0} <font color=\"#99c9f9\"> {1}% </font>",
 
   "item-cansocket-steel": "Steel socket",
   "itemdesc-cansocket-steel": "Small, Medium and Great gems",
@@ -142,6 +150,7 @@
   "processedgem-chipped-olivine_peridot": "Small processed olivine",
   "processedgem-chipped-quartz": "Small processed quartz",
   "processedgem-chipped-uranium": "Small processed uranium",
+  "processedgem-chipped-citrine": "Small processed citrine",
 
   "processedgem-flawed-diamond": "Medium processed diamond",
   "processedgem-flawed-corundum": "Medium processed corundum",
@@ -151,6 +160,7 @@
   "processedgem-flawed-olivine_peridot": "Medium processed olivine",
   "processedgem-flawed-quartz": "Medium processed quartz",
   "processedgem-flawed-uranium": "Medium processed uranium",
+  "processedgem-flawed-citrine": "Medium processed citrine",
 
   "processedgem-normal-diamond": "Greate processed diamond",
   "processedgem-normal-corundum": "Greate processed corundum",
@@ -160,6 +170,7 @@
   "processedgem-normal-olivine_peridot": "Greate processed olivine",
   "processedgem-normal-quartz": "Greate processed quartz",
   "processedgem-normal-uranium": "Greate processed uranium",
+  "processedgem-normal-citrine": "Greate processed citrine",
 
   "buff-name-walkspeed": "<font color=\"#99c9f9\">walkspeed</font>",
   "buff-name-miningSpeedMul": "<font color=\"#99c9f9\">mining speed</font>",
@@ -171,6 +182,7 @@
   "buff-name-oreDropRate": "<font color=\"#99c9f9\">ore drop</font>",
   "buff-name-healingeffectivness": "<font color=\"#99c9f9\">healing effectivness</font>",
   "buff-name-rangedWeaponsDamage": "<font color=\"#99c9f9\">ranged weapon damage</font>",
+  "buff-name-animalLootDropRate": "<font color=\"#99c9f9\">animal loot drop rate</font>",
 
 
   "block-grindlayeritem-rough": "Rough grindlayer(old)",

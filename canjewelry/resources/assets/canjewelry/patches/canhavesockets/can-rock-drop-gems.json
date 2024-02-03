@@ -94,6 +94,30 @@
             "avg": 0.00005,
             "var": 0
           }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-citrine",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-citrine",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-citrine",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
         }
       ],
       "rock-whitemarble": [
@@ -557,6 +581,30 @@
         {
           "type": "item",
           "code": "canjewelry:gem-rough-normal-uranium",
+          "quantity": {
+            "avg": 0.00005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-citrine",
+          "quantity": {
+            "avg": 0.001,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-citrine",
+          "quantity": {
+            "avg": 0.0005,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-citrine",
           "quantity": {
             "avg": 0.00005,
             "var": 0

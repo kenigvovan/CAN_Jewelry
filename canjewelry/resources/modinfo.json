@@ -5,7 +5,7 @@
   "authors": [ "KenigVovan" ],
   "description": "Gems and jewelry with buffs.",
   "contributors": [ "justOmi", "DarkPaapi" ],
-  "version": "0.2.0",
+  "version": "0.2.9",
   "dependencies": {
     "game": ""
   }

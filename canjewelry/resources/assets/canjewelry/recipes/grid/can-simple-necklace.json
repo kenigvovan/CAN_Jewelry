@@ -5,8 +5,9 @@
     "ingredients": {
       "S": {
         "type": "item",
-        "code": "canjewelry:cansocket-*",
-        "name": "metal-socket"
+        "code": "game:metalscale-*",
+        "name": "metal-socket",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ]
       },
       "L": {
         "type": "item",

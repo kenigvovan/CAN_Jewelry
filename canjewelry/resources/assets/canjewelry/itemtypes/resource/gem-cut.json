@@ -32,7 +32,8 @@
       "*-olivine": "armorDurabilityLoss",
       "*-quartz": "oreDropRate",
       "*-uranium": "healingeffectivness",
-      "*-ruby": "rangedWeaponsDamage"
+      "*-ruby": "rangedWeaponsDamage",
+      "*-citrine": "animalLootDropRate"
     },
     "displaycaseable": true,
     "shelvable": true
@@ -51,7 +52,7 @@
     },
     {
       "code": "gemtype",
-      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby" ]
+      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ]
     }
   ],
   "storageFlags": 5,

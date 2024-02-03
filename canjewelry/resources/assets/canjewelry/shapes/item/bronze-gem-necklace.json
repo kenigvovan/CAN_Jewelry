@@ -11,8 +11,7 @@
 	"textures": {
 		"loop": "game:block/metal/plate/tinbronze",
 		"socket": "game:block/metal/plate/tinbronze",
-		"gem": "game:block/metal/plate/steel",
-		"pendants1": "entity/humanoid/seraphclothes/neck/pendants1"
+		"gem": "game:block/metal/plate/steel"
 	},
 	"elements": [
 		{

@@ -1,0 +1,146 @@
+{
+  "code": "cantiara",
+  "class": "CANItemTiara",
+  "storageFlags": 128,
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "cannecklace-*" ]
+    },
+    "clothescategory": "head",
+    "canhavesocketsnumber": 3,
+    "warmth": 0.5,
+    "rackable": true,
+    "wearableAttachment": true,
+    "groundStorageTransformByType": {
+      "*": {
+        "translation": {
+          "x": -0.42,
+          "y": -0.45,
+          "z": -0.045
+        },
+        "rotation": {
+          "x": 21,
+          "y": 179,
+          "z": -90
+        },
+        "scale": 1
+      }
+    },
+    "__comment": "Note: variantgroups inside attributes. Used to generate all variants for the creative inventory dynamically, and for valid recipe checking",
+    "variantGroups": {
+      "carcassus": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
+      "gem_1": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ],
+      "gem_2": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ],
+      "gem_3": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ]
+    },
+    "allowedVariants": [
+      {
+        "construction": "normal-tiara",
+        "carcassus": "*",
+        "gem_1": "*",
+        "gem_2": "*",
+        "gem_3": "*"
+      }
+    ]
+  },
+  "behaviors": [
+    {
+      "name": "Encrustable"
+    }
+  ],
+  "variantgroups": [
+    {
+      "code": "construction",
+      "states": [ "normal-tiara" ]
+    }
+  ],
+  "shapeByType": {
+    "*": { "base": "canjewelry:item/can_tiara" }
+  },
+
+  "texturesByType": {
+    "*": {
+      "seraph": { "base": "game:block/transparent" }
+    }
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "clothing": [ "*" ]
+  },
+
+  "fpHandTransformByType": {
+    "*": {
+      "translation": {
+        "x": 0.6,
+        "y": -1.6,
+        "z": -0.5
+      },
+      "rotation": {
+        "x": 180,
+        "y": -108,
+        "z": -180
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.6,
+        "z": 0.5
+      },
+      "scale": 2.15
+    }
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -1.07,
+      "y": -2.6,
+      "z": -0.6
+    },
+    "rotation": {
+      "x": -25,
+      "y": -110,
+      "z": -30
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 1.5,
+      "z": 0.5
+    },
+    "scale": 0.68
+  },
+  "guiTransform": {
+    "translation": {
+      "x": 23,
+      "y": 22,
+      "z": 3.6
+    },
+    "rotation": {
+      "x": 174,
+      "y": -52,
+      "z": 23
+    },
+    "origin": {
+      "x": 0.52,
+      "y": 1.6,
+      "z": 0.5
+    },
+    "scale": 4.59
+  },
+  "groundTransform": {
+    "translation": {
+      "x": 0.05,
+      "y": -1.28,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 30,
+      "z": -1
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0.5,
+      "z": 0.5299
+    },
+    "scale": 4.72
+  }
+}

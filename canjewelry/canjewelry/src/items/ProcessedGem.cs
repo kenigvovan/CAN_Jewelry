@@ -130,7 +130,7 @@ namespace canjewelry.src.jewelry
             return jsonItemStack;
         }
         public static Dictionary<string, int> gemSizeToInt = new Dictionary<string, int>{ {"normal", 100 }, { "flawed", 200 }, { "chipped", 300 } };
-        public static Dictionary<string, int> gemBaseToInt = new Dictionary<string, int> { { "olivine_peridot", 10 }, { "corundum", 20 }, { "diamond", 30 }, { "emerald", 40 }, { "fluorite", 50 }, { "lapislazuli", 60 }, { "malachite", 70 }, { "quartz", 80 }, { "uranium", 90 }, { "ruby", 100 } };
+        public static Dictionary<string, int> gemBaseToInt = new Dictionary<string, int> { { "olivine_peridot", 10 }, { "corundum", 20 }, { "diamond", 30 }, { "emerald", 40 }, { "fluorite", 50 }, { "lapislazuli", 60 }, { "malachite", 70 }, { "quartz", 80 }, { "uranium", 90 }, { "ruby", 100 }, { "citrine", 110 } };
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             if (target == EnumItemRenderTarget.HandFp)

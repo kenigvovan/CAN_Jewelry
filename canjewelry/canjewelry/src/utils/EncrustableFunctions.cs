@@ -59,13 +59,13 @@ namespace canjewelry.src.utils
         {
             inventory.TakeLocked = true;
             ItemSlot encrustable = inventory[0];
-            if (encrustable.Itemstack != null && encrustable.Itemstack.Collectible.Attributes.KeyExists("canhavesocketsnumber"))
+            if (encrustable.Itemstack != null && encrustable.Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
             {
                 //already has itree -> has socket alteast 1
                 if (encrustable.Itemstack.Attributes.HasAttribute("canencrusted"))
                 {
                     var tree = encrustable.Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    if (tree.GetInt("socketsnumber") >= encrustable.Itemstack.Collectible.Attributes["canhavesocketsnumber"].AsInt())
+                    if (tree.GetInt("socketsnumber") >= encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt())
                     {
                         inventory.TakeLocked = false;
                         return;
@@ -91,7 +91,7 @@ namespace canjewelry.src.utils
                 }
                 else
                 {
-                    if (encrustable.Itemstack.Collectible.Attributes["canhavesocketsnumber"].AsInt() < 1)
+                    if (encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt() < 1)
                     {
                         inventory.TakeLocked = false;
                         return;

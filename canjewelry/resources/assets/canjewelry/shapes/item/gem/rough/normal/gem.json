@@ -6,7 +6,7 @@
   "textureWidth": 16,
   "textureHeight": 16,
   "textures": {
-    "gem": "game:block/stone/gem/corundum"
+
   },
   "elements": [
     {

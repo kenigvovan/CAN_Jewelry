@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using canjewelry.src.CB;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
 using canjewelry.src.utils;
@@ -20,13 +22,27 @@ namespace canjewelry.src.jewelry
     public class JewelerSetBE : BlockEntityOpenableContainer, ITexPositionSource
     {
         public InventoryJewelerSet inventory;
-        protected MeshData mesh;
         private ICoreClientAPI capi;
         private ICoreServerAPI sapi;
         protected CollectibleObject nowTesselatingObj;
         protected Shape nowTesselatingShape;
         GuiDialogJewelerSet renameGui;
-        // public static Vec3f centerVector = new Vec3f(0.5f, 0.5f, 0.5f);
+        BlockFacing facing;
+        public virtual string AttributeTransformCode => "groundTransform";
+        public virtual string ClassCode
+        {
+            get
+            {
+                return this.InventoryClassName;
+            }
+        }
+        protected Dictionary<string, MeshData> MeshCache
+        {
+            get
+            {
+                return ObjectCacheUtil.GetOrCreate<Dictionary<string, MeshData>>(this.Api, "meshesJewelrySet-" + this.ClassCode, () => new Dictionary<string, MeshData>());
+            }
+        }
         public override InventoryBase Inventory => this.inventory;
 
         public override string InventoryClassName => "canjewelerset";
@@ -35,20 +51,139 @@ namespace canjewelry.src.jewelry
         public JewelerSetBE()
         {
             this.inventory = new InventoryJewelerSet((string)null, (ICoreAPI)null);
-            // this.inventory.SlotModified += new Action<int>(this.OnSlotModified);
             this.inventory.Pos = this.Pos;
-            // this.meshes = new MeshData[this.inventory.Count - 1];
-            //this.inventory = new InventoryJewelerSet(4, (string)null, (ICoreAPI)null);
-            //  this.inventory.OnInventoryClosed += new OnInventoryClosedDelegate(this.OnInventoryClosed);
-            //this.inventory.OnInventoryOpened += new OnInventoryOpenedDelegate(this.OnInvOpened);
-            // this.inventory.SlotModified += new Action<int>(this.OnSlotModified);
 
-            // this.inventory.Pos = this.Pos;
-            //this.inventory[0].MaxSlotStackSize = 1;
             this.inventory.OnInventoryClosed += new OnInventoryClosedDelegate(this.OnInventoryClosed);
-            this.inventory.OnInventoryOpened += new OnInventoryOpenedDelegate(this.OnInvOpened);
-
+            this.inventory.OnInventoryOpened += new OnInventoryOpenedDelegate(this.OnInvOpened);        
         }
+        public void UpdateMeshes()
+        {
+            if (this.inventory == null)
+            {
+                return;
+            }
+            for (int slotid = 0; slotid < 1; slotid++)
+            {
+                if (!this.inventory[slotid].Empty)
+                {
+                    this.getOrCreateMesh(this.inventory[slotid].Itemstack, slotid);
+                }
+            }
+            this.MarkDirty(true);
+        }
+        protected virtual string getMeshCacheKey(ItemStack stack)
+        {
+            IContainedMeshSource meshSource = stack.Collectible as IContainedMeshSource;
+            if (meshSource != null)
+            {
+                return meshSource.GetMeshCacheKey(stack);
+            }
+            return stack.Collectible.Code.ToString();
+        }
+        protected MeshData getMesh(ItemStack stack)
+        {
+            string key = this.getMeshCacheKey(stack);
+            MeshData meshdata;
+            this.MeshCache.TryGetValue(key + this.facing, out meshdata);
+            return meshdata;
+        }
+        protected virtual MeshData getOrCreateMesh(ItemStack stack, int index)
+        {
+            MeshData mesh = this.getMesh(stack);
+            this.MeshCache.Clear();
+            /*if (mesh != null)
+            {               
+                return mesh;
+            }*/
+            IContainedMeshSource meshSource = stack.Collectible as IContainedMeshSource;
+            if (meshSource != null)
+            {
+                mesh = meshSource.GenMesh(stack, this.capi.BlockTextureAtlas, this.Pos);
+            }
+            if (mesh == null)
+            {
+                ICoreClientAPI capi = this.Api as ICoreClientAPI;
+                if (stack.Class == EnumItemClass.Block)
+                {
+                    mesh = capi.TesselatorManager.GetDefaultBlockMesh(stack.Block).Clone();
+                }
+                else
+                {
+                    this.nowTesselatingObj = stack.Collectible;
+                    this.nowTesselatingShape = null;
+                    CompositeShape shape = stack.Item.Shape;
+                    if (((shape != null) ? shape.Base : null) != null)
+                    {
+                        this.nowTesselatingShape = capi.TesselatorManager.GetCachedShape(stack.Item.Shape.Base);
+                    }
+                    capi.Tesselator.TesselateItem(stack.Item, out mesh, this);
+                    mesh.RenderPassesAndExtraBits.Fill((short)EnumChunkRenderPass.BlendNoCull);
+                }
+            }
+            mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
+            
+            if(stack.Item is CANItemSimpleNecklace)
+            {
+                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.25f, 1.25f, 1.25f);
+                mesh.Translate(1f/16, 2f / 16, 1f / 16);
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 2), -((float)Math.PI / 6));
+                mesh.Translate(-3f/16, -1f/16,3f/16);
+            }
+            else if(stack.Item is CANItemTiara)
+            {
+                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
+                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
+                mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
+            }
+            else if(stack.Item != null && stack.Item.StorageFlags == EnumItemStorageFlags.Outfit)
+            {
+               
+                if(stack.Collectible.Code.Path.Contains("-head-"))
+                {
+                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 2), 0f);
+                    mesh.Translate(-3f/16, 0, 0f/16);
+                    
+                }
+                else
+                {
+                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
+                    mesh.Translate(0, 12f / 16, 0);
+                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), ((float)Math.PI / 2), 0.0f, 0.0f);
+                    mesh.Translate(0, 9f / 16, -1);
+                }
+            }
+            else
+            {
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
+                mesh.Translate(0, 7f / 16, 0);
+            }
+
+
+
+            if (this.facing == BlockFacing.SOUTH)
+            {
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, -2.35f, 0f);
+            }
+            else if (this.facing == BlockFacing.NORTH)
+            {
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, 1.0f, 0f);
+            }
+            else if (this.facing == BlockFacing.EAST)
+            {
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, -1.0f, 0f);
+            }
+            else
+            {
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, 2.35f, 0f);
+            }
+
+            string key = this.getMeshCacheKey(stack);
+            this.MeshCache[key + this.facing] = mesh;
+            return mesh;
+        }
+
+
         private void OnInventoryClosed(IPlayer player)
         {
             this.renameGui?.Dispose();
@@ -63,16 +198,32 @@ namespace canjewelry.src.jewelry
             else
                 this.capi = api as ICoreClientAPI;
             this.inventory.LateInitialize("canjewelerset-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);
-            //this.inventory.LateInitialize("canrenamecollectible-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);         
-            //this.mesh = new MeshData();
-            //this.RegisterGameTickListener
             this.inventory.Pos = this.Pos;
+            if(this.capi != null)
+            {
+                this.inventory.SlotModified += (int slotId) =>
+                {
+                    if (slotId == 0)
+                    {
+                        this.UpdateMeshes();
+                    }
+
+                };               
+                this.UpdateMeshes();
+                Block block = (this.Api as ICoreClientAPI).World.BlockAccessor.GetBlock(this.Pos);
+                this.facing = BlockFacing.FromCode(block.LastCodePart());
+            }
             foreach (var it in this.inventory)
             {
                 this.inventory[0].MaxSlotStackSize = 1;
-                //this.inventory[0].CanHold += canHoldSocket;
             }
-            //this.UpdateMesh(0);
+
+            this.inventory.SlotModified += (int num) => {
+                if (this.inventory.Api.Side == EnumAppSide.Client)
+                {
+                    this.renameGui.SetupDialog();
+                } };
+            
             this.MarkDirty(true);
         }
         public TextureAtlasPosition this[string textureCode]
@@ -102,7 +253,6 @@ namespace canjewelry.src.jewelry
             this.inventory.AfterBlocksLoaded(this.Api.World);
             if (this.Api.Side != EnumAppSide.Client)
                 return;
-            //this.UpdateMesh(0);
         }
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
@@ -143,13 +293,6 @@ namespace canjewelry.src.jewelry
                 Inventory.FromTreeAttributes(treeAttribute);
                 Inventory.ResolveBlocksOrItems();
                 renameGui = new GuiDialogJewelerSet(dialogTitle, Inventory, Pos, capi);
-                /*Block block = Api.World.BlockAccessor.GetBlock(Pos);
-                string text = block.Attributes?["openSound"]?.AsString();
-                string text2 = block.Attributes?["closeSound"]?.AsString();
-                AssetLocation assetLocation = (text == null) ? null : AssetLocation.Create(text, block.Code.Domain);
-                AssetLocation assetLocation2 = (text2 == null) ? null : AssetLocation.Create(text2, block.Code.Domain);
-                invDialog.OpenSound = (assetLocation ?? OpenSound);
-                invDialog.CloseSound = (assetLocation2 ?? CloseSound);*/
                 renameGui.TryOpen();
             }
 
@@ -227,11 +370,28 @@ namespace canjewelry.src.jewelry
             {
                 if (packetid == 1001 && player.InventoryManager != null)
                 {
+                   
                     player.InventoryManager.CloseInventory((IInventory)this.inventory);
                 }
                 if (packetid == 1004)
                 {
-                    EncrustableFunctions.TryToAddSocket(this.inventory);
+                    TreeAttribute tree = new TreeAttribute();
+                    int socketNumber;
+                    int selectedSlotNum;
+                    using (MemoryStream ms = new MemoryStream(data))
+                    {
+                        using (BinaryReader reader = new BinaryReader(ms))
+                        {
+                            tree.FromBytes(reader);
+                            //in which slot in item we want socket to be added
+                            socketNumber = tree.GetInt("selectedSocketSlot");
+                            //which slot of the inventory contains socket item to be added
+                            selectedSlotNum = tree.GetInt("selectedSlotNum");
+                        }
+                    }
+                    EncrustableCB.TryAddSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber);
+
+                    //EncrustableFunctions.TryToAddSocket(this.inventory);
                 }
                 else if (packetid == 1005)
                 {
@@ -239,14 +399,38 @@ namespace canjewelry.src.jewelry
                     //for 1-3 slots
                     //check if null try to place if slotN exists at target
                     //set null if taken
-                    EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
+                    TreeAttribute tree = new TreeAttribute();
+                    int socketNumber;
+                    int selectedSlotNum;
+                    using (MemoryStream ms = new MemoryStream(data))
+                    {
+                        using (BinaryReader reader = new BinaryReader(ms))
+                        {
+                            tree.FromBytes(reader);
+                            //in which slot in item we want socket to be added
+                            socketNumber = tree.GetInt("selectedSocketSlot");
+                            //which slot of the inventory contains socket item to be added
+                            selectedSlotNum = tree.GetInt("selectedSlotNum");
+                        }
+                    }
+
+                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber);
+                    
+                    //EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
                 }
 
             }
         }
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
         {
-            return base.OnTesselation(mesher, tessThreadTesselator);
+            for (int index = 0; index < 1; index++)
+            {
+                if (!inventory[0].Empty)
+                {
+                    mesher.AddMeshData(this.getMesh(inventory[0].Itemstack));
+                }              
+            }
+            return false;
         }
     }
 }

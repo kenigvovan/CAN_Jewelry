@@ -4,6 +4,7 @@
     "op": "add",
     "path": "/canjewelry:canmods",
     "value": [
+      "/bir remapq game:air wildcraft:block-duckweed-duckweed-nesw force",
       "/bir remapq canjewelry:grindlayeritem-fine canmods:grindlayeritem-fine force",
       "/bir remapq canjewelry:grindlayeritem-rough canmods:grindlayeritem-rough force",
       "/bir remapq canjewelry:grindlayeritem-medium canmods:grindlayeritem-medium force",

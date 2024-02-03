@@ -20,19 +20,19 @@
   "blockmaterial": "Wood",
   "shapebytype": {
     "*-north": {
-      "base": "canjewelry:block/jewelsetnormal",
+      "base": "canjewelry:block/jewelerset_vis",
       "rotateY": 0
     },
     "*-east": {
-      "base": "canjewelry:block/jewelsetnormal",
+      "base": "canjewelry:block/jewelerset_vis",
       "rotateY": 270
     },
     "*-south": {
-      "base": "canjewelry:block/jewelsetnormal",
+      "base": "canjewelry:block/jewelerset_vis",
       "rotateY": 180
     },
     "*-west": {
-      "base": "canjewelry:block/jewelsetnormal",
+      "base": "canjewelry:block/jewelerset_vis",
       "rotateY": 90
     }
   },

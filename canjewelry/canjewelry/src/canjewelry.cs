@@ -21,6 +21,8 @@ using System.Security.Claims;
 using Newtonsoft.Json.Linq;
 using canjewelry.src.jewelry;
 using canjewelry.src.items;
+using System.Numerics;
+using Vintagestory.API.Common.CommandAbbr;
 
 namespace canjewelry.src
 {
@@ -52,6 +54,7 @@ namespace canjewelry.src
             api.RegisterItemClass("ProcessedGem", typeof(ProcessedGem));
             api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
             api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
+            api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
@@ -62,12 +65,9 @@ namespace canjewelry.src
             capi = api;
             loadConfig(capi);
             harmonyInstance = new Harmony(harmonyID);
-
-            //ItemSlot inSlot, double posX, double posY, double posZ, float size, int color, float dt, bool shading = true, bool origRotate = false, bool showStackSize = true
             harmonyInstance.Patch(typeof(Vintagestory.API.Client.GuiElementItemSlotGridBase).GetMethod("ComposeSlotOverlays", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage")));
-           // harmonyInstance.Patch(typeof(Vintagestory.API.Common.EntityAgent).GetMethod("addGearToShape",
-            //    BindingFlags.NonPublic | BindingFlags.Instance, new[] { typeof(ItemSlot), typeof(Shape), typeof(string) }), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_addGearToShape")));
-             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
+
+            harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             clientChannel.SetMessageHandler<SyncCANJewelryPacket>((packet) =>
@@ -84,8 +84,12 @@ namespace canjewelry.src
             {
                 api = sapi;
             }
-            foreach (var it in config.items_codes_with_socket_count)
+            foreach (var it in config.items_codes_with_socket_count_and_tiers)
             {
+                if(it.Value == null || it.Value.Length == 0)
+                {
+                    continue;
+                }
                 Item[] arrayResult = api.World.SearchItems(new AssetLocation(it.Key));
                 if(arrayResult.Length > 0) 
                 {
@@ -94,12 +98,37 @@ namespace canjewelry.src
                         item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new EncrustableCB(item));
                         if(item.Attributes == null)
                         {
-                            JToken jt = JToken.Parse("{}");                          
-                            jt["canhavesocketsnumber"] = it.Value;
+                            JToken jt = JToken.Parse("{}");
+                            jt[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
                             item.Attributes = new JsonObject(jt);
                             continue;
                         }
-                        item.Attributes.Token["canhavesocketsnumber"] = it.Value;
+
+   
+                        //make string for jtoken
+                        string s = "[";
+                        bool first = true;
+                        foreach (var socketTier in it.Value)
+                        {
+                            if (!first)
+                            {
+                                s += ",";
+                            }
+                            else
+                            {
+                                first = false;
+                            }
+                            s += socketTier;
+                        }
+                            
+                        s += "]";
+                        //parse it for jarray
+                        JToken k = JToken.Parse(s);
+                        //set to item general attributes, accessible across all
+                        item.Attributes.Token[CANJWConstants.SOCKETS_TIERS_STRING] = k;
+
+                        item.Attributes.Token[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
+
                         item.Attributes = new JsonObject(item.Attributes.Token);
                     }
                 }
@@ -127,14 +156,15 @@ namespace canjewelry.src
                     for (int i = 0; i < tree.GetInt("socketsnumber"); i++)
                     {
                         ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + i);
-                        if (treeSocket.GetInt("size") > 0)
+                        /*if (treeSocket.GetInt("size") > 0)
                         {
 
-                        }
+                        }*/
                     }
                 }
             };
         }
+
         public static void onPlayerRespawnRecalculateGemsBuffs(IServerPlayer player)
         {
             //go through all stats and delete "canencrusted" part
@@ -204,7 +234,7 @@ namespace canjewelry.src
                 //playerBackpacks.Player
                 if (charakterInv != null)
                 {
-                    for (int i = 0; i < 4; ++i)
+                    for (int i = 0; i < 16; ++i)
                     {
                         if (charakterInv[i] != null)
                         {
@@ -256,12 +286,7 @@ namespace canjewelry.src
             harmonyInstance.Patch(typeof(Vintagestory.Server.CoreServerEventManager).GetMethod("TriggerAfterActiveSlotChanged"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_TriggerAfterActiveSlotChanged")));
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
-            //ActivateSlotRightClick
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
-
-            //new checked patches
-            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryFlipWith"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryFlipWith")));
-
 
             api.Event.PlayerNowPlaying += onPlayerPlaying;
             api.Event.PlayerRespawn += onPlayerRespawnRecalculateGemsBuffs;
@@ -269,7 +294,7 @@ namespace canjewelry.src
             serverChannel = sapi.Network.RegisterChannel("canjewelry");
             serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             api.Event.PlayerNowPlaying += sendNewValues;
-            api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, rr);         
+            api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, rr);
 
             commands.RegisterCommands.registerServerCommands(sapi);
         }
@@ -327,15 +352,29 @@ namespace canjewelry.src
             //no old config, try to load new format
             else
             {
+                //config = new Config();
                 config = api.LoadModConfig<Config>(this.Mod.Info.ModID + ".json");
-                if(config == null)
+                if (config != null && config.items_codes_with_socket_count.Count != 1)
+                {
+                    foreach (var itemIter in config.items_codes_with_socket_count)
+                    {
+                        int[] tmp = new int[itemIter.Value].Fill(3);
+                        config.items_codes_with_socket_count_and_tiers[itemIter.Key] = tmp;
+                    }
+                    config.items_codes_with_socket_count.Clear();
+                    config.items_codes_with_socket_count["moved to items_codes_with_socket_count_and_tiers"] = 42;
+                }
+                if (config == null)
                 {
                     api.Logger.Debug("[canjewelry] " + "Config file not found.");
                     config = new Config();
                     api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
                     api.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " new config created and stored.");
                     return;
-                }                
+                }
+                
+                api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
+                api.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + "config read and stored back.");
                 return;
             }
         }
