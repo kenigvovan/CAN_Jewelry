@@ -85,7 +85,11 @@
       "/iir remapq canjewelry:cansocket-blackbronze  canmods:cansocket-blackbronze force",
       "/iir remapq canjewelry:cansocket-meteoriciron  canmods:cansocket-meteoriciron force",
       "/iir remapq canjewelry:cansocket-steel  canmods:cansocket-steel force",
-      "/iir remapq canjewelry:cansocket-iron  canmods:cansocket-iron force"
+      "/iir remapq canjewelry:cansocket-iron  canmods:cansocket-iron force",
+
+      "/iir remapq canjewelry:gem-rough-normal-olivine canjewelry:gem-rough-normal-olivine_peridot force",
+      "/iir remapq canjewelry:gem-rough-flawed-olivine canjewelry:gem-rough-flawed-olivine_peridot force",
+      "/iir remapq canjewelry:gem-rough-chipped-olivine canjewelry:gem-rough-chipped-olivine_peridot force"
     ]
   }
 ]

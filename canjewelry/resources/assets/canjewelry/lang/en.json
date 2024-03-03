@@ -47,9 +47,9 @@
   "item-gem-rough-flawed-malachite": "Medium rough malachite",
   "item-gem-rough-normal-malachite": "Great rough malachite",
 
-  "item-gem-rough-chipped-olivine_peridot": "Small rough peridot",
-  "item-gem-rough-flawed-olivine_peridot": "Medium rough peridot",
-  "item-gem-rough-normal-olivine_peridot": "Great rough peridot",
+  "item-gem-rough-chipped-olivine": "Small rough peridot",
+  "item-gem-rough-flawed-olivine": "Medium rough peridot",
+  "item-gem-rough-normal-olivine": "Great rough peridot",
 
   "item-gem-rough-chipped-quartz": "Small rough quartz",
   "item-gem-rough-flawed-quartz": "Medium rough quartz",
@@ -114,6 +114,79 @@
   "item-gem-cut-flawless-citrine": "Medium cut citrine",
   "item-gem-cut-normal-citrine": "Small cut citrine",
 
+  "item-gem-cut-exquisite-berylaquamarine": "Great cut aquamarine",
+  "item-gem-cut-flawless-berylaquamarine": "Medium cut aquamarine",
+  "item-gem-cut-normal-berylaquamarine": "Small cut aquamarine",
+
+  "item-gem-cut-exquisite-berylbixbite": "Great cut bixbite",
+  "item-gem-cut-flawless-berylbixbite": "Medium cut bixbite",
+  "item-gem-cut-normal-berylbixbite": "Small cut bixbite",
+
+  "item-gem-cut-exquisite-corundumruby": "Great cut ruby",
+  "item-gem-cut-flawless-corundumruby": "Medium cut ruby",
+  "item-gem-cut-normal-corundumruby": "Small cut ruby",
+
+  "item-gem-cut-exquisite-corundumsapphire": "Great cut sapphire",
+  "item-gem-cut-flawless-corundumsapphire": "Medium cut sapphire",
+  "item-gem-cut-normal-corundumsapphire": "Small cut sapphire",
+
+  "item-gem-cut-exquisite-garnetalmandine": "Great cut almandine garnet",
+  "item-gem-cut-flawless-garnetalmandine": "Medium cut almandine garnet",
+  "item-gem-cut-normal-garnetalmandine": "Small cut almandine garnet",
+
+
+  "item-gem-cut-exquisite-garnetandradite": "Great cut andradite garnet",
+  "item-gem-cut-flawless-garnetandradite": "Medium cut andradite garnet",
+  "item-gem-cut-normal-garnetandradite": "Small cut andradite garnet",
+
+  "item-gem-cut-exquisite-garnetgrossular": "Great cut grossular garnet",
+  "item-gem-cut-flawless-garnetgrossular": "Medium cut grossular garnet",
+  "item-gem-cut-normal-garnetgrossular": "Small cut grossular garnet",
+
+  "item-gem-cut-exquisite-garnetpyrope": "Great cut pyrope garnet",
+  "item-gem-cut-flawless-garnetpyrope": "Medium cut pyrope garnet",
+  "item-gem-cut-normal-garnetpyrope": "Small cut pyrope garnet",
+
+  "item-gem-cut-exquisite-garnetspessartine": "Great cut spessartine garnet",
+  "item-gem-cut-flawless-garnetspessartine": "Medium cut spessartine garnet",
+  "item-gem-cut-normal-garnetspessartine": "Small cut spessartine garnet",
+
+  "item-gem-cut-exquisite-garnetuvarovite": "Great cut uvarovite garnet",
+  "item-gem-cut-flawless-garnetuvarovite": "Medium cut uvarovite garnet",
+  "item-gem-cut-normal-garnetuvarovite": "Small cut uvarovite garnet",
+
+  "item-gem-cut-exquisite-spinelred": "Great cut spinel",
+  "item-gem-cut-flawless-spinelred": "Medium cut spinel",
+  "item-gem-cut-normal-spinelred": "Small cut spinel",
+
+  "item-gem-cut-exquisite-topazamber": "Great cut amber topaz",
+  "item-gem-cut-flawless-topazamber": "Medium cut amber topaz",
+  "item-gem-cut-normal-topazamber": "Small cut amber topaz",
+
+  "item-gem-cut-exquisite-topazblue": "Great cut blue topaz",
+  "item-gem-cut-flawless-topazblue": "Medium cut blue topaz",
+  "item-gem-cut-normal-topazblue": "Small cut blue topaz",
+
+  "item-gem-cut-exquisite-topazpink": "Great cut pink topaz",
+  "item-gem-cut-flawless-topazpink": "Medium cut pink topaz",
+  "item-gem-cut-normal-topazpink": "Small cut pink topaz",
+
+  "item-gem-cut-exquisite-tourmalinerubellite": "Great cut rubellite tourmaline",
+  "item-gem-cut-flawless-tourmalinerubellite": "Medium cut rubellite tourmaline",
+  "item-gem-cut-normal-tourmalinerubellite": "Small cut rubellite tourmaline",
+
+  "item-gem-cut-exquisite-tourmalineschorl": "Great cut schorl tourmaline",
+  "item-gem-cut-flawless-tourmalineschorl": "Medium cut schorl tourmaline",
+  "item-gem-cut-normal-tourmalineschorl": "Small cut schorl tourmaline",
+
+  "item-gem-cut-exquisite-tourmalineverdelite": "Great cut verdelite tourmaline",
+  "item-gem-cut-flawless-tourmalineverdelite": "Medium cut verdelite tourmaline",
+  "item-gem-cut-normal-tourmalineverdelite": "Small cut verdelite tourmaline",
+
+  "item-gem-cut-exquisite-tourmalinewatermelon": "Great cut watermelon tourmaline",
+  "item-gem-cut-flawless-tourmalinewatermelon": "Medium cut watermelon tourmaline",
+  "item-gem-cut-normal-tourmalinewatermelon": "Small cut watermelon tourmaline",
+
   "item-crushed-diamond": "Crushed diamond",
 
   "item-can-have-n-sockets": "<icon name=select></icon>Can have ({0}) sockets",
@@ -147,7 +220,7 @@
   "processedgem-chipped-emerald": "Small processed emerald",
   "processedgem-chipped-fluorite": "Small processed fluorite",
   "processedgem-chipped-lapislazuli": "Small processed lapislazuli",
-  "processedgem-chipped-olivine_peridot": "Small processed olivine",
+  "processedgem-chipped-olivine": "Small processed olivine",
   "processedgem-chipped-quartz": "Small processed quartz",
   "processedgem-chipped-uranium": "Small processed uranium",
   "processedgem-chipped-citrine": "Small processed citrine",
@@ -157,7 +230,7 @@
   "processedgem-flawed-emerald": "Medium processed emerald",
   "processedgem-flawed-fluorite": "Medium processed fluorite",
   "processedgem-flawed-lapislazuli": "Medium processed lapislazuli",
-  "processedgem-flawed-olivine_peridot": "Medium processed olivine",
+  "processedgem-flawed-olivine": "Medium processed olivine",
   "processedgem-flawed-quartz": "Medium processed quartz",
   "processedgem-flawed-uranium": "Medium processed uranium",
   "processedgem-flawed-citrine": "Medium processed citrine",
@@ -167,7 +240,7 @@
   "processedgem-normal-emerald": "Greate processed emerald",
   "processedgem-normal-fluorite": "Greate processed fluorite",
   "processedgem-normal-lapislazuli": "Greate processed lapislazuli",
-  "processedgem-normal-olivine_peridot": "Greate processed olivine",
+  "processedgem-normal-olivine": "Greate processed olivine",
   "processedgem-normal-quartz": "Greate processed quartz",
   "processedgem-normal-uranium": "Greate processed uranium",
   "processedgem-normal-citrine": "Greate processed citrine",
@@ -183,6 +256,14 @@
   "buff-name-healingeffectivness": "<font color=\"#99c9f9\">healing effectivness</font>",
   "buff-name-rangedWeaponsDamage": "<font color=\"#99c9f9\">ranged weapon damage</font>",
   "buff-name-animalLootDropRate": "<font color=\"#99c9f9\">animal loot drop rate</font>",
+  "buff-name-vesselContentsDropRate": "<font color=\"#99c9f9\">vessel contents drop rate</font>",
+  "buff-name-animalseekingrange": "<font color=\"#99c9f9\">animal seeking range</font>",
+  "buff-name-rangedWeaponsSpeed": "<font color=\"#99c9f9\">range weapong speed</font>",
+  "buff-name-animalharvestingtime": "<font color=\"#99c9f9\">animal harvesting time</font>",
+  "buff-name-mechanicalsDamage": "<font color=\"#99c9f9\">mechanicals damage</font>",
+  "buff-name-rangedWeaponsAcc": "<font color=\"#99c9f9\">ranged weapon accuracy</font>",
+  "buff-name-armorWalkSpeedAffectedness": "<font color=\"#99c9f9\">armor walkspeed affectedness</font>",
+  "buff-name-bowDrawingStrength": "<font color=\"#99c9f9\">bow drawing strength</font>",
 
 
   "block-grindlayeritem-rough": "Rough grindlayer(old)",

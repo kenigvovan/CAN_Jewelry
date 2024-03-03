@@ -35,6 +35,7 @@ namespace canjewelry.src
         internal static IServerNetworkChannel serverChannel;
         internal static IClientNetworkChannel clientChannel;
         public static Config config;
+        public static Dictionary<string, string> gems_textures = new Dictionary<string, string>();
 
         public override void Start(ICoreAPI api)
         {
@@ -53,6 +54,8 @@ namespace canjewelry.src
 
             api.RegisterItemClass("ProcessedGem", typeof(ProcessedGem));
             api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
+            api.RegisterItemClass("CANRoughGemItem", typeof(CANRoughGemItem));
+            
             api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
             api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
 
@@ -74,7 +77,19 @@ namespace canjewelry.src
             {
                 config = JsonConvert.DeserializeObject<Config>(packet.CompressedConfig);
                 AddBehaviorAndSocketNumber(false);
-            });           
+            });
+
+            //Set colors of processed gems on jewel grinder
+            Item[] arrayResult = api.World.SearchItems(new AssetLocation("canjewelry:gem-rough-*"));
+            foreach(var gem in arrayResult)
+            {
+                string gemType = gem.Code.Path.Split('-').Last();
+                if(!BEJewelGrinder.gemTypeToColor.TryGetValue(gemType, out _))
+                {
+                    int color = gem.GetRandomColor(capi, null);
+                    BEJewelGrinder.gemTypeToColor[gemType] = color;
+                }
+            }
         }
 
         public void AddBehaviorAndSocketNumber(bool serverSide = true)
@@ -130,14 +145,54 @@ namespace canjewelry.src
                         item.Attributes.Token[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
 
                         item.Attributes = new JsonObject(item.Attributes.Token);
+                        
                     }
                 }
                 else
                 {
                     api.Logger.Debug(String.Format("[canjewelry] Item with \"{0}\" code not found", it.Key));
                 }
+            }         
+            
+            /*StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append("{");
+            foreach(var it in config.gem_type_to_buff)
+            {
+                stringBuilder.Append(it.Key);
+                stringBuilder.Append(":");
+                stringBuilder.Append(it.Value);
+                stringBuilder.Append(",");
+            }
+            stringBuilder.Append("}");
+            JToken buffs_token = JToken.Parse(stringBuilder.ToString());*/
+
+            Item[] rough_gems_items = api.World.SearchItems(new AssetLocation("canjewelry:gem-rough-*"));
+
+            foreach(var gem in rough_gems_items)
+            {
+                string code_item = gem.Code.Path.Split('-').Last();
+                if(config.gem_type_to_buff.ContainsKey(code_item) )
+                {
+                    gem.Attributes.Token["canGemTypeToAttribute"] = config.gem_type_to_buff[code_item];
+                }
             }
 
+            Item[] cut_gems_items = api.World.SearchItems(new AssetLocation("canjewelry:gem-cut-*"));
+
+            foreach (var gem in cut_gems_items)
+            {
+                //catch if not present?
+                gems_textures.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
+            }
+          
+            foreach (var gem in cut_gems_items)
+            {
+                string code_item = gem.Code.Path.Split('-').Last();
+                if (config.gem_type_to_buff.ContainsKey(code_item))
+                {
+                    gem.Attributes.Token["canGemTypeToAttribute"] = config.gem_type_to_buff[code_item];
+                }
+            }
         }
         public void onPlayerPlaying(IServerPlayer byPlayer)
         {

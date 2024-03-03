@@ -496,7 +496,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "quantity": {
             "avg": 0.001,
             "var": 0
@@ -504,7 +504,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "code": "canjewelry:gem-rough-flawed-olivine",
           "quantity": {
             "avg": 0.0005,
             "var": 0
@@ -512,7 +512,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "code": "canjewelry:gem-rough-normal-olivine",
           "quantity": {
             "avg": 0.00005,
             "var": 0
@@ -656,7 +656,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "quantity": {
             "avg": 0.001,
             "var": 0
@@ -664,7 +664,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "code": "canjewelry:gem-rough-flawed-olivine",
           "quantity": {
             "avg": 0.0005,
             "var": 0
@@ -672,7 +672,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "code": "canjewelry:gem-rough-normal-olivine",
           "quantity": {
             "avg": 0.00005,
             "var": 0

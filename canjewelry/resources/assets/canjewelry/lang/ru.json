@@ -35,9 +35,9 @@
   "item-gem-rough-flawed-malachite": "Средний грубый малахит",
   "item-gem-rough-normal-malachite": "Большой грубый малахит",
 
-  "item-gem-rough-chipped-olivine_peridot": "Малый грубый перидот",
-  "item-gem-rough-flawed-olivine_peridot": "Средний грубый перидот",
-  "item-gem-rough-normal-olivine_peridot": "Большой грубый перидот",
+  "item-gem-rough-chipped-olivine": "Малый грубый перидот",
+  "item-gem-rough-flawed-olivine": "Средний грубый перидот",
+  "item-gem-rough-normal-olivine": "Большой грубый перидот",
 
   "item-gem-rough-chipped-quartz": "Малый грубый кварц",
   "item-gem-rough-flawed-quartz": "Средний грубый кварц",
@@ -106,7 +106,7 @@
   "processedgem-chipped-emerald": "Заготовка из малого изумруд",
   "processedgem-chipped-fluorite": "Заготовка из малого флюорита",
   "processedgem-chipped-lapislazuli": "Заготовка из малого лазурита",
-  "processedgem-chipped-olivine_peridot": "Заготовка из малого оливина",
+  "processedgem-chipped-olivine": "Заготовка из малого оливина",
   "processedgem-chipped-quartz": "Заготовка из малого кварца",
   "processedgem-chipped-uranium": "Заготовка из малого уранита",
 
@@ -115,7 +115,7 @@
   "processedgem-flawed-emerald": "Заготовка из среднего изумруд",
   "processedgem-flawed-fluorite": "Заготовка из среднего флюорита",
   "processedgem-flawed-lapislazuli": "Заготовка из среднего лазурита",
-  "processedgem-flawed-olivine_peridot": "Заготовка из среднего оливина",
+  "processedgem-flawed-olivine": "Заготовка из среднего оливина",
   "processedgem-flawed-quartz": "Заготовка из среднего кварца",
   "processedgem-flawed-uranium": "Заготовка из среднего уранита",
 
@@ -124,7 +124,7 @@
   "processedgem-normal-emerald": "Заготовка из большого изумруд",
   "processedgem-normal-fluorite": "Заготовка из большого флюорита",
   "processedgem-normal-lapislazuli": "Заготовка из большого лазурита",
-  "processedgem-normal-olivine_peridot": "Заготовка из большого оливина",
+  "processedgem-normal-olivine": "Заготовка из большого оливина",
   "processedgem-normal-quartz": "Заготовка из большого кварца",
   "processedgem-normal-uranium": "Заготовка из большого уранита",
 

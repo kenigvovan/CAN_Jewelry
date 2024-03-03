@@ -62,7 +62,7 @@ namespace canjewelry.src.items
         {
             get
             {
-                if(!textureCode.Equals("seraph"))
+                if(!textureCode.Equals("seraph") && !textureCode.Equals("loop"))
                 {
                     var c = 3;
                 }
@@ -291,13 +291,13 @@ namespace canjewelry.src.items
                 }
                 else
                 {
-                    tmpTextures["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
+                    tmpTextures["gem"] = new AssetLocation("canjewelry:item/gem/" + gem + ".png");
                 }
                 itemstack.Item.Textures.TryGetValue("loop", out var compositeTexture);
                 var c =  api.Assets.TryGet("game:textures/block/stone/gem/emerald.png");
                 //CompositeTexture
 
-                itemstack.Item.Textures["gem"] = compositeTexture;
+                //itemstack.Item.Textures["gem"] = compositeTexture;
                 //this.Textures["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
                 //tmpTextures["gem"] = new AssetLocation("game:block/stone/gem/emerald.png");
             }
@@ -476,7 +476,7 @@ namespace canjewelry.src.items
             }
             else
             {
-                newdict["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
+                newdict["gem"] = new AssetLocation("canjewelry:item/gem/" + gem + ".png");
             }
 
 

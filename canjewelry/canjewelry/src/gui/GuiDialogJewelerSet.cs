@@ -1,4 +1,5 @@
 ﻿using canjewelry.src.CB;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -248,7 +249,6 @@ namespace canjewelry.src.jewelry
                            }),
                            buttonEl);
                     }
-                   // jewelerComposer.AddInset(tmpEl);
 
                     tmpEl = tmpEl.FlatCopy();
                     tmpEl.fixedX += scaledSlotSize + scaledOffset * 2;
@@ -257,205 +257,8 @@ namespace canjewelry.src.jewelry
 
             }
 
-
-            //ComposeAvailableGemTypesGui();
             this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].Compose();
             return;
-
-
-
-
-            /*ElementBounds tabsBounds = ElementBounds.Fixed(-120.0 + backgroundBounds.fixedX, 45.0 + backgroundBounds.fixedY, 100, 100);
-
-            int fixedY2 = fixedY1 + 28;
-            ElementBounds leftInsetBounds = tabsBounds.RightCopy().WithFixedSize(scaledInsetSize, scaledInsetSize).WithFixedPosition(10, 50);
-            
-
-            ElementBounds rightInsetBounds = leftInsetBounds.RightCopy(80).WithFixedSize(scaledInsetSize, scaledInsetSize);
-
-            ElementBounds bounds4 = ElementBounds.FixedPos(EnumDialogArea.LeftTop, 160, 80).WithFixedHeight(150).WithFixedWidth(250);
-
-            ElementBounds leftSlotBounds = leftInsetBounds.FlatCopy().WithFixedSize(scaledSlotSize, scaledSlotSize);
-            leftSlotBounds.WithFixedPadding(scaledOffset , scaledOffset);
-
-            ElementBounds rightSlotsBounds = rightInsetBounds.FlatCopy().WithFixedSize(scaledSlotSize *4, scaledSlotSize*4);
-            rightSlotsBounds.WithFixedPadding(scaledOffset, scaledOffset);
-
-            ElementBounds buttonBounds = ElementBounds.FixedPos(EnumDialogArea.LeftBottom, 140, 0)
-                .WithFixedWidth(100).WithFixedHeight(48);
-
-            int fixedY3 = fixedY2 + 28;
-            
-           
-            GuiTab[] tabs1 = new GuiTab[2];
-
-            tabs1[0] = new GuiTab();
-            tabs1[0].Name = "Sockets";
-            tabs1[0].DataInt = 0;
-            tabs1[0].Active = chosenGroupTab == 0;
-
-            tabs1[1] = new GuiTab();
-            tabs1[1].Name = "Gems";
-            tabs1[1].DataInt = 1;
-            tabs1[1].Active = chosenGroupTab == 1;
-
-
-            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()]
-                .AddVerticalTabs(tabs1, tabsBounds, new Action<int, GuiTab>(this.OnGroupTabClicked2), "GroupTabs");
-            this.groupOfInterests = this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].GetVerticalTab("GroupTabs");
-            //this.groupOfInterests.SetValue(chosenGroupTab);
-            
-            this.groupOfInterests.ActiveElement = chosenGroupTab;
-            tabs1[1].Active = chosenGroupTab == 1;
-            tabs1[0].Active = chosenGroupTab == 0;
-
-
-            //this.groupOfInterests.ActiveElement = chosenGroupTab;
-
-            if (this.groupOfInterests.ActiveElement == 0)
-            {
-
-                double elementToDialogPadding = GuiStyle.ElementToDialogPadding;
-                double unscaledSlotPadding = GuiElementItemSlotGridBase.unscaledSlotPadding;
-
-               
-
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
-                {
-                   0
-                }, leftSlotBounds, "craftinggrid");
-
-                if (!this.Inventory[0].Empty)
-                {
-                    if(this.Inventory[0].Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
-                    {
-                        int possibleSockets = this.Inventory[0].Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
-
-                        string [] intArr = new string[possibleSockets];
-                        for(int i = 0; i < possibleSockets; i++)
-                        {
-                            intArr[i] = i.ToString();
-                        }
-
-                        this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()]
-                                 .AddDropDown(intArr,
-                                intArr,
-                                selectedDropSocket,
-                                didSelectEntity,
-                                ElementBounds.Fixed(rightInsetBounds.fixedX - 45, rightInsetBounds.fixedY, 40, 35));
-
-                        var tree = this.Inventory[0].Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-
-                        //if socket already there, just show item instead of slot
-                        if(tree != null && tree.HasAttribute("slot" + selectedDropSocket))
-                        {
-                            int socketTier = tree.GetTreeAttribute("slot" + selectedDropSocket).GetInt(CANJWConstants.ADDED_SOCKET_TYPE);
-
-                            string socket_type_str = "tinbronze";
-
-                            if(socketTier == 2)
-                            {
-                                socket_type_str = "iron";
-                            }
-                            else if(socketTier == 3)
-                            {
-                                socket_type_str = "steel";
-                            }
-
-                            var bucketSatck = new ItemStack(capi.World.GetItem(new AssetLocation("canjewelry:cansocket-" + socket_type_str)), 1);
-                            var sli = new SlideshowItemstackTextComponent(capi, new ItemStack[] { bucketSatck }, 48, EnumFloat.Inline);
-                            if (bucketSatck != null)
-                            {
-                                SingleComposer.AddRichtext(new RichTextComponentBase[] { sli }, rightSlotsBounds, "outputstack");
-                            }
-                        }
-                        else
-                        {
-                            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
-                            {
-                                1
-                            }, rightSlotsBounds, "craftinggrid2");
-                            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(rightInsetBounds);
-                        }
-
-                    }
-                }
-
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(leftInsetBounds);
-                
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddButton(Lang.Get("canjewelry:gui_add_socket"),
-                    () => onClickBackButtonPutSocket(),
-                    buttonBounds,
-                    CairoFont.WhiteSmallText().WithOrientation(EnumTextOrientation.Center));
-            }
-            else
-            {
-                //gems input
-                
-                double elementToDialogPadding = GuiStyle.ElementToDialogPadding;
-                double unscaledSlotPadding = GuiElementItemSlotGridBase.unscaledSlotPadding;
-                ElementBounds elementBoundsbig = ElementStdBounds.SlotGrid(EnumDialogArea.None, 100.0, 40.0, 4, 3).FixedGrow(unscaledSlotPadding);
-
-
-
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), 1, new int[1]
-                            {
-                                0
-                            }, leftSlotBounds, "encrusteditem");
-                
-                
-                if (this.Inventory.Count > 1)
-                {
-                    if(!this.Inventory[0].Empty)
-                    {
-                        var encrustable = this.Inventory[0].Itemstack;
-                        int maxSocketNumber = encrustable.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
-                        if (maxSocketNumber > 0 && this.Inventory[0].Itemstack.Attributes.HasAttribute("canencrusted"))
-                        {
-
-                            //tree
-                            var canencrustedTree = this.Inventory[0].Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                            int encrustedSockets = canencrustedTree.GetInt("socketsnumber");
-                            var curElem = rightSlotsBounds.FlatCopy().WithFixedSize(48, 48);
-                            for (int i = 0; i < maxSocketNumber; i++)
-                            {
-                                var slotTree = canencrustedTree.GetTreeAttribute("slot" + i);
-                                if(slotTree == null)
-                                {
-                                    continue;
-                                }
-
-                                //no gem
-                                if(slotTree.HasAttribute(CANJWConstants.GEM_TYPE_IN_SOCKET))
-                                {
-                                    int[] intArr = new int[1];
-                                    intArr[0] = i + 1;
-                                    this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()]
-                                    .AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), intArr.Length, intArr, curElem, "socketsslots" + i);
-                                    var t = this.SingleComposer.GetSlotGrid("socketsslots" + i);
-                                    
-                                    //t.
-                                }
-                                curElem = curElem.RightCopy();
-
-                            }
-
-
-
-                           
-                        }
-                    }
-                }
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(leftInsetBounds);
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(rightInsetBounds);
-                this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddButton(Lang.Get("canjewelry:gui_add_gem"),
-                   () => onClickBackButtonPutGem(),
-                   buttonBounds,
-                   CairoFont.WhiteSmallText().WithOrientation(EnumTextOrientation.Center));
-            }
-            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].Compose();
-            this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].UnfocusOwnElements();
-            ComposeAvailableGemTypesGui();*/
         }
         private void didSelectEntity(string code, bool selected)
         {
@@ -498,16 +301,23 @@ namespace canjewelry.src.jewelry
             }
             return res.ToArray();
         }
+        public static int getStringLength(string name)
+        {
+            using (var paint = new SKPaint())
+            {
+                paint.Typeface = SKTypeface.FromFamilyName("Times New Roman");
+
+                paint.TextSize = 24f;
+                var skBounds = SKRect.Empty;
+                return (int)paint.MeasureText(name.AsSpan(), ref skBounds);
+
+            }
+        }
         public void ComposeAvailableGemTypesGui()
         {
             if(this.Inventory[0].Itemstack == null || !this.Inventory[0].Itemstack.Collectible.Attributes.KeyExists("canhavesocketsnumber"))
             {
                 this.Composers.Remove("jewelersetgui-types");
-                //this.Composers["jewelersetgui-types"]?.Clear();
-                //this.capi.Gui.CreateCompo("jewelersetgui-types", dialogBounds).Compose();
-                //this.Composers["jewelersetgui-types"]?.Dispose();
-                //var cc = this.capi.Gui.CreateCompo("jewelersetgui-types", new ElementBounds());
-                //cc.Compose();
                 return;
             }
             string[] availableGemTypes = GetAvailableGemTypes(this.Inventory[0].Itemstack);
@@ -518,8 +328,6 @@ namespace canjewelry.src.jewelry
             ElementBounds leftDlgBounds = this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].Bounds;
             double b = leftDlgBounds.InnerHeight / (double)RuntimeEnv.GUIScale + 10.0;
 
-            //ElementBounds elementBounds = ElementStdBounds.AutosizedMainDialog.WithAlignment(EnumDialogArea.RightBottom);
-            //ElementBounds backgroundBounds = ElementBounds.Fill.WithFixedPadding(GuiStyle.ElementToDialogPadding).WithFixedSize(Width, Height);
             ElementBounds bgBounds = ElementBounds.Fixed(0.0, 0.0,
                 235, leftDlgBounds.InnerHeight / (double)RuntimeEnv.GUIScale - GuiStyle.ElementToDialogPadding - 20.0 + b).WithFixedPadding(GuiStyle.ElementToDialogPadding);
             ElementBounds dialogBounds = bgBounds.ForkBoundingParent(0.0, 0.0, 0.0, 0.0)
@@ -532,33 +340,19 @@ namespace canjewelry.src.jewelry
             ElementBounds textBounds = ElementBounds.FixedPos(EnumDialogArea.LeftTop,
                                                                0,
                                                                 0);
-                //.WithFixedHeight(leftDlgBounds.InnerHeight)
-                //.WithFixedWidth(leftDlgBounds.InnerWidth / 2);
             bgBounds.WithChildren(textBounds);
 
-            //SingleComposer.AddStaticText("hello", CairoFont.WhiteDetailText(), bgBounds);
-
             this.Composers["jewelersetgui-types"] = this.capi.Gui.CreateCompo("jewelersetgui-types", dialogBounds).AddShadedDialogBG(bgBounds, false, 5.0, 0.75f);
-           // this.Composers["jewelersetgui-types"].AddInset(dialogBounds);
+            int maxWidth = availableGemTypes.OrderByDescending(s => s.Length).FirstOrDefault()?.Length ?? 20;
             for(int i = 0; i < availableGemTypes.Length; i++)
             {
                 ElementBounds el = textBounds.CopyOffsetedSibling().WithFixedHeight(20)
-                    .WithFixedWidth(100)
+                    .WithFixedWidth(maxWidth * 7)
                     .WithFixedPosition(0, i * 20);
                 bgBounds.WithChildren(el);
 
                 this.Composers["jewelersetgui-types"].AddStaticText(availableGemTypes[i], CairoFont.WhiteDetailText(), el);
             }
-            //this.Composers["jewelersetgui-types"].AddStaticText("hello", CairoFont.WhiteDetailText(), ElementBounds.Fixed(0, 0, 200, 20));
-            //this.Composers["jewelersetgui-types"].AddStaticText("hello1", CairoFont.WhiteDetailText(), bgBounds);
-            /*ElementBounds leftDlgBounds = this.Composers["single"].Bounds;
-            ElementBounds bounds = this.Composers["single"].Bounds;
-            double b = bounds.InnerHeight / (double)RuntimeEnv.GUIScale + 10.0;
-            ElementBounds bgBounds = ElementBounds.Fixed(0.0, 0.0, 235.0,
-                leftDlgBounds.InnerHeight / (double)RuntimeEnv.GUIScale - GuiStyle.ElementToDialogPadding - 20.0 + b)
-                .WithFixedPadding(GuiStyle.ElementToDialogPadding);
-            ElementBounds dialogBounds = bgBounds.ForkBoundingParent(0.0, 0.0, 0.0, 0.0).WithAlignment(EnumDialogArea.LeftMiddle);
-            SingleComposer.AddStaticText("hello", CairoFont.WhiteDetailText(), bgBounds);*/
             this.Composers["jewelersetgui-types"].Compose();
         }
         private void OnTitleBarClose() => this.TryClose();

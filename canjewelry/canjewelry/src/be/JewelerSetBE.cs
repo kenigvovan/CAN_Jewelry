@@ -90,11 +90,11 @@ namespace canjewelry.src.jewelry
         protected virtual MeshData getOrCreateMesh(ItemStack stack, int index)
         {
             MeshData mesh = this.getMesh(stack);
-            this.MeshCache.Clear();
-            /*if (mesh != null)
+            //this.MeshCache.Clear();
+            if (mesh != null)
             {               
                 return mesh;
-            }*/
+            }
             IContainedMeshSource meshSource = stack.Collectible as IContainedMeshSource;
             if (meshSource != null)
             {

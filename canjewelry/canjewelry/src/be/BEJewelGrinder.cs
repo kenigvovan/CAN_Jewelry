@@ -11,6 +11,8 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.API.Util;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 using Vintagestory.GameContent.Mechanics;
 
@@ -20,25 +22,10 @@ namespace canjewelry.src.jewelry
     {
         private static SimpleParticleProperties FlourParticles = new SimpleParticleProperties(1f, 3f, ColorUtil.ToRgba(40, 220, 220, 220), new Vec3d(), new Vec3d(), new Vec3f(-0.25f, -0.25f, -0.25f), new Vec3f(0.25f, 0.25f, 0.25f), minSize: 0.1f, maxSize: 0.3f, model: EnumParticleModel.Quad);
         private static SimpleParticleProperties FlourDustParticles;
-        private static Dictionary<string, int> gemTypeToColor = new Dictionary<string, int>
-        {{"olivine_peridot", -600519341},
-            {"corundum", -594380780},
-            {"emerald", -599342065},
-            {"fluorite", -591082170},
-            {"lapislazuli", -600146204},
-            {"diamond", -603535372},
-            {"malachite", -597371700},
-            {"quartz", -591214665},
-            {"uranium,", -603556450},
-            {"ruby", -590997970},
-            {"citrine", -587532980}
-        };
+        public static Dictionary<string, int> gemTypeToColor = new Dictionary<string, int>();
         private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
-        //private ITextureAtlasAPI targetAtlas;
         private ILoadedSound ambientSound;
         internal InventoryJewelGrinder inventory;
-        //public float inputGrindTime;
-        //public float prevInputGrindTime;
         private GuiDialogBlockEntityJewelGrinder clientDialog;
         private JewelGrinderTopRenderer renderer;
         private bool automated;
@@ -384,13 +371,15 @@ namespace canjewelry.src.jewelry
                 {
                     return;
                 }
-                //"gem-rough-flawed-quartz"
-                if (player.InventoryManager.ActiveHotbarSlot.Itemstack.Collectible.Code.Path.Contains("gem-rough-"))
+                ItemSlot activeSlot = player.InventoryManager.ActiveHotbarSlot;
+                AssetLocation item_code = activeSlot.Itemstack.Collectible.Code;
+                if (item_code.Path.Contains("gem-rough-"))
                 {
-                    var codeSplits = player.InventoryManager.ActiveHotbarSlot.Itemstack.Collectible.Code.Path.Split('-');
+                   
+                    var codeSplits = item_code.Path.Split('-');
                     string gemBase = codeSplits[3];
                     string gemSize = codeSplits[2];
-                    ItemStack newIS = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canjewelry:processedgem-" + codeSplits[2] + "variant")));
+                    ItemStack newIS = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canjewelry:processedgem-" + gemSize + "variant")));
                     ITreeAttribute tree = new TreeAttribute();
 
                     tree.SetString("gembase", gemBase);
@@ -398,16 +387,54 @@ namespace canjewelry.src.jewelry
                     tree.SetInt("grindtype", 0);
                     tree.SetInt("grindcounter", 20);
                     newIS.Attributes["cangrindlayerinfo"] = tree;
-                    
-                    player.InventoryManager.ActiveHotbarSlot.TakeOut(1);
+
+                    activeSlot.TakeOut(1);
                     player.Entity.TryGiveItemStack(newIS);
                     return;
                 }
-                if (!player.InventoryManager.ActiveHotbarSlot.Itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
+                if((WildcardUtil.Match("gem-*-rough", item_code.Path)))
+                {
+                    //geol
+                    var codeSplits = item_code.Path.Split('-');
+                    string gemBase = codeSplits[1];
+                    string gemSize = "normal";
+                    if (activeSlot.Itemstack.Attributes.HasAttribute("potential"))
+                    {
+                        string potential_val = activeSlot.Itemstack.Attributes.GetString("potential");
+                        if(potential_val == "medium")
+                        {
+                            gemSize = "flawless";
+                        }
+                        else if(potential_val == "high")
+                        {
+                            gemSize = "exquisite";
+                        }
+                    }
+
+                    ItemStack newIS = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canjewelry:processedgem-" + gemSize + "variant")));
+                    ITreeAttribute tree = new TreeAttribute();
+
+                    tree.SetString("gembase", gemBase);
+                    tree.SetString("gemsize", gemSize);
+                    tree.SetString("mod", "geology");
+                    tree.SetInt("grindtype", 0);
+                    tree.SetInt("grindcounter", 20);
+                    newIS.Attributes["cangrindlayerinfo"] = tree;
+
+                    activeSlot.TakeOut(1);
+                    player.Entity.TryGiveItemStack(newIS);
+                    return;
+
+
+
+                }
+
+
+                if (!activeSlot.Itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
                 {
                     return;
                 }
-                ITreeAttribute itree = player.InventoryManager.ActiveHotbarSlot.Itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
+                ITreeAttribute itree = activeSlot.Itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
                 if (itree.GetInt("grindtype") == this.getGrindLayerType())
                 {
                     this.InputStack.Collectible.DamageItem(canjewelry.sapi.World, player.Entity, this.InputSlot);
@@ -417,9 +444,8 @@ namespace canjewelry.src.jewelry
                     float num3 = 1f * grindSpeed;
                     float num4 = 20f * grindSpeed;
                     gemTypeToColor.TryGetValue(itree.GetString("gembase"), out int colorParticles);
+
                     BEJewelGrinder.FlourDustParticles.Color = colorParticles;
-                    //BEJewelGrinder.FlourDustParticles.Color &= 16777215;
-                    //BEJewelGrinder.FlourDustParticles.Color *= -1;
                     BEJewelGrinder.FlourDustParticles.MinQuantity = num1;
                     BEJewelGrinder.FlourDustParticles.AddQuantity = num2;
                     BEJewelGrinder.FlourDustParticles.MinPos.Set((double)this.Pos.X - 1.0 / 32.0, (double)this.Pos.Y + 11.0 / 16.0, (double)this.Pos.Z - 1.0 / 32.0);
@@ -434,7 +460,6 @@ namespace canjewelry.src.jewelry
                     {
                         if(itree.GetInt("grindtype") == 2)
                         {
-                            var codeSplits = player.InventoryManager.ActiveHotbarSlot.Itemstack.Collectible.Code.Path.Split('-');
                             string gemSize = "";
                             if(itree["gemsize"].GetValue().Equals("normal"))
                             {
@@ -457,8 +482,6 @@ namespace canjewelry.src.jewelry
                         }
                         itree.SetInt("grindtype", itree.GetInt("grindtype") + 1);
                         itree.SetInt("grindcounter", 20);
-                        //(Api as ICoreClientAPI).Render.UpdateMesh
-                        //(player.InventoryManager.ActiveHotbarSlot.Itemstack.Item.OnBeforeRender().
                         player.InventoryManager.ActiveHotbarSlot.MarkDirty();
                     }
                     else
@@ -473,13 +496,10 @@ namespace canjewelry.src.jewelry
         }
         public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
         {
-            //if (blockSel.SelectionBoxIndex == 1)
-            //   return false;
             if (this.Api.World is IServerWorldAccessor && byPlayer.Entity.ServerControls.CtrlKey)
             {
                 ((ICoreServerAPI)this.Api).Network.SendBlockEntityPacket((IServerPlayer)byPlayer, this.Pos.X, this.Pos.Y, this.Pos.Z, 1000);
                 byPlayer.InventoryManager.OpenInventory((IInventory)this.inventory);
-                //this.MarkDirty();
             }
             return true;
         }

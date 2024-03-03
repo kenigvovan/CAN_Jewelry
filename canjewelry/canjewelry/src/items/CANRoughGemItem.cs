@@ -3,17 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 
-namespace canjewelry.src.jewelry
+namespace canjewelry.src.items
 {
-    public class CANCutGemItem: Item
+    public class CANRoughGemItem: Item
     {
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-
             if (inSlot.Itemstack.Collectible.Attributes.KeyExists("canGemTypeToAttribute"))
             {
                 string buffName = inSlot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString();
@@ -30,4 +30,5 @@ namespace canjewelry.src.jewelry
             }
         }
     }
+
 }

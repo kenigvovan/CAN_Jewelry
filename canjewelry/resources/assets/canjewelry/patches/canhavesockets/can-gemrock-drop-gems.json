@@ -165,7 +165,7 @@
       "ore-low-olivine-peridotite": [
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "quantity": {
             "avg": 0.01,
             "var": 0
@@ -173,7 +173,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "code": "canjewelry:gem-rough-flawed-olivine",
           "quantity": {
             "avg": 0.001,
             "var": 0
@@ -181,7 +181,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "code": "canjewelry:gem-rough-normal-olivine",
           "quantity": {
             "avg": 0.0001,
             "var": 0

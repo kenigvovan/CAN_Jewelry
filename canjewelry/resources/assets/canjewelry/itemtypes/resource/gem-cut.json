@@ -22,24 +22,15 @@
       "*-flawless-*": 2,
       "*-normal-*": 1
     },
-    "canGemTypeToAttributeByType": {
-      "*-diamond": "walkspeed",
-      "*-corundum": "miningSpeedMul",
-      "*-emerald": "maxhealthExtraPoints",
-      "*-fluorite": "meleeWeaponsDamage",
-      "*-lapislazuli": "hungerrate",
-      "*-malachite": "wildCropDropRate",
-      "*-olivine": "armorDurabilityLoss",
-      "*-quartz": "oreDropRate",
-      "*-uranium": "healingeffectivness",
-      "*-ruby": "rangedWeaponsDamage",
-      "*-citrine": "animalLootDropRate"
-    },
+
     "displaycaseable": true,
     "shelvable": true
   },
-  "textures": {
-    "gem": { "base": "game:block/stone/gem/{gemtype}" }
+  "texturesByType": {
+    
+    "*": {
+      "gem": { "base": "canjewelry:item/gem/{gemtype}" }
+    }
   },
   "variantgroups": [
     {

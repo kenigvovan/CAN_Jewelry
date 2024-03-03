@@ -22,12 +22,33 @@ namespace canjewelry.src
             {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
             {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace", "cantiara" } },
             {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique", "cantiara" } },
-            {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara" } },
+            {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara", "scythe" } },
             {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
             {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
             {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" , "cantiara" } },
             {"ruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
-            {"citrine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }}
+            {"citrine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
+
+            {"berylaquamarine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara" } },
+            {"berylbixbite", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara" } },
+            {"corundumruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+            {"corundumsapphire", new HashSet<string>{ "pickaxe", "cansimplenecklace", "cantiara" } },
+            {"garnetalmandine",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+            {"garnetandradite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },           
+            {"garnetgrossular", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace", "cantiara" } },
+            {"garnetpyrope",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
+            {"garnetspessartine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
+            {"garnetuvarovite",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+            {"spinelred", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
+            {"topazamber", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara" } },
+             {"topazblue", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
+             {"topazpink",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
+             {"tourmalinerubellite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
+             {"tourmalineschorl", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace", "cantiara" } },
+              {"tourmalineverdelite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
+              {"tourmalinewatermelon",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+
+
         });
         public Dictionary<string, Dictionary<string, float>> gems_buffs = new Dictionary<string, Dictionary<string, float>>
             (new Dictionary<string, Dictionary<string, float>>  {
@@ -95,6 +116,56 @@ namespace canjewelry.src
                     { "1", 0.02f },
                     { "2", 0.04f },
                     { "3", 0.09f }
+                    }
+                },
+                
+                { "vesselContentsDropRate", new Dictionary<string, float>{
+                    { "1", 0.02f },
+                    { "2", 0.04f },
+                    { "3", 0.09f }
+                    }
+                },
+                
+                { "animalseekingrange", new Dictionary<string, float>{
+                    { "1", -0.03f },
+                    { "2", -0.05f },
+                    { "3", -0.010f }
+                    }
+                },
+                { "rangedWeaponsSpeed", new Dictionary<string, float>{
+                    { "1", 0.02f },
+                    { "2", 0.05f },
+                    { "3", 0.08f }
+                    }
+                },
+                { "animalharvestingtime", new Dictionary<string, float>{
+                    { "1", -0.02f },
+                    { "2", -0.05f },
+                    { "3", -0.08f }
+                    }
+                },
+                { "mechanicalsDamage", new Dictionary<string, float>{
+                    { "1", 0.02f },
+                    { "2", 0.04f },
+                    { "3", 0.08f }
+                    }
+                },
+                { "rangedWeaponsAcc", new Dictionary<string, float>{
+                    { "1", 0.02f },
+                    { "2", 0.04f },
+                    { "3", 0.07f }
+                    }
+                },
+                { "armorWalkSpeedAffectedness", new Dictionary<string, float>{
+                    { "1", -0.02f },
+                    { "2", -0.04f },
+                    { "3", -0.07f }
+                    }
+                },
+                { "bowDrawingStrength", new Dictionary<string, float>{
+                    { "1", 0.01f },
+                    { "2", 0.03f },
+                    { "3", 0.06f }
                     }
                 }
             });
@@ -201,5 +272,39 @@ namespace canjewelry.src
             {  "bow-long", new int[2] {3, 3} }
         };
         public int pan_take_per_use = 8;
+        public Dictionary<string, string> gem_type_to_buff = new Dictionary<string, string>()
+        {
+            { "diamond", "walkspeed"},
+            { "corundum", "miningSpeedMul"},
+            { "emerald", "maxhealthExtraPoints"},
+            { "fluorite", "meleeWeaponsDamage"},
+            { "lapislazuli", "hungerrate" },
+            { "malachite", "wildCropDropRate" },
+            { "olivine_peridot", "armorDurabilityLoss"},
+             { "olivine", "armorDurabilityLoss"},
+            { "quartz", "oreDropRate"},
+            { "uranium", "healingeffectivness"},
+            { "ruby", "rangedWeaponsDamage"},
+            { "citrine", "animalLootDropRate"},
+
+            { "berylaquamarine",  "walkspeed"},
+            { "berylbixbite",  "miningSpeedMul"},
+            { "corundumruby",  "rangedWeaponsDamage"},
+            { "corundumsapphire",  "vesselContentsDropRate"},
+            { "garnetalmandine",  "bowDrawingStrength"},
+            { "garnetandradite",  "animalseekingrange"},
+            { "garnetgrossular",  "meleeWeaponsDamage"},
+            { "garnetpyrope",  "animalLootDropRate"},
+            { "garnetspessartine",  "animalLootDropRate"},
+            { "garnetuvarovite",  "rangedWeaponsSpeed"},
+            { "spinelred",  "armorWalkSpeedAffectedness"},
+            { "topazamber",  "wildCropDropRate"},
+            { "topazblue",  "maxhealthExtraPoints"},
+            { "topazpink",  "animalharvestingtime"},
+            { "tourmalinerubellite",  "armorDurabilityLoss"},
+            { "tourmalineschorl",  "mechanicalsDamage"},
+            { "tourmalineverdelite",  "healingeffectivness"},
+            { "tourmalinewatermelon",  "rangedWeaponsAcc"}
+        };
     }
 }

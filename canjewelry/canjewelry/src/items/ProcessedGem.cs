@@ -26,7 +26,6 @@ namespace canjewelry.src.jewelry
 
         private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
 
-        private Dictionary<string, Dictionary<string, int>> durabilityGains;
         public TextureAtlasPosition this[string textureCode]
         {
             get
@@ -83,8 +82,6 @@ namespace canjewelry.src.jewelry
             base.OnLoaded(api);
             this.curOffY = (this.offY = this.FpHandTransform.Translation.Y);
             this.capi = (api as ICoreClientAPI);
-            // this.durabilityGains = this.Attributes["durabilityGains"].AsObject<Dictionary<string, Dictionary<string, int>>>(null);
-            //this.AddAllTypesToCreativeInventory();
         }
         public void AddAllTypesToCreativeInventory()
         {
@@ -129,8 +126,6 @@ namespace canjewelry.src.jewelry
             jsonItemStack.Resolve(this.api.World, "shield type", true);
             return jsonItemStack;
         }
-        public static Dictionary<string, int> gemSizeToInt = new Dictionary<string, int>{ {"normal", 100 }, { "flawed", 200 }, { "chipped", 300 } };
-        public static Dictionary<string, int> gemBaseToInt = new Dictionary<string, int> { { "olivine_peridot", 10 }, { "corundum", 20 }, { "diamond", 30 }, { "emerald", 40 }, { "fluorite", 50 }, { "lapislazuli", 60 }, { "malachite", 70 }, { "quartz", 80 }, { "uranium", 90 }, { "ruby", 100 }, { "citrine", 110 } };
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             if (target == EnumItemRenderTarget.HandFp)
@@ -147,9 +142,8 @@ namespace canjewelry.src.jewelry
             {
                 tree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
                 //var tmp = (int)tree.GetString("gembase")[0];
-                meshrefid = gemBaseToInt[tree.GetString("gembase")] + tree.GetInt("grindtype") + gemSizeToInt[tree.GetString("gemsize")];
-                // gembase gemsize grindtype
-               // meshrefid = (int)
+
+                meshrefid = (tree.GetString("gembase") + tree.GetInt("grindtype").ToString() + tree.GetString("gemsize").ToString()).GetHashCode();
             }
             
             if (meshrefid == 0 || !this.meshrefs.TryGetValue(meshrefid, out renderinfo.ModelRef))
@@ -170,23 +164,10 @@ namespace canjewelry.src.jewelry
         {
             this.targetAtlas = targetAtlas;
             this.tmpTextures.Clear();
-           /* string wood = itemstack.Attributes.GetString("wood", null);
-            string metal = itemstack.Attributes.GetString("metal", null);
-            string color = itemstack.Attributes.GetString("color", null);
-            string deco = itemstack.Attributes.GetString("deco", null);*/
 
             string gemBase = itemstack.Attributes.GetString("gembase", null);
             string gemSize = itemstack.Attributes.GetString("gemsize", null);
 
-            /* if (wood == null && metal == null && this.Construction != "crude" && this.Construction != "blackguard")
-             {
-                 return new MeshData(true);
-             }
-             if (wood == null || wood == "")
-             {
-                 wood = "generic";
-             }
-             this.tmpTextures["front"] = (this.tmpTextures["back"] = (this.tmpTextures["handle"] = new AssetLocation("block/wood/planks/generic.png")));*/
             foreach (KeyValuePair<string, AssetLocation> ctex in this.capi.TesselatorManager.GetCachedShape(this.Shape.Base).Textures)
             {
                 this.tmpTextures[ctex.Key] = ctex.Value;
@@ -204,10 +185,16 @@ namespace canjewelry.src.jewelry
                 {
                     gemBase = "olivine";
                 }
-                this.tmpTextures["gembase"] = new AssetLocation("game:block/stone/gem/" + gemBase + ".png");
+                string texture_path = "game:block/stone/gem/";
+                if (itree.HasAttribute("mod"))
+                {
+                    texture_path = "game:item/resource/ungraded/";
+                }
+
+                this.tmpTextures["gembase"] = new AssetLocation(texture_path + gemBase + ".png");
                 if (itree.GetInt("grindtype") <= 0)
                 {
-                    this.tmpTextures["emeralddefect0"] = new AssetLocation("canjewelry:item/gem/" + gemBase + "-defect.png");
+                    this.tmpTextures["emeralddefect0"] = new AssetLocation(texture_path + gemBase + ".png");
                 }
                else
                 {
@@ -216,13 +203,13 @@ namespace canjewelry.src.jewelry
 
                  if (itree.GetInt("grindtype") <= 1)
                 {
-                    this.tmpTextures["emeralddefect1"] = new AssetLocation("canjewelry:item/gem/" + gemBase + "-defect.png");
+                    this.tmpTextures["emeralddefect1"] = new AssetLocation(texture_path + gemBase + ".png");
                 }
                 else
                 {
                     this.tmpTextures["emeralddefect1"] = new AssetLocation("canjewelry:item/gem/notvis.png");
                 }
-                this.tmpTextures["emeralddefect2"] = new AssetLocation("canjewelry:item/gem/" + gemBase + "-defect.png");
+                this.tmpTextures["emeralddefect2"] = new AssetLocation(texture_path + gemBase + ".png");
             }
             else
             {

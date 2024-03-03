@@ -43,9 +43,9 @@
   "item-gem-rough-flawed-malachite": "Середній неогранений малахіт",
   "item-gem-rough-normal-malachite": "Великий неогранений малахіт",
 
-  "item-gem-rough-chipped-olivine_peridot": "Дрібний неогранений олівін",
-  "item-gem-rough-flawed-olivine_peridot": "Середній неогранений олівін",
-  "item-gem-rough-normal-olivine_peridot": "Великий неогранений олівін",
+  "item-gem-rough-chipped-olivine": "Дрібний неогранений олівін",
+  "item-gem-rough-flawed-olivine": "Середній неогранений олівін",
+  "item-gem-rough-normal-olivine": "Великий неогранений олівін",
 
   "item-gem-rough-chipped-quartz": "Дрібний неогранений кварц",
   "item-gem-rough-flawed-quartz": "Середній неогранений кварц",
@@ -113,7 +113,7 @@
   "processedgem-chipped-emerald": "Заготівля з маленького смарагду",
   "processedgem-chipped-fluorite": "Заготівля з маленького флюориту",
   "processedgem-chipped-lapislazuli": "Заготівля з маленького лазуриту",
-  "processedgem-chipped-olivine_peridot": "Заготівля з маленького олівіну",
+  "processedgem-chipped-olivine": "Заготівля з маленького олівіну",
   "processedgem-chipped-quartz": "Заготівля з маленького кварцу",
   "processedgem-chipped-uranium": "Заготівля з маленького урану",
 
@@ -122,7 +122,7 @@
   "processedgem-flawed-emerald": "Заготівля з середнього смарагду",
   "processedgem-flawed-fluorite": "Заготівля з середнього флюорит",
   "processedgem-flawed-lapislazuli": "Заготівля з середнього лазуриту",
-  "processedgem-flawed-olivine_peridot": "Заготівля з середнього олівіну",
+  "processedgem-flawed-olivine": "Заготівля з середнього олівіну",
   "processedgem-flawed-quartz": "Заготівля з середнього кварцу",
   "processedgem-flawed-uranium": "Заготівля з середнього урану",
 
@@ -131,7 +131,7 @@
   "processedgem-normal-emerald": "Заготівля з великого смарагду",
   "processedgem-normal-fluorite": "Заготівля з великого флюориту",
   "processedgem-normal-lapislazuli": "Заготівля з великого лазуриту",
-  "processedgem-normal-olivine_peridot": "Заготівля з великого олівіну",
+  "processedgem-normal-olivine": "Заготівля з великого олівіну",
   "processedgem-normal-quartz": "Заготівля з великого кварцу",
   "processedgem-normal-uranium": "Заготівля з великого урану",
   "buff-name-walkspeed": "<font color=\"#99c9f9\">швидкість ходьби</font>",

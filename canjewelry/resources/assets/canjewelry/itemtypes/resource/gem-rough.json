@@ -2,7 +2,7 @@
   "code": "gem",
   "__comment": "ItemOre is just for displaying the yield in units in the tooltip",
   "maxstacksize": 8,
-  "class": "CANCutGemItem",
+  "class": "CANRoughGemItem",
   "attributes": {
     "handbook": {
       "groupBy": [ "ore-{ore}-*" ]
@@ -22,19 +22,6 @@
       "*-flawed-*": 2,
       "*-chipped-*": 1
     },
-    "canGemTypeToAttributeByType": {
-      "*-diamond": "walkspeed",
-      "*-corundum": "miningSpeedMul",
-      "*-emerald": "maxhealthExtraPoints",
-      "*-fluorite": "meleeWeaponsDamage",
-      "*-lapislazuli": "hungerrate",
-      "*-malachite": "wildCropDropRate",
-      "*-olivine_peridot": "armorDurabilityLoss",
-      "*-quartz": "oreDropRate",
-      "*-uranium": "healingeffectivness",
-      "*-ruby": "rangedWeaponsDamage",
-      "*-citrine": "animalLootDropRate"
-    },
     "displaycaseable": true,
     "shelvable": true
   },
@@ -49,17 +36,14 @@
     },
     {
       "code": "gemtype",
-      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine_peridot", "quartz", "uranium", "ruby", "citrine" ]
+      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ]
     }
   ],
   "storageFlags": 5,
   "shape": { "base": "canjewelry:item/gem/{refinestate}/{quality}/gem" },
   "texturesByType": {
-    "*-olivine_peridot": {
-      "gem": { "base": "game:block/stone/gem/olivine" }
-    },
     "*": {
-      "gem": { "base": "game:block/stone/gem/{gemtype}" }
+      "gem": { "base": "canjewelry:item/gem/{gemtype}" }
     }
   },
   "creativeinventory": {

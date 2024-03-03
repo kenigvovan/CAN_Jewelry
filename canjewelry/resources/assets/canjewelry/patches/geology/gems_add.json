@@ -1,0 +1,314 @@
+[
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "addeach",
+    "path": "/variantgroups/2/states/-",
+    "value": [
+      "berylaquamarine",
+      "berylbixbite",
+      "corundumruby",
+      "corundumsapphire",
+      "garnetalmandine",
+      "garnetandradite",
+      "garnetgrossular",
+      "garnetpyrope",
+      "garnetspessartine",
+      "garnetuvarovite",
+      "spinelred",
+      "topazamber",
+      "topazblue",
+      "topazpink",
+      "tourmalinerubellite",
+      "tourmalineschorl",
+      "tourmalineverdelite",
+      "tourmalinewatermelon"
+    ],
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-corundumruby",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/corundumruby" }
+    },
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-berylaquamarine",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/berylaquamarine" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-berylbixbite",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/berylbixbite" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+
+
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-corundumsapphire",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/corundumsapphire" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-garnetalmandine",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/garnetalmandine" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-garnetandradite",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/garnetandradite" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-garnetgrossular",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/garnetgrossular" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-garnetpyrope",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/garnetpyrope" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-garnetspessartine",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/garnetspessartine" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-garnetuvarovite",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/garnetuvarovite" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-spinelred",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/spinelred" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-topazamber",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/topazamber" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-topazblue",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/topazblue" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-topazpink",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/topazpink" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-tourmalinerubellite",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/tourmalinerubellite" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-tourmalineschorl",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/tourmalineschorl" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-tourmalineverdelite",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/tourmalineverdelite" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+  {
+    "file": "canjewelry:itemtypes/resource/gem-cut.json",
+    "op": "add",
+    "path": "/texturesByType/*-tourmalinewatermelon",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/tourmalinewatermelon" }
+    },
+    "dependsOn": [
+      {
+        "modid": "geoaddons"
+      }
+    ],
+    "side": "server"
+  },
+
+  {
+    "comment": "Add Tree Heath flower shape same as heather.",
+    "op": "move",
+    "path": "/tmp",
+    "frompath": "/texturesByType/*",
+    "file": "itemtypes/resource/gem-cut.json"
+  },
+
+  {
+    "comment": "Add Tree Heath flower to config.",
+    "op": "add",
+    "path": "/texturesByType/*-berylaquamarine",
+    "file": "itemtypes/resource/gem-cut.json",
+    "value": {
+      "gem": { "base": "game:item/resource/ungraded/berylaquamarine" }
+    }
+  },
+  {
+    "comment": "Add texture wildcard back in.",
+    "op": "move",
+    "frompath": "/tmp",
+    "path": "/texturesByType/*",
+    "file": "itemtypes/resource/gem-cut.json"
+  }
+
+
+
+
+
+
+]

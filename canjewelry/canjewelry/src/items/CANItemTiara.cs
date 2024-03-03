@@ -259,10 +259,10 @@ namespace canjewelry.src.items
             CompositeShape compositeShape = (attributes["attachShape"].Exists ? attributes["attachShape"].AsObject<CompositeShape>(null, itemstack.Collectible.Code.Domain) : ((itemstack.Class == EnumItemClass.Item) ? itemstack.Item.Shape : itemstack.Block.Shape));
 
             string construction = this.Construction;
-            string carcassus = itemstack.Attributes.GetString("carcassus", null);
-            string gem_1 = itemstack.Attributes.GetString("gem_1", null);
-            string gem_2 = itemstack.Attributes.GetString("gem_2", null);
-            string gem_3 = itemstack.Attributes.GetString("gem_3", null);
+            string carcassus = itemstack.Attributes.GetString("carcassus", "steel");
+            string gem_1 = itemstack.Attributes.GetString("gem_1", "none");
+            string gem_2 = itemstack.Attributes.GetString("gem_2", "none");
+            string gem_3 = itemstack.Attributes.GetString("gem_3", "none");
 
             if (compositeShape == null)
             {

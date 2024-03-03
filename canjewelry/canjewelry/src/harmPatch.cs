@@ -19,6 +19,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.Client.NoObf;
+using Vintagestory.Common;
 using Vintagestory.GameContent;
 
 namespace canjewelry.src
@@ -71,7 +72,7 @@ namespace canjewelry.src
 
 
 
-            //canjewelry.sapi.SendMessage(ep.Player, 0, add.ToString() + ep.Stats[socketSlot.GetString("attributeBuff")].GetBlended().ToString() + socketSlot.GetString("attributeBuff"), EnumChatType.Notification);
+            canjewelry.sapi.SendMessage(ep.Player, 0, add.ToString() + ep.Stats[socketSlot.GetString("attributeBuff")].GetBlended().ToString() + socketSlot.GetString("attributeBuff"), EnumChatType.Notification);
         }
 
         /*
@@ -313,6 +314,41 @@ namespace canjewelry.src
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
                         applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                    }
+                }
+            }
+            else if (__instance.Inventory.ClassName.Equals("xskillshotbar"))
+            {
+
+                int activeSlotId = (__instance.Inventory as InventoryBasePlayer).Player.InventoryManager.ActiveHotbarSlotNumber;
+                //if (!__instance.Empty)
+                {
+                    if (activeSlotId == oldItemInSlotId)
+                    {
+                        if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
+                        {
+                            ITreeAttribute encrustTreeHere = __instance.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                            for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                            {
+                                ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                            }
+                        }
+                    }
+                }
+                //else
+                {
+                    if (activeSlotId == oldItemInSlotId)
+                    {
+                        if (itemSlot.Itemstack != null && itemSlot.Itemstack.Attributes.HasAttribute("canencrusted"))
+                        {
+                            ITreeAttribute encrustTreeHere = itemSlot.Itemstack.Attributes.GetTreeAttribute("canencrusted");
+                            for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
+                            {
+                                ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
+                                applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, true);
+                            }
+                        }
                     }
                 }
             }
@@ -563,8 +599,22 @@ namespace canjewelry.src
                 {
                     continue;
                 }
-  
-                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png").Location, 255);
+
+                if(!canjewelry.gems_textures.TryGetValue(socketSlot.GetString("gemtype"), out string assetPath))
+                {
+                    continue;
+                }
+                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
+                /*AssetLocation asset = canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png")?.Location;*/
+                /*if (canjewelry.capi.Assets.TryGet("game:textures/block/stone/gem/" + socketSlot.GetString("gemtype") + ".png") == null)
+                {
+                    asset = canjewelry.capi.Assets.TryGet("game:textures/item/resource/ungraded/" + socketSlot.GetString("gemtype") + ".png")?.Location;
+                }*/
+
+
+
+                if (asset == null) { continue; }
+                var socketSurface = GuiElement.getImageSurfaceFromAsset(canjewelry.capi, asset, 255);
 
                 double tr = unsSlotSize / 4;
                 

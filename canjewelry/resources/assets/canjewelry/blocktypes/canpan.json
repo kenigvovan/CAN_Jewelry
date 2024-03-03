@@ -270,7 +270,7 @@
       "@(ore|crystalizedore)-bountiful-cassiterite-.*": [
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "code": "canjewelry:gem-rough-normal-olivine",
           "chance": {
             "avg": 0.4,
             "var": 0
@@ -278,7 +278,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "code": "canjewelry:gem-rough-flawed-olivine",
           "chance": {
             "avg": 0.7,
             "var": 0
@@ -286,7 +286,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "chance": {
             "avg": 0.8,
             "var": 0
@@ -296,7 +296,7 @@
       "@(ore|crystalizedore)-rich-cassiterite-.*": [
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-normal-olivine_peridot",
+          "code": "canjewelry:gem-rough-normal-olivine",
           "chance": {
             "avg": 0.2,
             "var": 0
@@ -304,7 +304,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "code": "canjewelry:gem-rough-flawed-olivine",
           "chance": {
             "avg": 0.5,
             "var": 0
@@ -312,7 +312,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "chance": {
             "avg": 0.6,
             "var": 0
@@ -322,7 +322,7 @@
       "@(ore|crystalizedore)-medium-cassiterite-.*": [
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-flawed-olivine_peridot",
+          "code": "canjewelry:gem-rough-flawed-olivine",
           "chance": {
             "avg": 0.4,
             "var": 0
@@ -330,7 +330,7 @@
         },
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "chance": {
             "avg": 0.5,
             "var": 0
@@ -340,7 +340,7 @@
       "@(ore|crystalizedore)-poor-cassiterite-.*": [
         {
           "type": "item",
-          "code": "canjewelry:gem-rough-chipped-olivine_peridot",
+          "code": "canjewelry:gem-rough-chipped-olivine",
           "chance": {
             "avg": 0.4,
             "var": 0
