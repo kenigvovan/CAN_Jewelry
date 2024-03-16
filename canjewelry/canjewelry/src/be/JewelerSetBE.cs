@@ -89,8 +89,10 @@ namespace canjewelry.src.jewelry
         }
         protected virtual MeshData getOrCreateMesh(ItemStack stack, int index)
         {
-            MeshData mesh = this.getMesh(stack);
             //this.MeshCache.Clear();
+            //here
+            MeshData mesh = this.getMesh(stack);
+           
             if (mesh != null)
             {               
                 return mesh;
@@ -156,7 +158,7 @@ namespace canjewelry.src.jewelry
             else
             {
                 mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
-                mesh.Translate(0, 7f / 16, 0);
+                mesh.Translate(0, 13f / 16, 0);
             }
 
 

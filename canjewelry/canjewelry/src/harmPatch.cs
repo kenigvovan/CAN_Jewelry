@@ -72,7 +72,7 @@ namespace canjewelry.src
 
 
 
-            canjewelry.sapi.SendMessage(ep.Player, 0, add.ToString() + ep.Stats[socketSlot.GetString("attributeBuff")].GetBlended().ToString() + socketSlot.GetString("attributeBuff"), EnumChatType.Notification);
+            //canjewelry.sapi.SendMessage(ep.Player, 0, add.ToString() + ep.Stats[socketSlot.GetString("attributeBuff")].GetBlended().ToString() + socketSlot.GetString("attributeBuff"), EnumChatType.Notification);
         }
 
         /*

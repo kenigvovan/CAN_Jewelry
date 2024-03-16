@@ -24,6 +24,33 @@
   },
   "attributes": {
     "panningDrops": {
+      "game:rock-suevite": [
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-normal-diamond",
+          "chance": {
+            "avg": 0.2,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-flawed-diamond",
+          "chance": {
+            "avg": 0.3,
+            "var": 0
+          }
+        },
+        {
+          "type": "item",
+          "code": "canjewelry:gem-rough-chipped-diamond",
+          "chance": {
+            "avg": 0.5,
+            "var": 0
+          }
+        }
+      ],
+      //
       "@(ore|crystalizedore)-bountiful-hematite-.*": [
         {
           "type": "item",

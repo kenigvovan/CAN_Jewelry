@@ -405,9 +405,19 @@ namespace canjewelry.src.blocks
                 //var c2 = base.FirstCodePart(0);
                 if (oreSlot.Itemstack != null && oreSlot.Itemstack.Item != null)
                 {
-                    if(oreSlot.Itemstack.StackSize < canjewelry.config.pan_take_per_use)
+                    if (oreSlot.Itemstack.Item.Code.Path.Contains("stone"))
                     {
-                        return;
+                        if (oreSlot.Itemstack.StackSize < canjewelry.config.pan_take_per_use * 4)
+                        {
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (oreSlot.Itemstack.StackSize < canjewelry.config.pan_take_per_use)
+                        {
+                            return;
+                        }
                     }
                     string firstCodePart = oreSlot.Itemstack.Item.FirstCodePart(0);
                     string itemCode;
@@ -415,6 +425,10 @@ namespace canjewelry.src.blocks
                     {
 
                         itemCode = "ore-" + CodePartsAfterFirst(oreSlot.Itemstack.Item.Code.ToShortString());
+                    }
+                    else if(firstCodePart.Equals("stone"))
+                    {
+                        itemCode = "game:rock-" + CodePartsAfterFirst(oreSlot.Itemstack.Item.Code.SecondCodePart());
                     }
                     else
                     {
@@ -436,7 +450,14 @@ namespace canjewelry.src.blocks
                     }
                     
                     this.SetMaterial(slot, itemCode);
-                    oreSlot.TakeOut(canjewelry.config.pan_take_per_use);
+                    if (oreSlot.Itemstack.Item.Code.Path.Contains("stone"))
+                    {
+                        oreSlot.TakeOut(canjewelry.config.pan_take_per_use * 4);
+                    }
+                    else
+                    {
+                        oreSlot.TakeOut(canjewelry.config.pan_take_per_use);
+                    }
                     oreSlot.MarkDirty();
                     slot.MarkDirty();
                     return;

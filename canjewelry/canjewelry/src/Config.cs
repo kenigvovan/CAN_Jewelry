@@ -18,35 +18,39 @@ namespace canjewelry.src
         public Dictionary<string, HashSet<string>> buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
         (new Dictionary<string, HashSet<string>> {
             {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara" } },
-            {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara" } },
+            {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler" } },
             {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-            {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace", "cantiara" } },
+            {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
+                "cansimplenecklace", "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir" } },
+
             {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique", "cantiara" } },
             {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara", "scythe" } },
             {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
             {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
-            {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" , "cantiara" } },
-            {"ruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+            {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" , "cantiara", "tspaxel", "tunneler" } },
+            {"ruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound"  }},
             {"citrine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
 
             {"berylaquamarine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara" } },
-            {"berylbixbite", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara" } },
-            {"corundumruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
-            {"corundumsapphire", new HashSet<string>{ "pickaxe", "cansimplenecklace", "cantiara" } },
-            {"garnetalmandine",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+            {"berylbixbite", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler" } },
+            {"corundumruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound"  }},
+            {"corundumsapphire", new HashSet<string>{ "pickaxe", "cansimplenecklace", "cantiara", "tunneler" } },
+            {"garnetalmandine",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tspaxel", "tbow-compound"  }},
             {"garnetandradite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },           
-            {"garnetgrossular", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace", "cantiara" } },
+            {"garnetgrossular", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace",
+                "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir"} },
             {"garnetpyrope",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
             {"garnetspessartine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
             {"garnetuvarovite",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
             {"spinelred", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
             {"topazamber", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara" } },
-             {"topazblue", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-             {"topazpink",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
-             {"tourmalinerubellite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-             {"tourmalineschorl", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace", "cantiara" } },
-              {"tourmalineverdelite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
-              {"tourmalinewatermelon",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
+            {"topazblue", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
+            {"topazpink",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
+            {"tourmalinerubellite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
+            {"tourmalineschorl", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
+                "cansimplenecklace", "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir" } },
+            {"tourmalineverdelite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
+            {"tourmalinewatermelon",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound" }},
 
 
         });
@@ -269,7 +273,73 @@ namespace canjewelry.src
 
             {  "bow-simple", new int[1] {3} },
             {  "bow-recurve", new int[2] {3, 3} },
-            {  "bow-long", new int[2] {3, 3} }
+            {  "bow-long", new int[2] {3, 3} },
+                       
+            { "tstools:ihammer",  new int[1] { 3 } },
+            { "tstools:tshammer",  new int[2] {3, 3}  },
+            { "tstools:tspaxel",  new int[2] {3, 3}  },
+            { "tstools:tspickaxe",  new int[2] {3, 3}  },
+            { "tstools:biaxe",  new int[2] {3, 3}  },
+            { "tstools:tssword",  new int[2] {3, 3}  },
+            { "tstools:shammer",  new int[2] {3, 3}  },
+            { "tstools:hamb",  new int[2] {3, 3}  },
+            { "tstools:tbow-compound",  new int[2] {3, 3}  },
+
+            { "swordz:zweihander-iron-*",  new int[2] {3, 3}  },
+            { "swordz:zweihander-meteoriciron-*",  new int[2] {3, 3}  },
+            { "swordz:zweihander-steel-*",  new int[3] {3, 3, 3}  },
+
+            { "swordz:atgeir-iron",  new int[2] {3, 3}  },
+            { "swordz:atgeir-meteoriciron",  new int[2] {3, 3}  },
+            { "swordz:atgeir-steel",  new int[3] {3, 3, 3}  },
+
+            {  "swordz:armor-head-*", new int[1] {3} },
+            {  "swordz:armor-legs-*", new int[1] {3} },
+            {  "swordz:armor-body-*", new int[2] {3, 3} },
+
+            { "swordz:tunneler-steel-*",  new int[2] {3, 3}  },
+            { "swordz:tunneler-stainlesssteel-*",  new int[2] {3, 3}  },
+            { "swordz:tunneler-titanium-*",  new int[3] {3, 3, 3}  },
+            { "swordz:tunneler-mithril-*",  new int[3] {3, 3, 3}  },
+            { "swordz:tunneler-adamant-*",  new int[3] {3, 3, 3}  },
+            { "swordz:tunneler-orichalcum-*",  new int[3] {3, 3, 3}  },
+            { "swordz:tunneler-aithril-*",  new int[4] {3, 3, 3, 3}  },
+
+            { "swordz:pernach-iron-*",  new int[2] {3, 3}  },
+            { "swordz:pernach-meteoriciron-*",  new int[2] {3, 3}  },
+            { "swordz:pernach-steel-*",  new int[3] {3, 3, 3}  },
+
+            { "swordz:warhammer-iron",  new int[2] {3, 3}  },
+            { "swordz:warhammer-meteoriciron",  new int[2] {3, 3}  },
+            { "swordz:warhammer-steel",  new int[3] {3, 3, 3}  },
+
+            { "swordz:stiletto-iron",  new int[2] {3, 3}  },
+            { "swordz:stiletto-meteoriciron",  new int[2] {3, 3}  },
+            { "swordz:stiletto-steel",  new int[3] {3, 3, 3}  },
+
+
+            { "swordz:knife-generic-stainelesssteel", new int[1] {3} },
+             { "swordz:knife-generic-titanium", new int[2] {3, 3} },
+             { "swordz:knife-generic-mithril", new int[2] {3, 3} },
+             { "swordz:knife-generic-adamant", new int[2] {3, 3} },
+             { "swordz:knife-generic-orichalcum", new int[2] {3, 3} },
+             { "swordz:knife-generic-aithril", new int[3] {3, 3, 3} },
+
+              { "swordz:sord-iron-*",  new int[2] {3, 3}  },
+            { "swordz:sord-meteoriciron-*",  new int[2] {3, 3}  },
+            { "swordz:sord-steel-*",  new int[3] {3, 3, 3}  },
+
+
+            { "swordz:gladius-iron-*",  new int[2] {3, 3}  },
+
+
+            { "swordz:kilij-iron-*",  new int[2] {3, 3}  },
+            { "swordz:kilij-meteoriciron-*",  new int[2] {3, 3}  },
+            { "swordz:kilij-steel-*",  new int[3] {3, 3, 3}  },
+
+             { "swordz:longsword-iron-*",  new int[2] {3, 3}  },
+            { "swordz:longsword-meteoriciron-*",  new int[2] {3, 3}  },
+            { "swordz:longsword-steel-*",  new int[3] {3, 3, 3}  },
         };
         public int pan_take_per_use = 8;
         public Dictionary<string, string> gem_type_to_buff = new Dictionary<string, string>()

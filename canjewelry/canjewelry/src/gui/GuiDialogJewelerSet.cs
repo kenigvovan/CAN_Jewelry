@@ -347,7 +347,7 @@ namespace canjewelry.src.jewelry
             for(int i = 0; i < availableGemTypes.Length; i++)
             {
                 ElementBounds el = textBounds.CopyOffsetedSibling().WithFixedHeight(20)
-                    .WithFixedWidth(maxWidth * 7)
+                    .WithFixedWidth(maxWidth * 8)
                     .WithFixedPosition(0, i * 20);
                 bgBounds.WithChildren(el);
 

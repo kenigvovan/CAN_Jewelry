@@ -285,14 +285,26 @@ namespace canjewelry.src.items
                 //new AssetLocation("canjewelry:item/gem/notvis.png");
                 tmpTextures["loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
                 tmpTextures["socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
-                if (gem == "none")
+
+
+                if (!canjewelry.gems_textures.TryGetValue(gem, out string assetPath))
+                {
+                    tmpTextures["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    tmpTextures["gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                }
+
+
+               /* if (gem == "none")
                 {
                     tmpTextures["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
                 }
                 else
                 {
                     tmpTextures["gem"] = new AssetLocation("canjewelry:item/gem/" + gem + ".png");
-                }
+                }*/
                 itemstack.Item.Textures.TryGetValue("loop", out var compositeTexture);
                 var c =  api.Assets.TryGet("game:textures/block/stone/gem/emerald.png");
                 //CompositeTexture
@@ -468,18 +480,19 @@ namespace canjewelry.src.items
             string socket = stack.Attributes.GetString("socket", null);
             string gem = stack.Attributes.GetString("gem", null);
 
-            newdict["loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
-            newdict["socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
-            if (gem == "none")
+
+            if (!canjewelry.gems_textures.TryGetValue(gem, out string assetPath))
             {
                 newdict["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
             }
             else
             {
-                newdict["gem"] = new AssetLocation("canjewelry:item/gem/" + gem + ".png");
+                newdict["gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
             }
-
-
+           
+            newdict["loop"] = new AssetLocation("block/metal/sheet/" + loop + "1.png");
+            newdict["socket"] = new AssetLocation("block/metal/plate/" + socket + ".png");
+          
             foreach (var val in newdict)
             {
                 CompositeTexture ctex = new CompositeTexture() { Base = val.Value };

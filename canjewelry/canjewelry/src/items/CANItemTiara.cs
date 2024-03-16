@@ -260,9 +260,9 @@ namespace canjewelry.src.items
 
             string construction = this.Construction;
             string carcassus = itemstack.Attributes.GetString("carcassus", "steel");
-            string gem_1 = itemstack.Attributes.GetString("gem_1", "none");
+           /* string gem_1 = itemstack.Attributes.GetString("gem_1", "none");
             string gem_2 = itemstack.Attributes.GetString("gem_2", "none");
-            string gem_3 = itemstack.Attributes.GetString("gem_3", "none");
+            string gem_3 = itemstack.Attributes.GetString("gem_3", "none");*/
 
             if (compositeShape == null)
             {
@@ -278,44 +278,20 @@ namespace canjewelry.src.items
                 return null;
             }
             this.tmpTextures.Clear();
-            //if (construction == "normal-tiara")
+
+            for(int i = 1; i < 4; i++)
             {
-                //new AssetLocation("canjewelry:item/gem/notvis.png");
-                tmpTextures["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
-                if (gem_1 == "none")
+                if (!canjewelry.gems_textures.TryGetValue(itemstack.Attributes.GetString("gem_" + i.ToString(), "none"), out string assetPath))
                 {
-                    tmpTextures["1_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                    tmpTextures[i.ToString() + "_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
                 }
                 else
                 {
-                    tmpTextures["1_gem"] = new AssetLocation("game:block/stone/gem/" + gem_1 + ".png");
+                    tmpTextures[i.ToString() + "_gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
                 }
-
-                if (gem_2 == "none")
-                {
-                    tmpTextures["2_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                else
-                {
-                    tmpTextures["2_gem"] = new AssetLocation("game:block/stone/gem/" + gem_2 + ".png");
-                }
-
-                if (gem_3 == "none")
-                {
-                    tmpTextures["3_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                else
-                {
-                    tmpTextures["3_gem"] = new AssetLocation("game:block/stone/gem/" + gem_3 + ".png");
-                }
-
-                //itemstack.Item.Textures.TryGetValue("carcassus", out var compositeTexture);
-
-
-                //itemstack.Item.Textures["gem"] = compositeTexture;
             }
 
-
+            tmpTextures["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
             shape.Textures = shape2.Textures;
 
 
@@ -488,43 +464,18 @@ namespace canjewelry.src.items
 
 
             newdict["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
-            /*if (gem == "none")
+            for (int i = 1; i < 4; i++)
             {
-                newdict["gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                if (!canjewelry.gems_textures.TryGetValue(stack.Attributes.GetString("gem_" + i.ToString(), "none"), out string assetPath))
+                {
+                    newdict[i.ToString() + "_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    newdict[i.ToString() + "_gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                }
             }
-            else
-            {
-                newdict["gem"] = new AssetLocation("game:block/stone/gem/" + gem + ".png");
-            }*/
-            if (gem_1 == "none")
-            {
-                newdict["1_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
-            else
-            {
-                newdict["1_gem"] = new AssetLocation("game:block/stone/gem/" + gem_1 + ".png");
-            }
-
-            if (gem_2 == "none")
-            {
-                newdict["2_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
-            else
-            {
-                newdict["2_gem"] = new AssetLocation("game:block/stone/gem/" + gem_2 + ".png");
-            }
-
-            if (gem_3 == "none")
-            {
-                newdict["3_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
-            else
-            {
-                newdict["3_gem"] = new AssetLocation("game:block/stone/gem/" + gem_3 + ".png");
-            }
-
-
-
+           
             foreach (var val in newdict)
             {
                 CompositeTexture ctex = new CompositeTexture() { Base = val.Value };

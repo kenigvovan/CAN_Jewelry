@@ -397,17 +397,17 @@ namespace canjewelry.src.jewelry
                     //geol
                     var codeSplits = item_code.Path.Split('-');
                     string gemBase = codeSplits[1];
-                    string gemSize = "normal";
+                    string gemSize = "chipped";
                     if (activeSlot.Itemstack.Attributes.HasAttribute("potential"))
                     {
                         string potential_val = activeSlot.Itemstack.Attributes.GetString("potential");
                         if(potential_val == "medium")
                         {
-                            gemSize = "flawless";
+                            gemSize = "flawed";
                         }
                         else if(potential_val == "high")
                         {
-                            gemSize = "exquisite";
+                            gemSize = "normal";
                         }
                     }
 

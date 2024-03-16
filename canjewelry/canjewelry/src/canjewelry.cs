@@ -80,7 +80,7 @@ namespace canjewelry.src
             });
 
             //Set colors of processed gems on jewel grinder
-            Item[] arrayResult = api.World.SearchItems(new AssetLocation("canjewelry:gem-rough-*"));
+            Item[] arrayResult = api.World.SearchItems(new AssetLocation("canjewelry:gem-cut-*"));
             foreach(var gem in arrayResult)
             {
                 string gemType = gem.Code.Path.Split('-').Last();
@@ -154,18 +154,6 @@ namespace canjewelry.src
                 }
             }         
             
-            /*StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append("{");
-            foreach(var it in config.gem_type_to_buff)
-            {
-                stringBuilder.Append(it.Key);
-                stringBuilder.Append(":");
-                stringBuilder.Append(it.Value);
-                stringBuilder.Append(",");
-            }
-            stringBuilder.Append("}");
-            JToken buffs_token = JToken.Parse(stringBuilder.ToString());*/
-
             Item[] rough_gems_items = api.World.SearchItems(new AssetLocation("canjewelry:gem-rough-*"));
 
             foreach(var gem in rough_gems_items)
