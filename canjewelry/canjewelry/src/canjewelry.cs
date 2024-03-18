@@ -292,9 +292,13 @@ namespace canjewelry.src
                                     {
                                         return;
                                     }
-                                    for (int j = 0; j < encrustTree.GetInt("socketsnumber"); j++)
+                                    for (int j = 0; j < itemStack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); j++)
                                     {
                                         ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + j.ToString());
+                                        if(socketSlot == null)
+                                        {
+                                            continue;
+                                        }
                                         if (!socketSlot.HasAttribute("attributeBuff"))
                                         {
                                             continue;

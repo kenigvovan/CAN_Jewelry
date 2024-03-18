@@ -340,6 +340,8 @@ namespace canjewelry.src
              { "swordz:longsword-iron-*",  new int[2] {3, 3}  },
             { "swordz:longsword-meteoriciron-*",  new int[2] {3, 3}  },
             { "swordz:longsword-steel-*",  new int[3] {3, 3, 3}  },
+
+            { "diamondpick-steel",  new int[3] {3, 3, 3}  },
         };
         public int pan_take_per_use = 8;
         public Dictionary<string, string> gem_type_to_buff = new Dictionary<string, string>()
@@ -375,6 +377,12 @@ namespace canjewelry.src
             { "tourmalineschorl",  "mechanicalsDamage"},
             { "tourmalineverdelite",  "healingeffectivness"},
             { "tourmalinewatermelon",  "rangedWeaponsAcc"}
+        };
+
+        public Dictionary<string, float> max_buff_values = new Dictionary<string, float>()
+        {
+            { "walkspeed", 0.5f},
+            { "maxhealthExtraPoints", 25}
         };
     }
 }
