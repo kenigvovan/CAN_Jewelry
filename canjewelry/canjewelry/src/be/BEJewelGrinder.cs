@@ -373,6 +373,7 @@ namespace canjewelry.src.jewelry
                 }
                 ItemSlot activeSlot = player.InventoryManager.ActiveHotbarSlot;
                 AssetLocation item_code = activeSlot.Itemstack.Collectible.Code;
+            
                 if (item_code.Path.Contains("gem-rough-"))
                 {
                    
@@ -416,7 +417,7 @@ namespace canjewelry.src.jewelry
 
                     tree.SetString("gembase", gemBase);
                     tree.SetString("gemsize", gemSize);
-                    tree.SetString("mod", "geology");
+                    //tree.SetString("mod", "geology");
                     tree.SetInt("grindtype", 0);
                     tree.SetInt("grindcounter", 20);
                     newIS.Attributes["cangrindlayerinfo"] = tree;

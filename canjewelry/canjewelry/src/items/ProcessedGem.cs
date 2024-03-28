@@ -141,8 +141,6 @@ namespace canjewelry.src.jewelry
             if (itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
             {
                 tree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
-                //var tmp = (int)tree.GetString("gembase")[0];
-
                 meshrefid = (tree.GetString("gembase") + tree.GetInt("grindtype").ToString() + tree.GetString("gemsize").ToString()).GetHashCode();
             }
             
@@ -180,36 +178,32 @@ namespace canjewelry.src.jewelry
                 itree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
                 
                 gemBase = itree.GetString("gembase");
-                gemSize = itree.GetString("gemsize");
-                if(gemBase.Equals("olivine_peridot"))
+
+                if (gemBase.Equals("olivine_peridot"))
                 {
                     gemBase = "olivine";
                 }
-                string texture_path = "game:block/stone/gem/";
-                if (itree.HasAttribute("mod"))
-                {
-                    texture_path = "game:item/resource/ungraded/";
-                }
 
-                this.tmpTextures["gembase"] = new AssetLocation(texture_path + gemBase + ".png");
-                if (itree.GetInt("grindtype") <= 0)
+                if (!canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
                 {
-                    this.tmpTextures["emeralddefect0"] = new AssetLocation(texture_path + gemBase + ".png");
+                    canjewelry.gems_textures.TryGetValue("diamond", out assetPath);
                 }
-               else
-                {
-                    this.tmpTextures["emeralddefect0"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
+                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
 
-                 if (itree.GetInt("grindtype") <= 1)
+                this.tmpTextures["gembase"] = asset;
+
+                for(int i = 0; i < 2; i++)
                 {
-                    this.tmpTextures["emeralddefect1"] = new AssetLocation(texture_path + gemBase + ".png");
+                    if (itree.GetInt("grindtype") <= i)
+                    {
+                        this.tmpTextures["emeralddefect" + i] = asset;
+                    }
+                    else
+                    {
+                        this.tmpTextures["emeralddefect" + i] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                    }
                 }
-                else
-                {
-                    this.tmpTextures["emeralddefect1"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                this.tmpTextures["emeralddefect2"] = new AssetLocation(texture_path + gemBase + ".png");
+                this.tmpTextures["emeralddefect2"] = asset;
             }
             else
             {
@@ -217,7 +211,14 @@ namespace canjewelry.src.jewelry
                 {
                     gemBase = "olivine";
                 }
-                this.tmpTextures["gembase"] = new AssetLocation("game:block/stone/gem/" + gemBase + ".png");
+
+                if (!canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
+                {
+                    canjewelry.gems_textures.TryGetValue("diamond", out assetPath);
+                }
+                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
+
+                this.tmpTextures["gembase"] = asset;
             }        
             MeshData mesh;
             this.capi.Tesselator.TesselateItem(this, out mesh, this);
@@ -232,49 +233,7 @@ namespace canjewelry.src.jewelry
             }
             return "";          
         }
-        public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
-        {
-            base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
-           /* ItemStack itemstack = inSlot.Itemstack;
-            JsonObject jsonObject;
-            if (itemstack == null)
-            {
-                jsonObject = null;
-            }
-            else
-            {
-                JsonObject itemAttributes = itemstack.ItemAttributes;
-                jsonObject = ((itemAttributes != null) ? itemAttributes["shield"] : null);
-            }
-            JsonObject attr = jsonObject;
-            if (attr == null || !attr.Exists)
-            {
-                return;
-            }
-            float acdmgabsorb = attr["damageAbsorption"]["active"].AsFloat(0f);
-            float acchance = attr["protectionChance"]["active"].AsFloat(0f);
-            float padmgabsorb = attr["damageAbsorption"]["passive"].AsFloat(0f);
-            float pachance = attr["protectionChance"]["passive"].AsFloat(0f);
-            dsc.AppendLine(Lang.Get("shield-stats", new object[]
-            {
-                (int)(100f * acchance),
-                (int)(100f * pachance),
-                acdmgabsorb,
-                padmgabsorb
-            }));
-            string construction = this.Construction;
-            if (construction == "woodmetal")
-            {
-                dsc.AppendLine("Wood: " + inSlot.Itemstack.Attributes.GetString("wood", null));
-                dsc.AppendLine("Metal: " + inSlot.Itemstack.Attributes.GetString("metal", null));
-                return;
-            }
-            if (!(construction == "woodmetalleather"))
-            {
-                return;
-            }
-            dsc.AppendLine("Metal: " + inSlot.Itemstack.Attributes.GetString("metal", null));*/
-        }
+
         public MeshData GenMesh(ItemStack itemstack, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
         {
             return this.GenMesh(itemstack, targetAtlas);
@@ -283,10 +242,6 @@ namespace canjewelry.src.jewelry
         {
             string gemBase = itemstack.Attributes.GetString("gembase", null);
             string gemSize = itemstack.Attributes.GetString("gemsize", null);
-            /*string wood = itemstack.Attributes.GetString("wood", null);
-            string metal = itemstack.Attributes.GetString("metal", null);
-            string color = itemstack.Attributes.GetString("color", null);
-            string deco = itemstack.Attributes.GetString("deco", null);*/
             return string.Concat(new string[]
             {
                 this.Code.ToShortString(),

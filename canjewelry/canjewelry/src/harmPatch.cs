@@ -803,5 +803,79 @@ namespace canjewelry.src
 
             return;
         }
+
+        //Prefix_GetDrops
+        public static void Prefix_GetDrops(Vintagestory.API.Common.Block __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+        {
+            var f = 3;
+
+            bool flag = false;
+            List<ItemStack> list = new List<ItemStack>();
+            BlockBehavior[] blockBehaviors = __instance.BlockBehaviors;
+            foreach (BlockBehavior obj in blockBehaviors)
+            {
+                EnumHandling handling = EnumHandling.PassThrough;
+                ItemStack[] drops = obj.GetDrops(world, pos, byPlayer, ref dropQuantityMultiplier, ref handling);
+                if (drops != null)
+                {
+                    list.AddRange(drops);
+                }
+
+                switch (handling)
+                {
+                    case EnumHandling.PreventSubsequent:
+                        return;
+                    case EnumHandling.PreventDefault:
+                        flag = true;
+                        break;
+                }
+            }
+
+            if (flag)
+            {
+                return;
+            }
+
+            if (__instance.Drops == null)
+            {
+                return;
+            }
+
+            List<ItemStack> list2 = new List<ItemStack>();
+            for (int j = 0; j < __instance.Drops.Length; j++)
+            {
+                BlockDropItemStack blockDropItemStack = __instance.Drops[j];
+                if (blockDropItemStack.Tool.HasValue && (byPlayer == null || blockDropItemStack.Tool != byPlayer.InventoryManager.ActiveTool))
+                {
+                    continue;
+                }
+
+                float num = 1f;
+                if (blockDropItemStack.DropModbyStat != null)
+                {
+                    num = byPlayer.Entity.Stats.GetBlended(blockDropItemStack.DropModbyStat);
+                }
+
+                ItemStack itemStack = __instance.Drops[j].GetNextItemStack(dropQuantityMultiplier * num);
+                if (itemStack != null)
+                {
+                    if (itemStack.Collectible is IResolvableCollectible resolvableCollectible)
+                    {
+                        DummySlot dummySlot = new DummySlot(itemStack);
+                        resolvableCollectible.Resolve(dummySlot, world);
+                        itemStack = dummySlot.Itemstack;
+                    }
+
+                    list2.Add(itemStack);
+                    if (__instance.Drops[j].LastDrop)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            list2.AddRange(list);
+            return;
+        }
     }
 }

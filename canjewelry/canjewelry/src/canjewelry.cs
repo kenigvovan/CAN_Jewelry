@@ -150,7 +150,10 @@ namespace canjewelry.src
                 }
                 else
                 {
-                    api.Logger.Debug(String.Format("[canjewelry] Item with \"{0}\" code not found", it.Key));
+                    if (config.debugMode)
+                    {
+                        api.Logger.VerboseDebug(String.Format("[canjewelry] Item with \"{0}\" code not found", it.Key));
+                    }
                 }
             }         
             
@@ -334,7 +337,8 @@ namespace canjewelry.src
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
-
+            //GetDrops IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f
+            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.Block).GetMethod("GetDrops"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_GetDrops")));
             api.Event.PlayerNowPlaying += onPlayerPlaying;
             api.Event.PlayerRespawn += onPlayerRespawnRecalculateGemsBuffs;
 
@@ -344,6 +348,55 @@ namespace canjewelry.src
             api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, rr);
 
             commands.RegisterCommands.registerServerCommands(sapi);
+
+            
+            foreach(var it in config.gems_drops_table)
+            {
+                Block[] found_blocks = api.World.SearchBlocks(new AssetLocation(it.Key));
+                foreach(var block in found_blocks) 
+                {
+                    List<BlockDropItemStack> blockDropsToAdd = new List<BlockDropItemStack>();
+                    foreach(var dropInfo in it.Value)
+                    {
+                        ItemStack itemStack;
+                        if (dropInfo.TypeCollectable == EnumItemClass.Item)
+                        {
+                            Item item = sapi.World.GetItem(new AssetLocation(dropInfo.NameCollectable));
+                            if (item == null)
+                            {
+                                sapi.Logger.VerboseDebug(dropInfo.NameCollectable + " not found.");
+                                continue; 
+                            }
+                            itemStack = new ItemStack(item);
+                            if(itemStack == null)
+                            {
+                                var ff = 3;
+                            }
+                        }       
+                        else
+                        {
+                            itemStack = new ItemStack(sapi.World.GetBlock(new AssetLocation(dropInfo.NameCollectable)));
+                            if(itemStack == null)
+                            {
+                                var f = 3;
+                            }
+                        }
+                        BlockDropItemStack additionalDrop = new BlockDropItemStack();
+                        additionalDrop.Type = dropInfo.TypeCollectable;
+                        additionalDrop.Code = itemStack.Collectible.Code;
+                        additionalDrop.ResolvedItemstack = itemStack;
+                        additionalDrop.Quantity.avg = dropInfo.avg;
+                        additionalDrop.Quantity.var = dropInfo.var;
+                        additionalDrop.LastDrop = dropInfo.LastDrop;
+                        additionalDrop.DropModbyStat = null;
+                        blockDropsToAdd.Add(additionalDrop);
+                    }
+                    block.Drops = block.Drops.Append(blockDropsToAdd.ToArray());
+                    var t = 3;
+                }
+            }
+
+
         }
         public void rr()
         {
@@ -374,7 +427,7 @@ namespace canjewelry.src
             }
             catch (Exception e)
             {
-                api.Logger.Debug("[canjewelry] No old config found.");
+
             }
             //old config was found and we just copy values from it
             if (oldConfig != null)
@@ -392,7 +445,7 @@ namespace canjewelry.src
                 }
                 catch(Exception e)
                 {
-                    api.Logger.Debug("[canjewelry] " + "Saving old config failed." + e);
+
                 }
                 return;
             }
@@ -413,15 +466,21 @@ namespace canjewelry.src
                 }
                 if (config == null)
                 {
-                    api.Logger.Debug("[canjewelry] " + "Config file not found.");
+  
                     config = new Config();
                     api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
-                    api.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " new config created and stored.");
+                    if (config.debugMode)
+                    {
+                        api.Logger.VerboseDebug("[canjewelry] " + this.Mod.Info.ModID + ".json" + " new config created and stored.");
+                    }
                     return;
                 }
                 
                 api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
-                api.Logger.Debug("[canjewelry] " + this.Mod.Info.ModID + ".json" + "config read and stored back.");
+                if (config.debugMode)
+                {
+                    api.Logger.VerboseDebug("[canjewelry] " + this.Mod.Info.ModID + ".json" + "config read and stored back.");
+                }
                 return;
             }
         }

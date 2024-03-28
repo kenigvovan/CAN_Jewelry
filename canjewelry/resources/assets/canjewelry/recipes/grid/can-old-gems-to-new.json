@@ -1,33 +1,93 @@
 ﻿[
   {
-
     "ingredientPattern": "D",
     "ingredients": {
       "D": {
         "type": "item",
-        "code": "game:gem-diamond-rough"
+        "code": "game:gem-*-rough",
+        "attributes": { "potential": "low" },
+        "name": "gem_type",
+        "allowedVariants": [ "diamond", "emerald" ]
       }
     },
-    "name": "canolddiamond",
+    "name": "canlowtochippedrough",
     "width": 1,
     "height": 1,
     "output": {
       "type": "item",
-      "code": "canjewelry:gem-rough-flawed-diamond",
+      "code": "canjewelry:gem-rough-chipped-{gem_type}",
+      "quantity": 1
+    }
+  },
+  {
+    "ingredientPattern": "D",
+    "ingredients": {
+      "D": {
+        "type": "item",
+        "code": "game:gem-*-rough",
+        "attributes": { "potential": "medium" },
+        "name": "gem_type",
+        "allowedVariants": [ "diamond", "emerald" ]
+      }
+    },
+    "name": "canmediumtoflawedrough",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-rough-flawed-{gem_type}",
+      "quantity": 1
+    }
+  },
+  {
+    "ingredientPattern": "D",
+    "ingredients": {
+      "D": {
+        "type": "item",
+        "code": "game:gem-*-rough",
+        "attributes": { "potential": "high" },
+        "name": "gem_type",
+        "allowedVariants": [ "diamond", "emerald" ]
+      }
+    },
+    "name": "canhightonormalrough",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-rough-normal-{gem_type}",
       "quantity": 1
     }
 
   },
   {
-
     "ingredientPattern": "D",
     "ingredients": {
       "D": {
         "type": "item",
-        "code": "game:gem-olivine_peridot-rough"
+        "code": "game:gem-olivine_peridot-rough",
+        "attributes": { "potential": "low" }
       }
     },
-    "name": "canolddiamond",
+    "name": "canlowtochippedrougholivine",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-rough-chipped-olivine",
+      "quantity": 1
+    }
+  },
+  {
+    "ingredientPattern": "D",
+    "ingredients": {
+      "D": {
+        "type": "item",
+        "code": "game:gem-olivine_peridot-rough",
+        "attributes": { "potential": "medium" }
+      }
+    },
+    "name": "canmediumtoflawedrougholivine",
     "width": 1,
     "height": 1,
     "output": {
@@ -35,25 +95,23 @@
       "code": "canjewelry:gem-rough-flawed-olivine",
       "quantity": 1
     }
-
   },
   {
-
     "ingredientPattern": "D",
     "ingredients": {
       "D": {
         "type": "item",
-        "code": "game:gem-emerald-rough"
+        "code": "game:gem-olivine_peridot-rough",
+        "attributes": { "potential": "high" }
       }
     },
-    "name": "canolddiamond",
+    "name": "canhightonormalrougholivine",
     "width": 1,
     "height": 1,
     "output": {
       "type": "item",
-      "code": "canjewelry:gem-rough-flawed-emerald",
+      "code": "canjewelry:gem-rough-normal-olivine",
       "quantity": 1
     }
-
   }
 ]

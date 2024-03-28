@@ -29,7 +29,10 @@ namespace canjewelry.src.commands
                                         .HandleWith(reapplyCancrustedBuffFromPlayer)
                                     .EndSub()
                                     ;
-            sapi.Logger.Debug("[canjewelry] " + "Server commands registered");
+            if (canjewelry.config.debugMode)
+            {
+                sapi.Logger.VerboseDebug("[canjewelry] " + "Server commands registered");
+            }
         }
 
 
