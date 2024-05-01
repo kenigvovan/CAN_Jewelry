@@ -18,7 +18,7 @@ using Vintagestory.GameContent.Mechanics;
 
 namespace canjewelry.src.jewelry
 {
-    public class BEJewelGrinder :  BlockEntityOpenableContainer, ITexPositionSource
+    public class BEJewelGrinder : BlockEntityContainer, ITexPositionSource
     {
         private static SimpleParticleProperties FlourParticles = new SimpleParticleProperties(1f, 3f, ColorUtil.ToRgba(40, 220, 220, 220), new Vec3d(), new Vec3d(), new Vec3f(-0.25f, -0.25f, -0.25f), new Vec3f(0.25f, 0.25f, 0.25f), minSize: 0.1f, maxSize: 0.3f, model: EnumParticleModel.Quad);
         private static SimpleParticleProperties FlourDustParticles;
@@ -26,7 +26,6 @@ namespace canjewelry.src.jewelry
         private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
         private ILoadedSound ambientSound;
         internal InventoryJewelGrinder inventory;
-        private GuiDialogBlockEntityJewelGrinder clientDialog;
         private JewelGrinderTopRenderer renderer;
         private bool automated;
         private BEBehaviorMPConsumer mpc;
@@ -130,7 +129,7 @@ namespace canjewelry.src.jewelry
                 return;
             if ((api as ICoreClientAPI) != null)
                 this.blockTexSource = (api as ICoreClientAPI).Tesselator.GetTexSource(this.Block);
-            this.renderer = new JewelGrinderTopRenderer(api as ICoreClientAPI, this.Pos, this.GenMesh("top"));
+           this.renderer = new JewelGrinderTopRenderer(api as ICoreClientAPI, this.Pos, this.GenMesh("top"));
            this.renderer.mechPowerPart = this.mpc;
            if (this.automated)
             {
@@ -140,7 +139,7 @@ namespace canjewelry.src.jewelry
           (api as ICoreClientAPI).Event.RegisterRenderer((IRenderer)this.renderer, EnumRenderStage.Opaque, "jewelgrinder");
             if (this.quernBaseMesh == null)
                 this.quernBaseMesh = this.GenMesh();
-            this.inventory.SlotModified += (int sl) => { this.setRenderer(); };
+            //this.inventory.SlotModified += (int sl) => { this.setRenderer(); };
             this.setRenderer();
 
             
@@ -285,15 +284,12 @@ namespace canjewelry.src.jewelry
 
         private void OnSlotModifid(int slotid)
         {
-           /* if (this.Api is ICoreClientAPI)
-                this.clientDialog.Update(this.inputGrindTime, this.maxGrindingTime());*/
+            if(Api is ICoreClientAPI)
+            {
+                this.GenMesh("top");
+            }
             if (slotid != 0)
                 return;
-            //this.inputGrindTime = 0.0f;
-            //this.MarkDirty();
-            if (this.clientDialog == null || !this.clientDialog.IsOpened())
-                return;
-            this.clientDialog.SingleComposer.ReCompose();
         }
 
         private void OnRetesselated()
@@ -446,7 +442,7 @@ namespace canjewelry.src.jewelry
                     float num4 = 20f * grindSpeed;
                     gemTypeToColor.TryGetValue(itree.GetString("gembase"), out int colorParticles);
 
-                    BEJewelGrinder.FlourDustParticles.Color = colorParticles;
+                    BEJewelGrinder.FlourDustParticles.Color = -421266951;//colorParticles;
                     BEJewelGrinder.FlourDustParticles.MinQuantity = num1;
                     BEJewelGrinder.FlourDustParticles.AddQuantity = num2;
                     BEJewelGrinder.FlourDustParticles.MinPos.Set((double)this.Pos.X - 1.0 / 32.0, (double)this.Pos.Y + 11.0 / 16.0, (double)this.Pos.Z - 1.0 / 32.0);
@@ -495,7 +491,7 @@ namespace canjewelry.src.jewelry
             }
 
         }
-        public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
+        /*public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
         {
             if (this.Api.World is IServerWorldAccessor && byPlayer.Entity.ServerControls.CtrlKey)
             {
@@ -503,7 +499,7 @@ namespace canjewelry.src.jewelry
                 byPlayer.InventoryManager.OpenInventory((IInventory)this.inventory);
             }
             return true;
-        }
+        }*/
 
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
@@ -534,7 +530,14 @@ namespace canjewelry.src.jewelry
                 this.updateGrindingState();
             }*/
             ICoreAPI api = this.Api;
-            if ((api != null ? (api.Side == EnumAppSide.Client ? 1 : 0) : 0) == 0 || this.clientDialog == null)
+            if (api != null ? (api.Side == EnumAppSide.Client) : false)
+            {
+                if (this.renderer != null)
+                {
+                    this.renderer.meshref = (api as ICoreClientAPI).Render.UploadMesh(this.GenMesh("top"));
+                }
+                //this.GenMesh("top");
+            }
                 return;
             //this.clientDialog.Update(this.inputGrindTime, this.maxGrindingTime());
         }
@@ -565,7 +568,6 @@ namespace canjewelry.src.jewelry
                 this.ambientSound.Stop();
                 this.ambientSound.Dispose();
             }
-            this.clientDialog?.TryClose();
             this.renderer?.Dispose();
             this.renderer = null;
         }
@@ -593,21 +595,6 @@ namespace canjewelry.src.jewelry
                 player.InventoryManager.CloseInventory((IInventory)this.Inventory);
             }
         }
-
-        public override void OnReceivedServerPacket(int packetid, byte[] data)
-        {
-            if (packetid == 1000 && (this.clientDialog == null || !this.clientDialog.IsOpened()))
-            {
-                this.clientDialog = new GuiDialogBlockEntityJewelGrinder(this.DialogTitle, this.Inventory, this.Pos, this.Api as ICoreClientAPI);
-                this.clientDialog.TryOpen();
-                this.clientDialog.OnClosed += (Action)(() => this.clientDialog = (GuiDialogBlockEntityJewelGrinder)null);
-               // this.clientDialog.Update(this.inputGrindTime, this.maxGrindingTime());
-            }
-            if (packetid != 1001)
-                return;
-            ((IClientWorldAccessor)this.Api.World).Player.InventoryManager.CloseInventory((IInventory)this.Inventory);
-        }
-
         public ItemSlot InputSlot => this.inventory[0];
 
         public ItemSlot OutputSlot => this.inventory[1];

@@ -1,20 +1,4 @@
 ﻿{
-  "item-leather-croc-plain": "Крокодиляча шкіра",
-  "item-crochide-soaked-huge": "Просочена крокодиляча шкура",
-  "item-crochide-scraped-huge": "Вискоблена крокодиляча шкура",
-  "item-crochide-prepared-huge": "Підготовлена крокодиляча шкура",
-
-  "smithed_by": "Виковано: {0}",
-  "playername_color": "#ffffff",
-  "can-level": "Рівень:<font color=\"#99c9f9\">{0}</font>",
-  "can-curexp-allexp": "Од. Досвіду.:<font color=\"#99c9f9\">{0}/{1}</font>",
-  "new_level_achieved": "Новий рівень - {0}",
-  "n_uses_per_hours_interval": "{0} використань/{1} годин",
-  "gui-rename-ok": "Перейменувати",
-  "rename_gui_name": "Блок для перейменування",
-  "gui_add_socket": "Додати виїмку",
-  "gui_add_gem": "Додати дорогоцінне каміння",
-
   "jewelset_gui_name": "Ювелірний набір",
 
   "block-renamecollectible": "Блок для перейменування",

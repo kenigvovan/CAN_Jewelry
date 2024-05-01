@@ -1,27 +1,5 @@
 ﻿{
-  "item-leather-croc-plain": "Crocodile leather",
-  "item-crochide-soaked-huge": "Soaked crocodile hide",
-  "item-crochide-scraped-huge": "Scraped crocodile hide",
-  "item-crochide-prepared-huge": "Prepared crocodile hide",
-
-
-  "game:tabname-collabclasses": "Collaborative Classes",
-  "game:collaborative-classes-title": "Collaborative Classes",
-
-  "smithed_by": "Forged by: {0}",
-  "playername_color": "#ffffff",
-  "can-level": "Level:<font color=\"#99c9f9\">{0}</font>",
-  "can-curexp-allexp": "Exp.:<font color=\"#99c9f9\">{0}/{1}</font>",
-  "new_level_achieved": "New level - {0}",
-  "n_uses_per_hours_interval": "{0} uses/{1} hours",
-  "gui-rename-ok": "Rename",
-  "rename_gui_name": "Renaming block",
-  "gui_add_socket": "Add socket",
-  "gui_add_gem": "Add gem",
-
   "jewelset_gui_name": "Jewel set",
-
-  "block-renamecollectible": "Renaming block",
 
   "item-gem-rough-chipped-diamond": "Small rough diamond",
   "item-gem-rough-flawed-diamond": "Medium rough diamond",
@@ -289,5 +267,8 @@
   "block-canpan-iron": "Iron pan",
   "item-grindlayeritem-rough": "Rough grindlayer",
   "item-grindlayeritem-medium": "Medium grindlayer",
-  "item-grindlayeritem-fine": "Fine grindlayer"
+  "item-grindlayeritem-fine": "Fine grindlayer",
+
+
+  "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer"
 }

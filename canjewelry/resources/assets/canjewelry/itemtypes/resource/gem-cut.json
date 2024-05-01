@@ -43,7 +43,7 @@
     },
     {
       "code": "gemtype",
-      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ]
+      "states": [ "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine", "amethyst" ]
     }
   ],
   "storageFlags": 5,

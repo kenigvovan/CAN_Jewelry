@@ -55,11 +55,11 @@ namespace canjewelry.src.inventories
             {
                 return false;
             }
-
+            var f = canjewelry.config;
             int sinkId = sinkSlot.Inventory.GetSlotId(sinkSlot);
             if (sinkId == 0)
             {
-                if (sourceSlot.Itemstack.Collectible.HasBehavior<EncrustableCB>())
+                if (sourceSlot.Itemstack.Collectible.HasBehavior<EncrustableCB>() && sourceSlot.Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
                 {
                     return true;
                 }

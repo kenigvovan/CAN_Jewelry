@@ -1,16 +1,4 @@
 ﻿{
-  "item-leather-croc-plain": "Кожа крокодила",
-  "item-crochide-soaked-huge": "Вымоченная крокодильная шкура",
-  "item-crochide-scraped-huge": "Выскобленная крокодильная шкура",
-  "item-crochide-prepared-huge": "Подготовленная крокодильная шкура",
-
-  "can-level": "Уровень:<font color=\"#99c9f9\">{0}</font>",
-  "can-curexp-allexp": "Опыт:<font color=\"#99c9f9\">{0}/{1}</font>",
-  "new_level_achieved": "Новый уровень - {0}",
-  "n_uses_per_hours_interval": "{0} использований/{1} часов",
-  "gui-rename-ok": "Применить",
-  "rename_gui_name": "Блок переименования",
-
   "item-gem-rough-chipped-diamond": "Малый грубый алмаз",
   "item-gem-rough-flawed-diamond": "Средний грубый алмаз",
   "item-gem-rough-normal-diamond": "Большой грубый алмаз",

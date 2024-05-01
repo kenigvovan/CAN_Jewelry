@@ -90,6 +90,16 @@ namespace canjewelry.src
                     BEJewelGrinder.gemTypeToColor[gemType] = color;
                 }
             }
+            capi.Event.LevelFinalize += () =>
+            {
+                Item[] cut_gems_items = api.World.SearchItems(new AssetLocation("canjewelry:gem-cut-*"));
+
+                foreach (var gem in cut_gems_items)
+                {
+                    //catch if not present?
+                    gems_textures.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
+                }
+            };
         }
 
         public void AddBehaviorAndSocketNumber(bool serverSide = true)
@@ -99,6 +109,7 @@ namespace canjewelry.src
             {
                 api = sapi;
             }
+
             foreach (var it in config.items_codes_with_socket_count_and_tiers)
             {
                 if(it.Value == null || it.Value.Length == 0)
@@ -110,7 +121,10 @@ namespace canjewelry.src
                 {
                     foreach (Item item in arrayResult)
                     {
-                        item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new EncrustableCB(item));
+                        if (!item.HasBehavior<EncrustableCB>())
+                        {
+                            item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new EncrustableCB(item));
+                        }
                         if(item.Attributes == null)
                         {
                             JToken jt = JToken.Parse("{}");
@@ -145,7 +159,7 @@ namespace canjewelry.src
                         item.Attributes.Token[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
 
                         item.Attributes = new JsonObject(item.Attributes.Token);
-                        
+                        //api.Logger.VerboseDebug("Added to " + item.Code);
                     }
                 }
                 else
@@ -368,18 +382,10 @@ namespace canjewelry.src
                                 continue; 
                             }
                             itemStack = new ItemStack(item);
-                            if(itemStack == null)
-                            {
-                                var ff = 3;
-                            }
                         }       
                         else
                         {
                             itemStack = new ItemStack(sapi.World.GetBlock(new AssetLocation(dropInfo.NameCollectable)));
-                            if(itemStack == null)
-                            {
-                                var f = 3;
-                            }
                         }
                         BlockDropItemStack additionalDrop = new BlockDropItemStack();
                         additionalDrop.Type = dropInfo.TypeCollectable;
@@ -392,11 +398,8 @@ namespace canjewelry.src
                         blockDropsToAdd.Add(additionalDrop);
                     }
                     block.Drops = block.Drops.Append(blockDropsToAdd.ToArray());
-                    var t = 3;
                 }
             }
-
-
         }
         public void rr()
         {
@@ -465,9 +468,9 @@ namespace canjewelry.src
                     config.items_codes_with_socket_count["moved to items_codes_with_socket_count_and_tiers"] = 42;
                 }
                 if (config == null)
-                {
-  
+                { 
                     config = new Config();
+                    config.FillDefaultValues();
                     api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
                     if (config.debugMode)
                     {

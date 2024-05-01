@@ -18,12 +18,10 @@ namespace canjewelry.src.CB
         {
             
         }
-
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
         }
-
         public static bool TryAddSocket(InventoryBase inventory, ItemSlot encrustable, ItemSlot socketSlot, int socketNumber)
         {
             inventory.TakeLocked = true;
@@ -190,63 +188,7 @@ namespace canjewelry.src.CB
             }
             inventory.TakeLocked = false;
             return false;
-
-
-
-
-
-            /*int howManyGemsAdded = 0;
-            if (encrustable.Itemstack != null && encrustable.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
-            {
-                inventory.TakeLocked = true;
-                var tree = encrustable.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-                for (int i = 0; i < encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
-                {
-
-                    ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + i .ToString());
-                    if(treeSocket == null)
-                    {
-                        continue;
-                    }
-                    if (gems_slots[i].Itemstack != null && gems_slots[i].Itemstack.Collectible.Attributes.KeyExists("canGemType"))
-                    {
-
-                        //socket level is lower than gem type, just continue in cycle
-                        if (treeSocket.GetInt(CANJWConstants.ADDED_SOCKET_TYPE) < gems_slots[i].Itemstack.Collectible.Attributes["canGemType"].AsInt())
-                        {
-                            continue;
-                        }
-
-                        //item cannot have this gem encrusted, just loop next
-                        if (!canItemContainThisGem(gems_slots[i].Itemstack.Collectible.Code.Path.Split('-').Last(), encrustable.Itemstack))
-                        {
-                            continue;
-                        }
-
-                        treeSocket.SetInt("size", gems_slots[i].Itemstack.Collectible.Attributes["canGemType"].AsInt());
-                        treeSocket.SetString("gemtype", gems_slots[i].Itemstack.Collectible.Code.Path.Split('-').Last());
-                        treeSocket.SetString("attributeBuff", gems_slots[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString());
-
-
-                        treeSocket.SetFloat("attributeBuffValue", canjewelry.config.gems_buffs
-                            [gems_slots[i].Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][gems_slots[i].Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
-                        if (encrustable.Itemstack.Item is CANItemSimpleNecklace)
-                        {
-                            encrustable.Itemstack.Attributes.SetString("gem", gems_slots[i].Itemstack.Collectible.Code.Path.Split('-').Last());
-                        }
-
-                        gems_slots[i].TakeOut(1);
-                        gems_slots[i].MarkDirty();
-                        encrustable.MarkDirty();
-                        howManyGemsAdded++;
-                    }
-                }
-                inventory.TakeLocked = false;
-                return howManyGemsAdded;
-            }
-            return howManyGemsAdded;*/
         }
-
         public static bool canItemContainThisGem(string gemType, ItemStack targetItemStack)
         {
             if (canjewelry.config.buffNameToPossibleItem.TryGetValue(gemType, out var hashSetClasses))

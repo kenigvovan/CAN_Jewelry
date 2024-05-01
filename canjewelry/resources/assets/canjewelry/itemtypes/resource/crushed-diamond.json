@@ -38,7 +38,6 @@
 		"items": [ "*" ],
 		"canjewelry": [ "*" ]
 	},
-	"maxstacksize": 64,
 	"materialDensity": 500,
 	"guiTransform": {
 		"translation": {

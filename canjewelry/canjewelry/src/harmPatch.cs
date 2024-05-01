@@ -180,7 +180,10 @@ namespace canjewelry.src
                             for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                             {
                                 ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                                if (socketSlot != null)
+                                {
+                                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                                }
                             }
                         }
                     }
@@ -325,7 +328,10 @@ namespace canjewelry.src
                         for (int i = 0; i < itemSlot.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                         {
                             ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                            applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                            if (socketSlot != null)
+                            {
+                                applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                            }
                         }
                     }
                     if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted") && !(__instance.Itemstack.Item is ItemWearable || __instance.Itemstack.Item is CANItemWearable))
@@ -334,7 +340,10 @@ namespace canjewelry.src
                         for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                         {
                             ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                            if (socketSlot != null)
+                            {
+                                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                            }
                         }
                     }
                 }
@@ -348,7 +357,10 @@ namespace canjewelry.src
                     for (int i = 0; i < itemSlot.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
                     }
                 }
                 if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
@@ -357,7 +369,10 @@ namespace canjewelry.src
                     for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
                     }
                 }
             }
@@ -375,7 +390,10 @@ namespace canjewelry.src
                             for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                             {
                                 ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                                if (socketSlot != null)
+                                {
+                                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                                }
                             }
                         }
                     }
@@ -390,7 +408,10 @@ namespace canjewelry.src
                             for (int i = 0; i < itemSlot.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                             {
                                 ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                                applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, true);
+                                if (socketSlot != null)
+                                {
+                                    applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, true);
+                                }
                             }
                         }
                     }
@@ -404,7 +425,10 @@ namespace canjewelry.src
                     for (int i = 0; i < itemSlot.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (itemSlot.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
                     }
                 }
                 if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted") && !(__instance.Itemstack.Item is ItemWearable || __instance.Itemstack.Item is CANItemWearable))
@@ -413,7 +437,10 @@ namespace canjewelry.src
                     for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
                     }
                 }
             }
@@ -426,7 +453,10 @@ namespace canjewelry.src
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
                         //if it is chect there is no player there
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                        }
                     }
                 }
                 if (__instance.Itemstack != null && __instance.Itemstack.Attributes.HasAttribute("canencrusted"))
@@ -435,7 +465,10 @@ namespace canjewelry.src
                     for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                     {
                         ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        if (socketSlot != null)
+                        {
+                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, true);
+                        }
                     }
                 }
             }
@@ -544,7 +577,10 @@ namespace canjewelry.src
                         for (int i = 0; i < __instance.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
                         {
                             ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                            applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                            if (socketSlot != null)
+                            {
+                                applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                            }
                         }
                     }
                 }
@@ -556,7 +592,10 @@ namespace canjewelry.src
                 ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
                 if (socketSlot != null)
                 {
-                    applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                    if (socketSlot != null)
+                    {
+                        applyBuffFromItemStack(socketSlot, (__instance.Inventory as InventoryBasePlayer).Player.Entity, false);
+                    }
                 }
                 // (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", (__instance.Inventory as InventoryBasePlayer).Player.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value - socketSlot.GetFloat("attributeBuffValue"), true);
             }

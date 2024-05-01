@@ -6,8 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.API.Util;
+using Vintagestory.GameContent;
 using Vintagestory.GameContent.Mechanics;
 
 namespace canjewelry.src.blocks
@@ -35,10 +38,34 @@ namespace canjewelry.src.blocks
           IPlayer byPlayer,
           BlockSelection blockSel)
         {
-            if (!(world.BlockAccessor.GetBlockEntity(blockSel.Position) is BEJewelGrinder blockEntity) || !blockEntity.CanGrind() || blockSel.SelectionBoxIndex != 1 && !blockEntity.Inventory.openedByPlayerGUIds.Contains(byPlayer.PlayerUID))
-                return base.OnBlockInteractStart(world, byPlayer, blockSel);
-            blockEntity.SetPlayerGrinding(byPlayer, true);
-            return true;
+            if (world.BlockAccessor.GetBlockEntity(blockSel.Position) is BEJewelGrinder blockEntity) {
+
+                if (world.Claims.TryAccess(byPlayer, blockSel.Position, EnumBlockAccessFlags.BuildOrBreak))
+                {
+                    if (byPlayer.Entity.ServerControls.CtrlKey)
+                    {
+                        if (world is IServerWorldAccessor)
+                        {
+                            if (byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack == null || byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack.Item is GrindLayerBlock)
+                            {
+                                if (byPlayer.InventoryManager.ActiveHotbarSlot.TryFlipWith(blockEntity.inventory[0]))
+                                {
+                                    blockEntity.MarkDirty(true);
+                                    blockEntity.inventory.MarkSlotDirty(0);
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                }
+
+                if (blockEntity.CanGrind() && blockSel.SelectionBoxIndex == 1)
+                {
+                    blockEntity.SetPlayerGrinding(byPlayer, true);
+                    return true;
+                }
+            }
+            return base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
 
         public override bool OnBlockInteractStep(
@@ -90,23 +117,35 @@ namespace canjewelry.src.blocks
           IPlayer forPlayer)
         {
             if (selection.SelectionBoxIndex == 0)
+            {
                 return new WorldInteraction[1]
                 {
-          new WorldInteraction()
-          {
-            ActionLangCode = "blockhelp-quern-addremoveitems",
-            MouseButton = EnumMouseButton.Right
-          }
+                  new WorldInteraction()
+                  {
+                    ActionLangCode = "canjewelry:blockhelp-jewelgrinder-addremovelayer",
+                    MouseButton = EnumMouseButton.Right,
+                    HotKeyCode="ctrl"
+                  }
                 }.Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
-            return new WorldInteraction[1]
+            }
+            else
             {
-        new WorldInteraction()
-        {
-          ActionLangCode = "blockhelp-quern-grind",
-          MouseButton = EnumMouseButton.Right,
-          ShouldApply =  (wi, bs, es) => world.BlockAccessor.GetBlockEntity(bs.Position) is BEJewelGrinder blockEntity && blockEntity.CanGrind()
-        }
-            }.Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
+                return new WorldInteraction[2]
+                {
+                    new WorldInteraction()
+                    {
+                      ActionLangCode = "blockhelp-quern-grind",
+                      MouseButton = EnumMouseButton.Right,
+                      ShouldApply =  (wi, bs, es) => world.BlockAccessor.GetBlockEntity(bs.Position) is BEJewelGrinder blockEntity && blockEntity.CanGrind()
+                    },
+                    new WorldInteraction()
+                  {
+                    ActionLangCode = "canjewelry:blockhelp-jewelgrinder-addremovelayer",
+                    MouseButton = EnumMouseButton.Right,
+                    HotKeyCode="ctrl"
+                  }
+                }.Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
+            }
         }
 
         public override void DidConnectAt(IWorldAccessor world, BlockPos pos, BlockFacing face)
