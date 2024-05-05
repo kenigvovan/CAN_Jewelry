@@ -45,6 +45,10 @@
   "item-gem-rough-flawed-citrine": "Medium rough citrine",
   "item-gem-rough-normal-citrine": "Great rough citrine",
 
+  "item-gem-rough-chipped-amethyst": "Small rough amethyst",
+  "item-gem-rough-flawed-amethyst": "Medium rough amethyst",
+  "item-gem-rough-normal-amethyst": "Great rough amethyst",
+
   //Cut gems
 
   "item-gem-cut-exquisite-diamond": "Great cut diamond",
@@ -78,6 +82,10 @@
   "item-gem-cut-exquisite-quartz": "Great cut quartz",
   "item-gem-cut-flawless-quartz": "Medium cut quartz",
   "item-gem-cut-normal-quartz": "Small cut quartz",
+
+  "item-gem-cut-exquisite-amethyst": "Great cut amethyst",
+  "item-gem-cut-flawless-amethyst": "Medium cut amethyst",
+  "item-gem-cut-normal-amethyst": "Small cut amethyst",
 
 
   "item-gem-cut-exquisite-uranium": "Great cut uranium",
@@ -202,6 +210,7 @@
   "processedgem-chipped-quartz": "Small processed quartz",
   "processedgem-chipped-uranium": "Small processed uranium",
   "processedgem-chipped-citrine": "Small processed citrine",
+  "processedgem-chipped-amethyst": "Small processed amethyst",
 
   "processedgem-flawed-diamond": "Medium processed diamond",
   "processedgem-flawed-corundum": "Medium processed corundum",
@@ -212,6 +221,7 @@
   "processedgem-flawed-quartz": "Medium processed quartz",
   "processedgem-flawed-uranium": "Medium processed uranium",
   "processedgem-flawed-citrine": "Medium processed citrine",
+  "processedgem-flawed-amethyst": "Medium processed amethyst",
 
   "processedgem-normal-diamond": "Greate processed diamond",
   "processedgem-normal-corundum": "Greate processed corundum",
@@ -222,6 +232,8 @@
   "processedgem-normal-quartz": "Greate processed quartz",
   "processedgem-normal-uranium": "Greate processed uranium",
   "processedgem-normal-citrine": "Greate processed citrine",
+  "processedgem-normal-amethyst": "Greate processed amethyst",
+  "processedgem-stage": " [Stage {0}]",
 
   "buff-name-walkspeed": "<font color=\"#99c9f9\">walkspeed</font>",
   "buff-name-miningSpeedMul": "<font color=\"#99c9f9\">mining speed</font>",
@@ -242,6 +254,7 @@
   "buff-name-rangedWeaponsAcc": "<font color=\"#99c9f9\">ranged weapon accuracy</font>",
   "buff-name-armorWalkSpeedAffectedness": "<font color=\"#99c9f9\">armor walkspeed affectedness</font>",
   "buff-name-bowDrawingStrength": "<font color=\"#99c9f9\">bow drawing strength</font>",
+  "buff-name-candurability": "<font color=\"#99c9f9\">item durability</font>",
 
 
   "block-grindlayeritem-rough": "Rough grindlayer(old)",
@@ -268,7 +281,15 @@
   "item-grindlayeritem-rough": "Rough grindlayer",
   "item-grindlayeritem-medium": "Medium grindlayer",
   "item-grindlayeritem-fine": "Fine grindlayer",
+  "need_to_be_processed": "<font color=\"#9966ff\">Need to be processed</font>",
 
+  "item-canrottenkingmask-steel": "Steel leper king mask",
+  "item-canrottenkingmask-tinbronze": "Tin bronze leper king mask",
+  "item-canrottenkingmask-blackbronze": "Black bronze leper king mask",
+  "item-canrottenkingmask-gold": "Gold leper king mask",
+  "item-canrottenkingmask-silver": "Silver leper king mask",
+  "item-canrottenkingmask-iron": "Iron leper king mask",
+  "item-canrottenkingmask-meteoriciron": "Meteoric iron leper king mask",
 
   "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer"
 }

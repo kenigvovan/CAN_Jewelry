@@ -1,11 +1,11 @@
 {
   "type": "code",
   "modid": "canjewelry",
-  "name": "canjewelry",
+  "name": "CAN Jewelry",
   "authors": [ "KenigVovan" ],
   "description": "Gems and jewelry with buffs.",
   "contributors": [ "justOmi", "DarkPaapi" ],
-  "version": "0.2.27",
+  "version": "0.2.29",
   "dependencies": {
     "game": ""
   }

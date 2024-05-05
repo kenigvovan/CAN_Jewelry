@@ -1,0 +1,191 @@
+{
+	"editor": {
+		"backDropShape": "entity/humanoid/seraph",
+		"allAngles": true,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textureSizes": {
+	},
+	"textures": {
+		"rotten-king-mask": "entity/humanoid/seraphclothes/face/rottenking",
+		"rotten-king-cloth": "entity/humanoid/seraphclothes/face/rottenkingcloth"
+	},
+	"elements": [
+		{
+			"name": "origin",
+			"stepParentName": "Head",
+			"from": [ -0.2, 1.6, 2.3 ], 
+			"to": [ -0.2, 1.6, 2.3 ], 
+			"rotationOrigin": [ -0.2, 1.6, 2.3 ],
+			"rotationZ": 1.0,
+			"faces": {
+				"north": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"east": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"south": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"west": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"up": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"down": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false }
+			},
+			"children": [
+				{
+					"name": "L side",
+					"from": [ -0.8, -1.7, -2.8 ], 
+					"to": [ -0.3, 2.8, 0.2 ], 
+					"rotationOrigin": [ -0.8, -1.7, 0.2 ],
+					"rotationY": -20.0,
+					"faces": {
+						"north": { "texture": "#rotten-king-mask", "uv": [ 0.5, 4.5, 1.0, 9.0 ] },
+						"east": { "texture": "#rotten-king-mask", "uv": [ 6.0, 1.0, 9.0, 5.5 ] },
+						"south": { "texture": "#rotten-king-mask", "uv": [ 0.5, 4.5, 1.0, 9.0 ] },
+						"west": { "texture": "#rotten-king-mask", "uv": [ 5.0, 1.0, 8.0, 5.5 ] },
+						"up": { "texture": "#rotten-king-mask", "uv": [ 5.0, 1.0, 8.0, 1.5 ], "rotation": 90 },
+						"down": { "texture": "#rotten-king-mask", "uv": [ 2.5, 8.0, 5.5, 8.5 ], "rotation": 90 }
+					},
+					"children": [
+						{
+							"name": "L string",
+							"from": [ 0.0, 3.5, 0.0 ], 
+							"to": [ 6.0, 4.5, 0.5 ], 
+							"rotationOrigin": [ 0.0, 4.0, 0.0 ],
+							"rotationY": 20.0,
+							"rotationZ": -2.0,
+							"faces": {
+								"north": { "texture": "#rotten-king-mask", "uv": [ 0.0, 1.0, 6.0, 2.0 ] },
+								"east": { "texture": "#rotten-king-mask", "uv": [ 1.0, 1.0, 1.5, 2.0 ] },
+								"south": { "texture": "#rotten-king-mask", "uv": [ 3.0, 1.0, 9.0, 2.0 ] },
+								"west": { "texture": "#rotten-king-mask", "uv": [ 1.5, 1.0, 2.0, 2.0 ] },
+								"up": { "texture": "#rotten-king-mask", "uv": [ 1.5, 1.5, 7.5, 2.0 ] },
+								"down": { "texture": "#rotten-king-mask", "uv": [ 4.0, 1.5, 10.0, 2.0 ] }
+							}
+						}
+					]
+				},
+				{
+					"name": "R side",
+					"from": [ -0.8, -1.7, 0.2 ], 
+					"to": [ -0.3, 2.8, 3.2 ], 
+					"rotationOrigin": [ -0.8, -1.7, 0.2 ],
+					"rotationY": 20.0,
+					"faces": {
+						"north": { "texture": "#rotten-king-mask", "uv": [ 0.0, 4.5, 0.5, 9.0 ] },
+						"east": { "texture": "#rotten-king-mask", "uv": [ 8.0, 1.0, 11.0, 5.5 ] },
+						"south": { "texture": "#rotten-king-mask", "uv": [ 11.5, 5.5, 12.0, 10.0 ] },
+						"west": { "texture": "#rotten-king-mask", "uv": [ 8.5, 1.0, 11.5, 5.5 ] },
+						"up": { "texture": "#rotten-king-mask", "uv": [ 10.5, 1.5, 13.5, 2.0 ], "rotation": 90 },
+						"down": { "texture": "#rotten-king-mask", "uv": [ 3.5, 9.5, 6.5, 10.0 ], "rotation": 90 }
+					},
+					"children": [
+						{
+							"name": "R string",
+							"from": [ 0.0, 3.5, 2.5 ], 
+							"to": [ 6.0, 4.5, 3.0 ], 
+							"rotationOrigin": [ 0.0, 4.0, 2.9 ],
+							"rotationX": 1.1581377093192536E-7,
+							"rotationY": -20.0,
+							"rotationZ": -2.0,
+							"faces": {
+								"north": { "texture": "#rotten-king-mask", "uv": [ 3.0, 1.0, 9.0, 2.0 ] },
+								"east": { "texture": "#rotten-king-mask", "uv": [ 1.5, 1.0, 2.0, 2.0 ] },
+								"south": { "texture": "#rotten-king-mask", "uv": [ 10.0, 1.0, 16.0, 2.0 ] },
+								"west": { "texture": "#rotten-king-mask", "uv": [ 1.5, 1.0, 2.0, 2.0 ] },
+								"up": { "texture": "#rotten-king-mask", "uv": [ 1.0, 1.0, 7.0, 1.5 ] },
+								"down": { "texture": "#rotten-king-mask", "uv": [ 5.0, 1.5, 11.0, 2.0 ] }
+							}
+						}
+					]
+				},
+				{
+					"name": "back string",
+					"from": [ 5.9, 1.6, -2.5 ], 
+					"to": [ 6.4, 2.6, 3.0 ], 
+					"rotationOrigin": [ 5.9, 2.1, -0.6 ],
+					"faces": {
+						"north": { "texture": "#rotten-king-mask", "uv": [ 0.0, 1.0, 0.5, 2.0 ] },
+						"east": { "texture": "#rotten-king-mask", "uv": [ 5.0, 1.0, 10.5, 2.0 ] },
+						"south": { "texture": "#rotten-king-mask", "uv": [ 2.0, 1.0, 2.5, 2.0 ] },
+						"west": { "texture": "#rotten-king-mask", "uv": [ 4.0, 1.0, 9.5, 2.0 ] },
+						"up": { "texture": "#rotten-king-mask", "uv": [ 2.5, 1.0, 8.0, 1.5 ], "rotation": 90 },
+						"down": { "texture": "#rotten-king-mask", "uv": [ 2.5, 1.5, 8.0, 2.0 ], "rotation": 90 }
+					}
+				},
+				{
+					"name": "metal head",
+					"from": [ 0.2, -1.8, -2.4 ], 
+					"to": [ 6.3, 3.4, 2.8 ], 
+					"rotationOrigin": [ 0.2, -1.8, 0.6 ],
+					"faces": {
+						"north": { "texture": "#rotten-king-mask", "uv": [ 8.0, 10.5, 14.0, 15.5 ] },
+						"east": { "texture": "#rotten-king-mask", "uv": [ 1.0, 9.5, 6.0, 14.5 ] },
+						"south": { "texture": "#rotten-king-mask", "uv": [ 8.0, 10.0, 14.0, 15.0 ] },
+						"west": { "texture": "#rotten-king-mask", "uv": [ 1.0, 9.0, 6.0, 14.0 ] },
+						"up": { "texture": "#rotten-king-mask", "uv": [ 5.5, 11.0, 11.5, 16.0 ] },
+						"down": { "texture": "#rotten-king-mask", "uv": [ 0.5, 10.0, 6.5, 15.0 ] }
+					}
+				},
+				{
+					"name": "cloth cover",
+					"from": [ 0.0, -4.6, -2.6 ], 
+					"to": [ 6.5, 1.9, 3.0 ], 
+					"renderPass": 2,
+					"rotationOrigin": [ 3.0, 0.4, 0.2 ],
+					"rotationZ": -2.0,
+					"faces": {
+						"north": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 6.5, 6.5 ] },
+						"east": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 5.5, 6.5 ] },
+						"south": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 6.5, 6.5 ] },
+						"west": { "texture": "#rotten-king-cloth", "uv": [ 5.0, 8.5, 10.5, 15.0 ] },
+						"up": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 6.5, 5.5 ] },
+						"down": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 6.5, 5.5 ], "enabled": false }
+					}
+				},
+				{
+					"name": "neck",
+					"from": [ 1.5, -3.3, -1.6 ], 
+					"to": [ 5.1, -1.3, 2.0 ], 
+					"rotationOrigin": [ 1.5, -3.3, -1.6 ],
+					"faces": {
+						"north": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.5, 2.0 ] },
+						"east": { "texture": "#rotten-king-mask", "uv": [ 2.5, 0.0, 6.0, 2.0 ] },
+						"south": { "texture": "#rotten-king-mask", "uv": [ 6.0, 0.0, 9.5, 2.0 ] },
+						"west": { "texture": "#rotten-king-mask", "uv": [ 8.5, 0.0, 12.0, 2.0 ] },
+						"up": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.5, 3.5 ], "enabled": false },
+						"down": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.5, 3.5 ], "enabled": false }
+					},
+					"children": [
+						{
+							"name": "Cube12",
+							"from": [ -1.2, 0.7, 0.3 ], 
+							"to": [ 0.8, 1.2, 3.3 ], 
+							"rotationOrigin": [ 0.8, 0.7, 2.0 ],
+							"rotationZ": 6.0,
+							"faces": {
+								"north": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 2.0, 0.5 ] },
+								"east": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.0, 0.5 ] },
+								"south": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 2.0, 0.5 ] },
+								"west": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.0, 0.5 ] },
+								"up": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.0, 2.0 ], "rotation": 90 },
+								"down": { "texture": "#rotten-king-mask", "uv": [ 0.0, 0.0, 3.0, 2.0 ], "rotation": 90 }
+							}
+						},
+						{
+							"name": "Cube13",
+							"from": [ -2.1, 0.6, 0.3 ], 
+							"to": [ -0.1, 1.6, 3.3 ], 
+							"rotationOrigin": [ -0.1, 0.6, 2.0 ],
+							"rotationZ": 72.0,
+							"faces": {
+								"north": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 2.0, 1.0 ], "enabled": false },
+								"east": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 3.0, 1.0 ], "enabled": false },
+								"south": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 2.0, 1.0 ], "enabled": false },
+								"west": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 3.0, 1.0 ], "enabled": false },
+								"up": { "texture": "#rotten-king-cloth", "uv": [ 0.5, 3.0, 3.5, 5.0 ], "rotation": 90 },
+								"down": { "texture": "#rotten-king-cloth", "uv": [ 0.0, 0.0, 3.0, 2.0 ], "rotation": 90, "enabled": false }
+							}
+						}
+					]
+				}
+			]
+		}
+	]}

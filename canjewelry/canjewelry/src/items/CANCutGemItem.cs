@@ -21,6 +21,11 @@ namespace canjewelry.src.jewelry
                 {
                     dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName)).Append(" +" + canjewelry.config.gems_buffs[buffName][inSlot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
                 }
+                else if (buffName.Equals("cadurability"))
+                {
+                    float buffValue = canjewelry.config.gems_buffs[buffName][inSlot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()] * 100;
+
+                }
                 else
                 {
                     float buffValue = canjewelry.config.gems_buffs[buffName][inSlot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()] * 100;

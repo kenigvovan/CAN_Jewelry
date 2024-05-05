@@ -151,9 +151,9 @@
 					"rotationZ": -4.0,
 					"faces": {
 						"north": { "texture": "#gem", "uv": [ 0.0, 0.0, 0.5, 1.0 ], "enabled": false },
-						"east": { "texture": "#gem", "uv": [ 2.5, 6.5, 3.5, 7.5 ] },
+						"east": { "texture": "#gem", "uv": [ 1.5, 6.5, 2.5, 7.5 ] },
 						"south": { "texture": "#gem", "uv": [ 0.0, 0.0, 0.5, 1.0 ], "enabled": false },
-						"west": { "texture": "#gem", "uv": [ 3.5, 6.5, 8.5, 11.5 ], "autoUv": false },
+						"west": { "texture": "#gem", "uv": [ 1.5, 6.5, 2.5, 7.5 ] },
 						"up": { "texture": "#gem", "uv": [ 0.0, 0.0, 0.5, 1.0 ], "enabled": false },
 						"down": { "texture": "#gem", "uv": [ 0.0, 0.0, 0.5, 1.0 ], "enabled": false }
 					},

@@ -29,45 +29,49 @@ namespace canjewelry.src
         public Dictionary<string, DropInfo[]> gems_drops_table = new Dictionary<string, DropInfo[]>();
         
         public bool debugMode;
+        public float chance_gem_drop_on_item_broken;
 
         public void FillDefaultValues()
         {
             buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
             (new Dictionary<string, HashSet<string>> {
                 {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara", "-antique" } },
-                {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler" } },
-                {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-                {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
-                    "cansimplenecklace", "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade" } },
+                {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler", "canrottenkingmask" } },
+                {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask" } },
+                {"fluorite", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer",
+                    "cansimplenecklace", "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade", "canrottenkingmask" } },
 
-                {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique", "cantiara" } },
-                {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara", "scythe" } },
-                {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-                {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
-                {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" , "cantiara", "tspaxel", "tunneler" } },
-                {"ruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound"  }},
-                {"citrine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
+                {"lapislazuli", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique", "cantiara", "canrottenkingmask" } },
+                {"malachite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara", "scythe", "canrottenkingmask" } },
+                {"olivine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask" } },
+                {"uranium", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara", "canrottenkingmask" } },
+                {"quartz", new HashSet<string>{ "pickaxe", "cansimplenecklace" , "cantiara", "tspaxel", "tunneler", "canrottenkingmask" } },
+                {"ruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound" , "canrottenkingmask" }},
+                {"citrine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara", "canrottenkingmask" }},
 
-                {"berylaquamarine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara", "-antique" } },
-                {"berylbixbite", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler" } },
-                {"corundumruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound"  }},
-                {"corundumsapphire", new HashSet<string>{ "pickaxe", "cansimplenecklace", "cantiara", "tunneler" } },
-                {"garnetalmandine",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tspaxel", "tbow-compound"  }},
-                {"garnetandradite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
+                {"berylaquamarine", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara", "-antique", "canrottenkingmask" } },
+                {"berylbixbite", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler", "canrottenkingmask" } },
+                {"corundumruby",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound", "canrottenkingmask"  }},
+                {"corundumsapphire", new HashSet<string>{ "pickaxe", "cansimplenecklace", "cantiara", "tunneler", "canrottenkingmask" } },
+                {"garnetalmandine",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tspaxel", "tbow-compound", "canrottenkingmask"  }},
+                {"garnetandradite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara", "canrottenkingmask" } },
                 {"garnetgrossular", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx", "cansimplenecklace",
-                    "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade"} },
-                {"garnetpyrope",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
-                {"garnetspessartine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
-                {"garnetuvarovite",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara"  }},
-                {"spinelred", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-                {"topazamber", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara" } },
-                {"topazblue", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
-                {"topazpink",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" }},
-                {"tourmalinerubellite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara" } },
+                    "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade", "canrottenkingmask"} },
+                {"garnetpyrope",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara", "canrottenkingmask" }},
+                {"garnetspessartine",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara" , "canrottenkingmask"}},
+                {"garnetuvarovite",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara" , "canrottenkingmask" }},
+                {"spinelred", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask" } },
+                {"topazamber", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "knife", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask" } },
+                {"topazblue", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask" } },
+                {"topazpink",  new HashSet<string>{ "knife", "cansimplenecklace" , "cantiara", "canrottenkingmask" }},
+                {"tourmalinerubellite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask" } },
                 {"tourmalineschorl", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
-                    "cansimplenecklace", "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade" } },
-                {"tourmalineverdelite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara" } },
-                {"tourmalinewatermelon",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound" }},
+                    "cansimplenecklace", "cantiara", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade", "canrottenkingmask" } },
+                {"tourmalineverdelite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara", "canrottenkingmask" } },
+                {"tourmalinewatermelon",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound", "canrottenkingmask" }},
+                {"amethyst", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
+                    "bow", "knife", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade", "brigandine", 
+                    "plate", "chain", "scale", "-antique" , "canrottenkingmask"} },
         });
 
             gems_buffs = new Dictionary<string, Dictionary<string, float>>
@@ -203,13 +207,14 @@ namespace canjewelry.src
 
             items_codes_with_socket_count_and_tiers = new Dictionary<string, int[]>()
         {
-             { "canjewelry:cansimplenecklace-*", new int[1] {1} },
+            { "canjewelry:canrottenkingmask-*", new int[1] {1} },
+            { "canjewelry:cansimplenecklace-*", new int[1] {1} },
             { "canjewelry:cantiara-*", new int[3] {1, 3, 1} },
             { "*knife-generic-gold", new int[1] {3} },
-            {  "*knife-generic-silver", new int[1] {3} },
+            { "*knife-generic-silver", new int[1] {3} },
             { "*knife-generic-iron",  new int[1] {3} },
             { "*knife-generic-meteoriciron", new int[2] {3, 3} },
-            {  "*knife-generic-steel", new int[3] {3, 3, 3} },
+            { "*knife-generic-steel", new int[3] {3, 3, 3} },
 
             {  "*pickaxe-blackbronze", new int[1] {3} },
             {  "*pickaxe-tinbronze", new int[1] {3} },
@@ -445,7 +450,10 @@ namespace canjewelry.src
                 { "rock-limestone", new DropInfo[]{
                    new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-chipped-malachite", 0.001f, 0, true, "canjewelrygemsdroprate"),
                    new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-flawed-malachite", 0.0005f, 0, true, "canjewelrygemsdroprate"),
-                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-normal-malachite", 0.00005f, 0, true, "canjewelrygemsdroprate")
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-normal-malachite", 0.00005f, 0, true, "canjewelrygemsdroprate"),
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-chipped-amethyst", 0.001f, 0, true, "canjewelrygemsdroprate"),
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-flawed-amethyst", 0.0005f, 0, true, "canjewelrygemsdroprate"),
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-normal-amethyst", 0.00005f, 0, true, "canjewelrygemsdroprate")
                    }
                 },
                 { "rock-granite", new DropInfo[]{
@@ -496,7 +504,10 @@ namespace canjewelry.src
                 { "rock-phyllite", new DropInfo[]{
                    new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-chipped-corundum", 0.001f, 0, true, "canjewelrygemsdroprate"),
                    new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-flawed-corundum", 0.0005f, 0, true, "canjewelrygemsdroprate"),
-                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-normal-corundum", 0.00005f, 0, true, "canjewelrygemsdroprate")
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-normal-corundum", 0.00005f, 0, true, "canjewelrygemsdroprate"),
+                    new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-chipped-amethyst", 0.001f, 0, true, "canjewelrygemsdroprate"),
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-flawed-amethyst", 0.0005f, 0, true, "canjewelrygemsdroprate"),
+                   new DropInfo(EnumItemClass.Item, "canjewelry:gem-rough-normal-amethyst", 0.00005f, 0, true, "canjewelrygemsdroprate")
                    }
                 },
                 { "rock-shale", new DropInfo[]{
@@ -583,6 +594,7 @@ namespace canjewelry.src
             };
 
             debugMode = false;
+            chance_gem_drop_on_item_broken = 0.2f;
         }
 
 

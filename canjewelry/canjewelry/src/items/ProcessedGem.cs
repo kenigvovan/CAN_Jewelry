@@ -229,7 +229,8 @@ namespace canjewelry.src.jewelry
             if(itemStack.Attributes.HasAttribute("cangrindlayerinfo"))
             {
                 var tree = itemStack.Attributes.GetTreeAttribute("cangrindlayerinfo");
-                return Lang.Get("canjewelry:processedgem-" + tree.GetString("gemsize") + "-" + tree.GetString("gembase"));
+                return Lang.Get("canjewelry:processedgem-" + tree.GetString("gemsize") + "-" + tree.GetString("gembase")) +
+                       Lang.Get("canjewelry:processedgem-stage", tree.GetInt("grindtype") + 1); ;
             }
             return "";          
         }

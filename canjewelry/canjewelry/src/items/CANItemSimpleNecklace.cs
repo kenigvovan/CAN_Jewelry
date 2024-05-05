@@ -62,10 +62,6 @@ namespace canjewelry.src.items
         {
             get
             {
-                if(!textureCode.Equals("seraph") && !textureCode.Equals("loop"))
-                {
-                    var c = 3;
-                }
                 if(this.tmpTextures.TryGetValue(textureCode, out var res))
                 {
                     return this.getOrCreateTexPos(res);
@@ -455,10 +451,10 @@ namespace canjewelry.src.items
         {
             
             JsonObject attributes = stack.Collectible.Attributes;
-            EntityProperties entityType = capi.World.GetEntityType(new AssetLocation("player"));
-            Shape loadedShape = entityType.Client.LoadedShape;
-            AssetLocation @base = entityType.Client.Shape.Base;
-            Shape shape = new Shape
+            //EntityProperties entityType = capi.World.GetEntityType(new AssetLocation("player"));
+            //Shape loadedShape = entityType.Client.LoadedShape;
+           // AssetLocation @base = entityType.Client.Shape.Base;
+            /*Shape shape = new Shape
             {
                 Elements = loadedShape.CloneElements(),
                 Animations = loadedShape.Animations,
@@ -468,7 +464,7 @@ namespace canjewelry.src.items
                 TextureWidth = loadedShape.TextureWidth,
                 TextureHeight = loadedShape.TextureHeight,
                 Textures = null
-            };
+            };*/
             CompositeShape compositeShape = (attributes["attachShape"].Exists ? attributes["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain) : ((stack.Class == EnumItemClass.Item) ? stack.Item.Shape : stack.Block.Shape));
 
             AssetLocation assetLocation = compositeShape.Base.CopyWithPath("shapes/" + compositeShape.Base.Path + ".json");

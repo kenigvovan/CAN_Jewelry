@@ -53,23 +53,43 @@
     "items": [ "*" ],
     "canjewelry": [ "*" ]
   },
-  "guiTransform": {
-    "translation": {
-      "x": 0,
-      "y": 0,
-      "z": 0
+  "guiTransformByType": {
+    "gem-cut-flawless-*": {
+      "translation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotation": {
+        "x": 151,
+        "y": -3,
+        "z": 0
+      },
+      "origin": {
+        "x": 0.51,
+        "y": 0.08,
+        "z": 0.5
+      },
+      "scale": 6
     },
-    "rotation": {
-      "x": 151,
-      "y": -3,
-      "z": 0
-    },
-    "origin": {
-      "x": 0.51,
-      "y": 0.08,
-      "z": 0.5
-    },
-    "scale": 6
+    "*": {
+      "translation": {
+        "x": 4,
+        "y": -2,
+        "z": 0
+      },
+      "rotation": {
+        "x": 151,
+        "y": -3,
+        "z": 0
+      },
+      "origin": {
+        "x": 0.51,
+        "y": 0.08,
+        "z": 0.5
+      },
+      "scale": 6
+    }
   },
   "fpHandTransform": {
     "translation": {

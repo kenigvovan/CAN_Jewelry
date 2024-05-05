@@ -41,6 +41,11 @@ namespace canjewelry.src
         {
             base.Start(api);
             harmonyInstance = new Harmony(harmonyID);
+            var p = harmonyInstance.GetPatchedMethods();
+            if(p.All(it => it.Name != "GetMaxDurability"))
+            {
+                harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetMaxDurability"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CollectibleObject_GetMaxDurability")));
+            }
             
             api.RegisterBlockClass("JewelerSetBlock", typeof(JewelerSetBlock));
             api.RegisterBlockEntityClass("JewelerSetBE", typeof(JewelerSetBE));
@@ -58,6 +63,7 @@ namespace canjewelry.src
             
             api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
             api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
+            api.RegisterItemClass("CANItemRottenKingMask", typeof(CANItemRottenKingMask));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
@@ -351,6 +357,8 @@ namespace canjewelry.src
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
+            var p = harmonyInstance.GetPatchedMethods();
+            harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("DamageItem"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_CollectibleObject_DamageItem")));
             //GetDrops IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f
             //harmonyInstance.Patch(typeof(Vintagestory.API.Common.Block).GetMethod("GetDrops"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_GetDrops")));
             api.Event.PlayerNowPlaying += onPlayerPlaying;

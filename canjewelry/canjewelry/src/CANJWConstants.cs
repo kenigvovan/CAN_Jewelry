@@ -16,5 +16,8 @@ namespace canjewelry.src
         public static string GEM_TYPE_IN_SOCKET = "gemtype";
         public static string ADDED_SOCKET_TYPE = "sockettype";
         public static string ENCRUSTED_GEM_SIZE = "size";
+        public static string GEM_ATTRIBUTE_BUFF = "attributeBuff";
+        public static string GEM_BUFF_TYPE = "gembufftype";
+        public static string CANDURABILITY_STRING = "candurability";
     }
 }

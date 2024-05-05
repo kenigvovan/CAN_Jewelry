@@ -28,6 +28,8 @@ namespace canjewelry.src.items
                     dsc.Append(buffValue > 0 ? " +" + Math.Round(buffValue) + "%" : " " + Math.Round(buffValue) + "%");
                 }
             }
+            dsc.AppendLine();
+            dsc.Append(Lang.Get("canjewelry:need_to_be_processed"));
         }
     }
 

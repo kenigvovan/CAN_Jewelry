@@ -1,4 +1,5 @@
 ﻿using Cairo;
+using canjewelry.src.cb;
 using canjewelry.src.CB;
 using canjewelry.src.items;
 using HarmonyLib;
@@ -6,6 +7,7 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -42,7 +44,9 @@ namespace canjewelry.src
          */
         public static void applyBuffFromItemStack(ITreeAttribute socketSlot, EntityPlayer ep, bool add)
         {
-            if (!socketSlot.HasAttribute("attributeBuff"))
+            if (!socketSlot.HasAttribute(CANJWConstants.GEM_ATTRIBUTE_BUFF) 
+                || !socketSlot.HasAttribute(CANJWConstants.GEM_BUFF_TYPE)
+                || (EnumGemBuffType)socketSlot.GetInt(CANJWConstants.GEM_BUFF_TYPE) == EnumGemBuffType.STATS_BUFF)
             {
                 return;
             }
@@ -916,5 +920,87 @@ namespace canjewelry.src
             list2.AddRange(list);
             return;
         }
+
+        public static void Postfix_CollectibleObject_GetMaxDurability(ref int __result, ItemStack itemstack)
+        {
+            if(itemstack != null)
+            {
+                ITreeAttribute tree = itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
+                if(tree == null)
+                {
+                    return;
+                }
+
+                float valueOrDefault = tree.TryGetFloat(CANJWConstants.CANDURABILITY_STRING).GetValueOrDefault();
+                if (valueOrDefault > 0f && __result > 1)
+                {
+                    __result = (int)((float)__result * (1f + valueOrDefault));
+                }
+            }
+        }
+        public static void TryDropGems(Entity byEntity, ItemSlot itemslot)
+        {
+            if(byEntity.Api.Side == EnumAppSide.Client)
+            {
+                return;
+            }
+            if (itemslot.Itemstack != null && itemslot.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
+            {
+                Random r = new Random();
+                var tree = itemslot.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
+                for (int i = 0; i < itemslot.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); i++)
+                {
+                    if(canjewelry.config.chance_gem_drop_on_item_broken == 0 || r.NextDouble() > canjewelry.config.chance_gem_drop_on_item_broken)
+                    {
+                        return;
+                    }
+                    ITreeAttribute socketSlot = tree.GetTreeAttribute("slot" + i.ToString());
+                    if (socketSlot != null)
+                    {
+                        int size = socketSlot.GetInt("size");
+                        string gemType = socketSlot.GetString("gemtype");
+                        string gemSize;
+                        switch (size)
+                        {
+                            case 1:
+                                gemSize = "normal";
+                                break;
+                            case 2:
+                                gemSize = "flawless";
+                                break;
+                            case 3:
+                                gemSize = "exquisite";
+                                break;
+                            default:
+                                return;
+                        }
+
+                        Item currentItem = canjewelry.sapi.World.GetItem(new AssetLocation("canjewelry:" + "gem-cut-" + gemSize + "-" + gemType));
+                        ItemStack newIS = new ItemStack(currentItem, 1);
+                        canjewelry.sapi.World.SpawnItemEntity(newIS, byEntity.Pos.XYZ.Clone().Add(0.5f, 0.25f, 0.5f));
+                    }
+                }
+            }              
+        }
+        public static IEnumerable<CodeInstruction> Transpiler_CollectibleObject_DamageItem(IEnumerable<CodeInstruction> instructions, ILGenerator il)
+        {
+            bool found = false;
+            var codes = new List<CodeInstruction>(instructions);
+            var proxyMethod = AccessTools.Method(typeof(harmPatch), "TryDropGems");
+            for (int i = 0; i < codes.Count; i++)
+            {
+
+                if (!found &&
+                        codes[i].opcode == OpCodes.Ldarg_3 && codes[i + 1].opcode == OpCodes.Ldnull && codes[i + 2].opcode == OpCodes.Callvirt && codes[i - 1].opcode == OpCodes.Bgt)
+                {
+                    yield return new CodeInstruction(OpCodes.Ldarg_2);
+                    yield return new CodeInstruction(OpCodes.Ldarg_3);
+                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
+                    found = true;
+                }               
+                yield return codes[i];
+            }
+        }
+
     }
 }

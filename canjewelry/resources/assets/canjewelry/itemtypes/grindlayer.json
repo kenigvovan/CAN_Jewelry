@@ -13,8 +13,8 @@
     }
   ],
   "durabilitybytype": {
-    "*-rough": 200,
-    "*-medium": 250,
+    "*-rough": 1215,
+    "*-medium": 640,
     "*-fine": 300
   },
   "attributes": {
