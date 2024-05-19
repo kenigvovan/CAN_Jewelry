@@ -4,12 +4,11 @@
   "storageFlags": 128,
 
   "attributes": {
+    "disableElements": [ "Hair tile upper part", "ponytailhigh", "ponytaillow", "Hair", "hideme", "sidehigh", "sidelow", "bangs" ],
     "handbook": {
       "groupBy": [ "canrottenkingmask-*" ]
     },
     "clothescategory": "face",
-    "canhavesocketsnumber": 1,
-    "warmth": 0.2,
     "rackable": true,
     "wearableAttachment": true,
     "groundStorageTransformByType": {
@@ -26,32 +25,21 @@
         },
         "scale": 1
       }
-    },
-    "__comment": "Note: variantgroups inside attributes. Used to generate all variants for the creative inventory dynamically, and for valid recipe checking",
-    "variantGroups": {
-      "metal": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ]
-    },
-    "allowedVariants": [
-      {
-        "construction": "normal",
-        "metal": "*"
-      }
-    ]
-  },
-  "behaviors": [
-    {
-      "name": "Encrustable"
     }
-  ],
+  },
   "variantgroups": [
     {
-      "code": "construction",
-      "states": [ "normal" ]
+      "code": "loop",
+      "states": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
     }
   ],
   "creativeinventory": {
-
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "clothing": [ "*" ],
+    "canjewelry": [ "*" ]
   },
+
   "texturesByType": {
     "*": {
       "seraph": { "base": "game:block/transparent" }

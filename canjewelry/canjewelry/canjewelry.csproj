@@ -58,6 +58,7 @@
 <ItemGroup>
   <Content Remove="..\resources\assets\canjewelry\patches\canhavesockets\can-rock-drop-gems.json" />
   <Content Remove="..\resources\assets\canjewelry\patches\canhavesockets\can-ungraded-drop-gems.json" />
+  <Content Remove="..\resources\assets\canjewelry\recipes\grid\transm_gems.json" />
   <Content Remove="..\resources\assets\canjewelry\shapes\item\bronze-gem-necklace - kopie.json" />
   <Content Remove="..\resources\assets\canjewelry\shapes\item\__rottenkingmask.json" />
   <Content Remove="..\resources\assets\game\patches\CB\can-add-cb.json" />

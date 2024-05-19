@@ -64,6 +64,7 @@ namespace canjewelry.src
             api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
             api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
             api.RegisterItemClass("CANItemRottenKingMask", typeof(CANItemRottenKingMask));
+            api.RegisterItemClass("CANItemCoronet", typeof(CANItemCoronet));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
@@ -122,9 +123,14 @@ namespace canjewelry.src
                 {
                     continue;
                 }
+                if (it.Key.Contains("tiara"))
+                {
+                    var c = 3;
+                }
                 Item[] arrayResult = api.World.SearchItems(new AssetLocation(it.Key));
                 if(arrayResult.Length > 0) 
                 {
+                    
                     foreach (Item item in arrayResult)
                     {
                         if (!item.HasBehavior<EncrustableCB>())

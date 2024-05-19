@@ -1,0 +1,125 @@
+{
+  "code": "cancoronet",
+  "class": "CANItemCoronet",
+  "storageFlags": 128,
+  "attributes": {
+    "handbook": {
+      "groupBy": [ "cancoronet-*" ]
+    },
+    "clothescategory": "head",
+    "rackable": true,
+    "wearableAttachment": true,
+    "groundStorageTransformByType": {
+      "*": {
+        "translation": {
+          "x": -0.42,
+          "y": -0.45,
+          "z": -0.045
+        },
+        "rotation": {
+          "x": 21,
+          "y": 179,
+          "z": -90
+        },
+        "scale": 1
+      }
+    }
+  },
+  "variantgroups": [
+    {
+      "code": "loop",
+      "states": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+    }
+  ],
+  "shapeByType": {
+    "*": { "base": "canjewelry:item/cancoronet" }
+  },
+
+  "texturesByType": {
+    "*": {
+      "seraph": { "base": "game:block/transparent" },
+      "metal": { "base": "game:block/metal/plate/{loop}" }
+    }
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "clothing": [ "*" ],
+    "canjewelry": [ "*" ]
+  },
+
+  "fpHandTransformByType": {
+    "*": {
+      "translation": {
+        "x": 0.6,
+        "y": -1.6,
+        "z": -0.5
+      },
+      "rotation": {
+        "x": 180,
+        "y": -108,
+        "z": -180
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.6,
+        "z": 0.5
+      },
+      "scale": 2.15
+    }
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -0.97,
+      "y": -1,
+      "z": -1.3
+    },
+    "rotation": {
+      "x": 22,
+      "y": -69,
+      "z": -30
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 1.5,
+      "z": 0.5
+    },
+    "scale": 0.68
+  },
+  "guiTransform": {
+    "translation": {
+      "x": 78,
+      "y": -72,
+      "z": 3.6
+    },
+    "rotation": {
+      "x": -20,
+      "y": 180,
+      "z": 147
+    },
+    "origin": {
+      "x": 0.52,
+      "y": 1.6,
+      "z": 0.5
+    },
+    "scale": 3.01
+  },
+  "groundTransform": {
+    "translation": {
+      "x": 0.05,
+      "y": 0.22,
+      "z": 0
+    },
+    "rotation": {
+      "x": 0,
+      "y": 30,
+      "z": -1
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 0.5,
+      "z": 0.5299
+    },
+    "scale": 4.7199
+  }
+}

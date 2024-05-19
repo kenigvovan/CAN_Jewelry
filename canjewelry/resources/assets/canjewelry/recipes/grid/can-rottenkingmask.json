@@ -1,0 +1,31 @@
+﻿[
+  {
+
+    "ingredientPattern": "FLF,FPF",
+    "ingredients": {
+      "P": {
+        "type": "item",
+        "code": "game:metalplate-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      },
+      "F": {
+        "type": "item",
+        "code": "game:flaxtwine",
+      },
+      "L": {
+        "type": "block",
+        "code": "game:linen-normal-down"
+      }
+    },
+    "name": "can-rottenkingmask",
+    "width": 3,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canrottenkingmask-{metal-type}",
+      "quantity": 1
+    }
+
+  }
+]

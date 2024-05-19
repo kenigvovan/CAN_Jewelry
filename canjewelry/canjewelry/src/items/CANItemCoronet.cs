@@ -1,22 +1,23 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using HarmonyLib;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Vintagestory.API.Client;
-using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
+using Vintagestory.API.Datastructures;
+using canjewelry.src.CB;
 
 namespace canjewelry.src.items
 {
-    public class CANItemRottenKingMask : CANItemWearable, IWearableShapeSupplier
+    public class CANItemCoronet: CANItemWearable, IWearableShapeSupplier
     {
         private Shape nowTesselatingShape;
         private ITextureAtlasAPI curAtlas;
@@ -27,10 +28,10 @@ namespace canjewelry.src.items
         public override Size2i AtlasSize => curAtlas.Size;
         private Dictionary<int, MultiTextureMeshRef> meshrefs
         {
-            
+
             get
             {
-                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "canrottenkingmaskmeshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
+                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "cancoronetmeshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
             }
         }
         public EnumCharacterDressType DressType { get; private set; }
@@ -96,11 +97,12 @@ namespace canjewelry.src.items
             jsonItemStack.Code = this.Code;
             jsonItemStack.Type = EnumItemClass.Item;
             jsonItemStack.Attributes = new JsonObject(JToken.Parse(json));
-            jsonItemStack.Resolve(this.api.World, "canrottenkingmask type", true);
+            jsonItemStack.Resolve(this.api.World, "cancoronet type", true);
             return jsonItemStack;
         }
+
         public Shape GetShape(ItemStack stack, EntityAgent forEntity, string texturePrefixCode)
-        {           
+        {
             Shape gearShape = null;
             CompositeShape compGearShape = null;
             JsonObject attrObj = stack.Collectible.Attributes;
@@ -119,7 +121,7 @@ namespace canjewelry.src.items
                 });
                 return null;
             }
-            
+
             //gearShape.SubclassForStepParenting(texturePrefixCode, damageEffect);
             HashSet<string> textureCodes = new HashSet<string>();
             ShapeElement[] elements = gearShape.Elements;
@@ -131,7 +133,7 @@ namespace canjewelry.src.items
                     ShapeElementFace[] facesResolved = el.FacesResolved;
                     foreach (ShapeElementFace shapeElementFace in facesResolved)
                     {
-                        if (shapeElementFace != null && shapeElementFace.Enabled && !shapeElementFace.Texture.Contains("silver"))
+                        if (shapeElementFace != null && shapeElementFace.Enabled && !shapeElementFace.Texture.Contains("gems"))
                         {
                             textureCodes.Add(shapeElementFace.Texture);
                             shapeElementFace.Texture = texturePrefixCode + "-" + shapeElementFace.Texture;
@@ -159,18 +161,21 @@ namespace canjewelry.src.items
             }
 
 
-            string maskMetal = stack.Item.Variant.Get("loop", "steel");
-            gearShape.Textures["canjewelry:canrottenkingmask-normal-silver1"] = new AssetLocation("block/metal/sheet/" + maskMetal + "1.png");
-            gearShape.Textures["rotten-king-mask"] = new AssetLocation("canjewelry:item/rottenking.png");
-            gearShape.Textures["rotten-king-cloth"] = new AssetLocation("canjewelry:item/rottenkingcloth.png");
-            gearShape.Textures["silver1"] = new AssetLocation("block/metal/sheet/" + maskMetal + "1.png");
+            canjewelry.gems_textures.TryGetValue("diamond", out string assetPath);
+            string maskMetal = stack.Attributes.GetString("metal", null);
+            gearShape.Textures["canjewelry:cancoronet-tinbronze-gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+            
+            gearShape.Textures["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
 
-           Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
-            newdict["canjewelry:canrottenkingmask-normal-silver1"] = new AssetLocation("block/metal/sheet/" + maskMetal + "1.png");
-            newdict["silver1"] = new AssetLocation("block/metal/sheet/" + maskMetal + "1.png");
-            //"canjewelry:canrottenkingmask-normal-silver1"
-            newdict["rotten-king-mask"] = new AssetLocation("canjewelry:item/rottenking.png");
-            newdict["rotten-king-cloth"] = new AssetLocation("canjewelry:item/rottenkingcloth.png");
+
+            FillTextureDict(gearShape.Textures, stack);
+
+
+            Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
+            FillTextureDict(newdict, stack);
+            newdict["canjewelry:cancoronet-tinbronze-gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+
+            newdict["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
             foreach (var val in newdict)
             {
                 CompositeTexture ctex = new CompositeTexture() { Base = val.Value };
@@ -204,7 +209,7 @@ namespace canjewelry.src.items
         }
         public override string GetMeshCacheKey(ItemStack itemstack)
         {
-            string metal = itemstack.Item.Variant.Get("loop", "steel");
+            string metal = itemstack.Attributes.GetString("metal", null);
             return string.Concat(new string[]
             {
                 this.Code.ToShortString(),
@@ -216,12 +221,17 @@ namespace canjewelry.src.items
         {
             get
             {
+                
                 if (this.tmpTextures.TryGetValue(textureCode, out var res))
                 {
                     return this.getOrCreateTexPos(res);
                 }
 
                 AssetLocation value = null;
+                if (textureCode == "metal")
+                {
+                    value = this.Textures["metal"].Base;
+                }
                 if (Textures.TryGetValue(textureCode, out var value2))
                 {
                     value = value2.Baked.BakedName;
@@ -249,7 +259,7 @@ namespace canjewelry.src.items
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
 
-            string maskMetal = inSlot.Itemstack.Item.Variant.Get("loop", "steel");
+            string maskMetal = inSlot.Itemstack.Attributes.GetString("metal", null);
 
             /* if (gem != "none")
             {
@@ -260,16 +270,16 @@ namespace canjewelry.src.items
                 dsc.AppendLine(Lang.Get("canjewelry:necklace-parts-without-gem-held-info", Lang.Get("material-" + loop), Lang.Get("material-" + socket)));
             }*/
             if ((api as ICoreClientAPI).Settings.Bool["extendedDebugInfo"])
-    {
-        if (DressType == EnumCharacterDressType.Unknown)
-        {
-            dsc.AppendLine(Lang.Get("Cloth Category: Unknown"));
-        }
-        else
-        {
-            dsc.AppendLine(Lang.Get("Cloth Category: {0}", Lang.Get("clothcategory-" + inSlot.Itemstack.ItemAttributes["clothescategory"].AsString())));
-        }
-    }
+            {
+                if (DressType == EnumCharacterDressType.Unknown)
+                {
+                    dsc.AppendLine(Lang.Get("Cloth Category: Unknown"));
+                }
+                else
+                {
+                    dsc.AppendLine(Lang.Get("Cloth Category: {0}", Lang.Get("clothcategory-" + inSlot.Itemstack.ItemAttributes["clothescategory"].AsString())));
+                }
+            }
 
         }
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
@@ -307,19 +317,177 @@ namespace canjewelry.src.items
             meshData.RenderPassesAndExtraBits.Fill((short)1);
             return meshData;
         }
+        public void FillTextureDict(Dictionary<string, AssetLocation> dict, ItemStack itemStack)
+        {
+            if (itemStack != null && itemStack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
+            {
+                var tree = itemStack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
+                int possibleGemsNumber = itemStack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                if (possibleGemsNumber >= 4)
+                {
+                    for (int i = 0; i < possibleGemsNumber; i++)
+                    {
+                        if (tree.HasAttribute("slot" + i))
+                        {
+                            ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + i);
+                            string gemType = treeSocket.GetString("gemtype");
+                            canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                            if (assetPath != null)
+                            {
+                                dict["gems_" + (i + 1)] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            }
+                            else
+                            {
+                                dict["gems_" + (i + 1)] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            }
+                        }
+                        else
+                        {
+                            dict["gems_" + (i + 1)] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+                }
+                else if (possibleGemsNumber == 3)
+                {
+                    if (tree.HasAttribute("slot0"))
+                    {
+                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot0");
+                        string gemType = treeSocket.GetString("gemtype");
+                        canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                        if (assetPath != null)
+                        {
+                            dict["gems_1"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            dict["gems_4"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                        }
+                        else
+                        {
+                            dict["gems_1"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            dict["gems_4"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+                    if (tree.HasAttribute("slot1"))
+                    {
+                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot1");
+                        string gemType = treeSocket.GetString("gemtype");
+                        canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                        if (assetPath != null)
+                        {
+                            dict["gems_2"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                        }
+                        else
+                        {
+                            dict["gems_2"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+                    if (tree.HasAttribute("slot2"))
+                    {
+                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot2");
+                        string gemType = treeSocket.GetString("gemtype");
+                        canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                        if (assetPath != null)
+                        {
+                            dict["gems_3"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                        }
+                        else
+                        {
+                            dict["gems_3"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+                }
+                else if (possibleGemsNumber == 2)
+                {
+                    if (tree.HasAttribute("slot0"))
+                    {
+                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot0");
+                        string gemType = treeSocket.GetString("gemtype");
+                        canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                        if (assetPath != null)
+                        {
+                            dict["gems_1"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            dict["gems_4"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                        }
+                        else
+                        {
+                            dict["gems_1"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            dict["gems_4"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+                    if (tree.HasAttribute("slot1"))
+                    {
+                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot1");
+                        string gemType = treeSocket.GetString("gemtype");
+                        canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                        if (assetPath != null)
+                        {
+                            dict["gems_2"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            dict["gems_3"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                        }
+                        else
+                        {
+                            dict["gems_2"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            dict["gems_3"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+                }
+                else if (possibleGemsNumber == 1)
+                {
+                    if (tree.HasAttribute("slot0"))
+                    {
+                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot0");
+                        string gemType = treeSocket.GetString("gemtype");
+                        canjewelry.gems_textures.TryGetValue(gemType, out string assetPath);
+                        if (assetPath != null)
+                        {
+                            dict["gems_1"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            dict["gems_2"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            dict["gems_3"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                            dict["gems_4"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                        }
+                        else
+                        {
+                            dict["gems_1"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            dict["gems_2"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            dict["gems_3"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                            dict["gems_4"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                        }
+                    }
+
+                }
+                else
+                {
+                    for (int i = 1; i < 5; i++)
+                    {
+                        dict["gems_" + i] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                    }
+                }
+            }
+            else
+            {
+                for(int i = 1; i < 5; i++)
+                {
+                    dict["gems_" + i] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+            }
+
+
+
+            dict["metal"] = itemStack.Item.Textures["metal"].Base;
+            dict["gems"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+        }
+
         private MeshData genMesh(ICoreClientAPI capi, ItemStack itemstack, ITexPositionSource texSource)
         {
-            string carcassus = itemstack.Item.Variant.Get("loop", "steel");
-            tmpTextures["silver1"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
-            tmpTextures["rotten-king-mask"] = new AssetLocation("canjewelry:item/rottenking.png");
-            tmpTextures["rotten-king-cloth"] = new AssetLocation("canjewelry:item/rottenkingcloth.png");
-
+            //canjewelry.gems_textures.TryGetValue("diamond", out string assetPath);
+           // tmpTextures["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
             ContainedTextureSource cnts = new ContainedTextureSource(this.api as ICoreClientAPI, curAtlas, new Dictionary<string, AssetLocation>(), string.Format("For render in shield {0}", this.Code));
             cnts.Textures.Clear();
 
-            cnts.Textures["silver1"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
-            cnts.Textures["rotten-king-mask"] = new AssetLocation("canjewelry:item/rottenking.png");
-            cnts.Textures["rotten-king-cloth"] = new AssetLocation("canjewelry:item/rottenkingcloth.png");
+           // cnts.Textures["metal"] = itemstack.Item.Textures["metal"].Base;
+            
+            //cnts.Textures["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+
+            FillTextureDict(cnts.Textures, itemstack);
+
 
             MeshData mesh;
             this.capi.Tesselator.TesselateItem(this, out mesh, cnts);
@@ -327,9 +495,8 @@ namespace canjewelry.src.items
         }
         public override string GetHeldItemName(ItemStack itemStack)
         {
-
             string variant = itemStack.Item.Variant.Get("loop");
-            return Lang.Get("game:material-" + variant) + Lang.Get("canjewelry:item-canrottenkingmask");
+            return Lang.Get("game:material-" + variant) + Lang.Get("canjewelry:item-coronet");
         }
     }
 }

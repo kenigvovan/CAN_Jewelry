@@ -283,13 +283,8 @@
   "item-grindlayeritem-fine": "Fine grindlayer",
   "need_to_be_processed": "<font color=\"#9966ff\">Need to be processed</font>",
 
-  "item-canrottenkingmask-steel": "Steel leper king mask",
-  "item-canrottenkingmask-tinbronze": "Tin bronze leper king mask",
-  "item-canrottenkingmask-blackbronze": "Black bronze leper king mask",
-  "item-canrottenkingmask-gold": "Gold leper king mask",
-  "item-canrottenkingmask-silver": "Silver leper king mask",
-  "item-canrottenkingmask-iron": "Iron leper king mask",
-  "item-canrottenkingmask-meteoriciron": "Meteoric iron leper king mask",
+  "item-coronet": " coronet",
+  "item-canrottenkingmask": "  leper king mask",
 
   "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer"
 }

@@ -1,0 +1,27 @@
+﻿[
+  {
+    "ingredientPattern": "AAA,ABA,AAA",
+    "ingredients": {
+      "A": {
+        "type": "item",
+        "code": "canjewelry:gem-cut-normal-*",
+        "name": "gem_type",
+        "allowedVariants": [ "diamond", "emerald" ],
+        "quantity": 1
+      },
+      "B": {
+        "type": "item",
+        "code": "game:gear-temporal",
+        "quantity": 1
+      }
+    },
+    "width": 3,
+    "height": 3,
+    "name": "gem_upgrades",
+    "output": {
+      "type": "item",
+      "code": "canjewelry:gem-cut-flawless-{gem_type}",
+      "quantity": 1
+    }
+  }
+]

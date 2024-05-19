@@ -1,0 +1,38 @@
+{
+  "ingredient": {
+    "type": "item",
+    "code": "game:ingot-*",
+    "name": "metal",
+    "allowedVariants": [ "bismuthbronze", "tinbronze", "blackbronze", "iron", "meteoriciron", "steel", "gold", "copper" ]
+  },
+  "pattern": [
+    [
+      "#########",
+      "#_______#",
+      "#_______#",
+      "#_______#",
+      "#_______#",
+      "#_______#",
+      "#_______#",
+      "#_______#",
+      "#########"
+    ],
+    [
+      "_#__#__#_",
+      "#_______#",
+      "_________",
+      "#_______#",
+      "_________",
+      "#_______#",
+      "_________",
+      "#_______#",
+      "_#__#__#_"
+    ]
+  ],
+  "name": "cancoronet",
+  "output": {
+    "type": "item",
+    "code": "canjewelry:cancoronet-{metal}",
+    "quantity": 1
+  }
+}
