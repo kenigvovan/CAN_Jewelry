@@ -4,13 +4,25 @@
   "storageFlags": 128,
 
   "attributes": {
+    "displaycaseable": true,
+    "onDisplayTransform": {
+      "translation": {
+        "x": -0.5,
+        "y": -1.2,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -39
+      }
+    },
     "handbook": {
       "groupBy": [ "cannecklace-*" ]
     },
     "clothescategory": "neck",
     "canhavesocketsnumber": 1,
     "warmth": 0.5,
-    "rackable": true,
     "wearableAttachment": true,
     "groundStorageTransformByType": {
       "*": {
@@ -101,82 +113,7 @@
     },
     "scale": 0.71
   },
-  "guiTransformByType": {
-    "*-copper-torc": {
-      "translation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 174,
-        "y": -128,
-        "z": 6
-      },
-      "origin": {
-        "x": 0.54,
-        "y": 1.5499,
-        "z": 0.54
-      },
-      "scale": 3.95
-    },
-    "@*-(pearl-necklace|forlorn-talisman)": {
-      "rotate": false,
-      "translation": {
-        "x": 0,
-        "y": 0,
-        "z": 19
-      },
-      "rotation": {
-        "x": 174,
-        "y": -90,
-        "z": 23
-      },
-      "origin": {
-        "x": 0.5,
-        "y": 1.4,
-        "z": 0.55
-      },
-      "scale": 2.5
-    },
-    "@*-(walnut-amulet|redwood-amulet|pinecone-amulet|larch-seed-amulet|cypress-seed-amulet|acorn-amulet)": {
-      "rotate": false,
-      "translation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 163,
-        "y": -113,
-        "z": 6
-      },
-      "origin": {
-        "x": 0.45,
-        "y": 1.48,
-        "z": 0.55
-      },
-      "scale": 3.93
-    },
-    "*-marketeer": {
-      "rotate": false,
-      "translation": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "rotation": {
-        "x": 174,
-        "y": -128,
-        "z": 6
-      },
-      "origin": {
-        "x": 0.45,
-        "y": 1.63,
-        "z": 0.54
-      },
-      "scale": 3.5
-    },
+  "guiTransformByType": {      
     "*": {
       "rotate": false,
       "translation": {

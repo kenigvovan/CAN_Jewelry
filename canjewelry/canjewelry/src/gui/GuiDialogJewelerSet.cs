@@ -126,7 +126,7 @@ namespace canjewelry.src.jewelry
                         //jewelerComposer.AddInset(tmpEl);
                         int[] intArr = new int[1];
                         intArr[0] = i + 1;
-                        jewelerComposer.AddItemSlotGrid(this.Inventory, new Action<object>(this.DoSendPacket), intArr.Length, intArr, tmpEl, "gemslot" + i);
+                        jewelerComposer.AddItemSlotGrid(this.Inventory, new Action<object>(this.SendInvPacket), intArr.Length, intArr, tmpEl, "gemslot" + i);
 
                         ElementBounds buttonEl = ElementBounds.FixedSize(48, 24);
                         buttonEl.fixedX = tmpEl.fixedX;
@@ -214,7 +214,7 @@ namespace canjewelry.src.jewelry
                         int[] intArr = new int[1];
                         intArr[0] = i + 5;
                         this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()]
-                        .AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).DoSendPacket), intArr.Length, intArr, tmpEl, "socketsslot" + i);
+                        .AddItemSlotGrid((IInventory)this.Inventory, new Action<object>(((GuiDialogJewelerSet)this).SendInvPacket), intArr.Length, intArr, tmpEl, "socketsslot" + i);
 
                         ElementBounds buttonEl = ElementBounds.FixedSize(48, 24);
                         buttonEl.fixedX = tmpEl.fixedX;
@@ -465,6 +465,10 @@ namespace canjewelry.src.jewelry
                 array = output.ToArray();
             }
             this.capi.Network.SendBlockEntityPacket(this.BlockEntityPosition, 1004, array);
+        }
+        private void SendInvPacket(object packet)
+        {
+            this.capi.Network.SendBlockEntityPacket(base.BlockEntityPosition.X, base.BlockEntityPosition.Y, base.BlockEntityPosition.Z, packet);
         }
     }
 }

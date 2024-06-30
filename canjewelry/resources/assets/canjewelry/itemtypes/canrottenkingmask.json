@@ -87,8 +87,8 @@
   },
   "guiTransform": {
     "translation": {
-      "x": -19,
-      "y": -94,
+      "x": -5,
+      "y": -8.8,
       "z": 1
     },
     "rotation": {
@@ -98,10 +98,10 @@
     },
     "origin": {
       "x": 0.45,
-      "y": 1.4299,
-      "z": 0.54
+      "y": 0.1299,
+      "z": 0.24
     },
-    "scale": 2.66
+    "scale": 2.88
   },
   "groundTransformByType": {
     "*-copper-torc": {

@@ -1,26 +1,14 @@
 {
-  "code": "cancoronet",
-  "class": "CANItemCoronet",
+  "code": "canmonocle",
+  "class": "CANItemMonocle",
+  "enabled": false,
   "storageFlags": 128,
   "attributes": {
-    "displaycaseable": true,
-    "onDisplayTransform": {
-      "translation": {
-        "x": 0.3,
-        "y": -0.2,
-        "z": 0.3
-      },
-      "rotation": {
-        "x": 0,
-        "y": 14,
-        "z": 0
-      },
-      "scale": 0.89
-    },
     "handbook": {
-      "groupBy": [ "cancoronet-*" ]
+      "groupBy": [ "canmonocle-*" ]
     },
     "clothescategory": "head",
+    "rackable": true,
     "wearableAttachment": true,
     "groundStorageTransformByType": {
       "*": {
@@ -45,7 +33,7 @@
     }
   ],
   "shapeByType": {
-    "*": { "base": "canjewelry:item/cancoronet" }
+    "*": { "base": "canjewelry:item/canmonocle" }
   },
 
   "texturesByType": {
@@ -81,7 +69,6 @@
       "scale": 2.15
     }
   },
-
   "tpHandTransform": {
     "translation": {
       "x": -0.97,
@@ -102,21 +89,21 @@
   },
   "guiTransform": {
     "translation": {
-      "x": 0,
-      "y": 0,
-      "z": 0
+      "x": 78,
+      "y": -72,
+      "z": 3.6
     },
     "rotation": {
       "x": -20,
-      "y": 146,
-      "z": 169
+      "y": 180,
+      "z": 147
     },
     "origin": {
-      "x": -0.05,
-      "y": 0.1,
+      "x": 0.52,
+      "y": 1.6,
       "z": 0.5
     },
-    "scale": 2.61
+    "scale": 3.01
   },
   "groundTransform": {
     "translation": {

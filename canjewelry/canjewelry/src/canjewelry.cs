@@ -23,6 +23,10 @@ using canjewelry.src.jewelry;
 using canjewelry.src.items;
 using System.Numerics;
 using Vintagestory.API.Common.CommandAbbr;
+using Vintagestory.API.Config;
+using Vintagestory.API.MathTools;
+using Vintagestory.API.Common.Entities;
+using Realms.Content.systems.locks;
 
 namespace canjewelry.src
 {
@@ -36,7 +40,6 @@ namespace canjewelry.src
         internal static IClientNetworkChannel clientChannel;
         public static Config config;
         public static Dictionary<string, string> gems_textures = new Dictionary<string, string>();
-
         public override void Start(ICoreAPI api)
         {
             base.Start(api);
@@ -65,6 +68,7 @@ namespace canjewelry.src
             api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
             api.RegisterItemClass("CANItemRottenKingMask", typeof(CANItemRottenKingMask));
             api.RegisterItemClass("CANItemCoronet", typeof(CANItemCoronet));
+            //api.RegisterItemClass("CANItemMonocle", typeof(CANItemMonocle));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
@@ -107,6 +111,21 @@ namespace canjewelry.src
                     gems_textures.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
                 }
             };
+
+            var parsers = sapi.ChatCommands.Parsers;
+            capi.ChatCommands.Create("cb")
+                                .RequiresPlayer().RequiresPrivilege(Privilege.controlserver)
+                                    .BeginSub("s")
+                                        .HandleWith(checkBlock)
+                                    .EndSub()
+
+                                    ;
+            if (canjewelry.config.debugMode)
+            {
+                sapi.Logger.VerboseDebug("[canjewelry] " + "Server commands registered");
+            }
+
+
         }
 
         public void AddBehaviorAndSocketNumber(bool serverSide = true)
@@ -213,6 +232,8 @@ namespace canjewelry.src
         }
         public void onPlayerPlaying(IServerPlayer byPlayer)
         {
+
+            
             IInventory charakterInv = byPlayer.InventoryManager.GetOwnInventory("character");
             InventoryBasePlayer playerHotbar = (InventoryBasePlayer)byPlayer.InventoryManager.GetOwnInventory("hotbar");
             charakterInv.SlotModified += (int slotId) => {
@@ -239,6 +260,10 @@ namespace canjewelry.src
 
         public static void onPlayerRespawnRecalculateGemsBuffs(IServerPlayer player)
         {
+            //TreeAttributeUtil.SetBlockPos(player.Entity.WatchedAttributes.GetOrAddTreeAttribute("not_realms"), "lastBedPos", player.Entity.Pos.AsBlockPos);
+
+            //var c = 3;
+
             //go through all stats and delete "canencrusted" part
             foreach (KeyValuePair<string, EntityFloatStats> stat in player.Entity.Stats)
             {
@@ -415,6 +440,23 @@ namespace canjewelry.src
                 }
             }
         }
+
+
+        public static TextCommandResult checkBlock(TextCommandCallingArgs args)
+        {
+            IPlayer player = args.Caller.Player;
+            TextCommandResult tcr = new TextCommandResult();
+            tcr.Status = EnumCommandStatus.Success;
+           // player.Entity.World.Api.Side == EnumAppSide.Server
+
+            var ls = player.Entity.Api.ModLoader.GetModSystem<LockSystem>();
+
+            string targetPlayerName = (string)args.LastArg;
+
+
+            return tcr;
+        }
+
         public void rr()
         {
             AddBehaviorAndSocketNumber();

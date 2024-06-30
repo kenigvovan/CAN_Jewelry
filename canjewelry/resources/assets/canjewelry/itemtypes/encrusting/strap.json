@@ -1,6 +1,6 @@
 {
   "code": "canstrap",
-  "maxstacksize": 4,
+  "maxstacksize": 400,
   "shape": { "base": "canjewelry:encrusting/strap" },
   "variantgroups": [
     {

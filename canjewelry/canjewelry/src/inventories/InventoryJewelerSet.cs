@@ -13,6 +13,13 @@ namespace canjewelry.src.inventories
     {
         private ItemSlot[] slots;
         public int invSize = 9;
+        protected override ItemSlot NewSlot(int i)
+        {
+            // if (i == 0)
+            {
+                return new ItemSlotSurvival(this);
+            }
+        }
         public InventoryJewelerSet(string className, string instanceID, ICoreAPI api) : base(className, instanceID, api)
         {
             slots = GenEmptySlots(invSize);
@@ -51,11 +58,12 @@ namespace canjewelry.src.inventories
         }
         public override bool CanContain(ItemSlot sinkSlot, ItemSlot sourceSlot)
         {
+            //return base.CanContain(sinkSlot, sourceSlot);
             if (!base.CanContain(sinkSlot, sourceSlot))
             {
                 return false;
             }
-            var f = canjewelry.config;
+            
             int sinkId = sinkSlot.Inventory.GetSlotId(sinkSlot);
             if (sinkId == 0)
             {
@@ -66,10 +74,40 @@ namespace canjewelry.src.inventories
             }
             else if (sinkId > 0 && sinkId < Count)
             {
-                if (sourceSlot.Itemstack.Collectible.Code.Path.Contains("cansocket-") || sourceSlot.Itemstack.Collectible.Code.Path.Contains("gem-cut-"))
+                /*if (sourceSlot.Itemstack.Collectible.Code.Path.Contains("cansocket-") || sourceSlot.Itemstack.Collectible.Code.Path.Contains("gem-cut-"))
                 {
                     return true;
+                }*/
+                if (slots[0].Itemstack != null && slots[0].Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+                {
+                    int possibleSocketsNumber = slots[0].Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+
+                    if (possibleSocketsNumber > 0) 
+                    { 
+                        if(sinkId >= 1)
+                        {
+                            if (sinkId <= possibleSocketsNumber && sinkId > 0)
+                            {
+                                if (sourceSlot.Itemstack.Collectible.Code.Path.Contains("gem-cut-"))
+                                {
+                                    return true; 
+                                }                             
+                            }
+                            else if(sinkId > 4 && sinkId <= 4 + possibleSocketsNumber)
+                            {
+                                if (sourceSlot.Itemstack.Collectible.Code.Path.Contains("cansocket-"))
+                                {
+                                    return true;
+                                }
+                            }                            
+                        }
+                    }
                 }
+                if (sinkSlot.Itemstack != null && sinkSlot.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
+                {
+                    var tree = sinkSlot.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
+                }
+
             }
             return false;
         }
@@ -79,18 +117,25 @@ namespace canjewelry.src.inventories
 
         public override void FromTreeAttributes(ITreeAttribute tree)
         {
-            ItemSlot[] itemSlotArray = SlotsFromTreeAttributes(tree);
-            int? length1 = itemSlotArray?.Length;
-            int length2 = slots.Length;
-            if (!(length1.GetValueOrDefault() == length2 & length1.HasValue))
-                return;
-            slots = itemSlotArray;
+            List<ItemSlot> modifiedSlots = new List<ItemSlot>();
+            this.slots = this.SlotsFromTreeAttributes(tree, this.slots, modifiedSlots);
+            for (int i = 0; i < modifiedSlots.Count; i++)
+            {
+                this.DidModifyItemSlot(modifiedSlots[i], null);
+            }
+            if (this.Api != null)
+            {
+                for (int j = 0; j < this.slots.Length; j++)
+                {
+                    this.slots[j].MaxSlotStackSize = 1;
+                }
+            }
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             SlotsToTreeAttributes(slots, tree);
-            ResolveBlocksOrItems();
+            //ResolveBlocksOrItems();
         }
     }
 }
