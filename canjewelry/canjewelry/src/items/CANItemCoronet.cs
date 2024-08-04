@@ -319,10 +319,11 @@ namespace canjewelry.src.items
         }
         public void FillTextureDict(Dictionary<string, AssetLocation> dict, ItemStack itemStack)
         {
+            int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(itemStack);
             if (itemStack != null && itemStack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
             {
                 var tree = itemStack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-                int possibleGemsNumber = itemStack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                int possibleGemsNumber = maxSocketNumber;
                 if (possibleGemsNumber >= 4)
                 {
                     for (int i = 0; i < possibleGemsNumber; i++)

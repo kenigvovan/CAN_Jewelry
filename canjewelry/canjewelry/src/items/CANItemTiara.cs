@@ -1,5 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using canjewelry.src.CB;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +15,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 using static HarmonyLib.Code;
+using static Vintagestory.Server.Timer;
 
 namespace canjewelry.src.items
 {
@@ -279,17 +282,7 @@ namespace canjewelry.src.items
             }
             this.tmpTextures.Clear();
 
-            for(int i = 1; i < 4; i++)
-            {
-                if (!canjewelry.gems_textures.TryGetValue(itemstack.Attributes.GetString("gem_" + i.ToString(), "none"), out string assetPath))
-                {
-                    tmpTextures[i.ToString() + "_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                else
-                {
-                    tmpTextures[i.ToString() + "_gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
-                }
-            }
+            FillTextureDict(tmpTextures, itemstack);
 
             tmpTextures["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
             shape.Textures = shape2.Textures;
@@ -429,7 +422,64 @@ namespace canjewelry.src.items
                 gem_3
             });
         }
+        public void FillTextureDict(Dictionary<string, AssetLocation> newdict, ItemStack stack)
+        {
+            int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(stack);
+            if (maxSocketNumber == 1)
+            {
+                AssetLocation path;
+                if (!canjewelry.gems_textures.TryGetValue(stack.Attributes.GetString("gem_1", "none"), out string assetPath))
+                {
+                    path = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    path = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                }
+                for (int i = 1; i < 4; i++)
+                {
+                    newdict[i.ToString() + "_gem"] = path;
+                }
+            }
+            else if (maxSocketNumber == 2)
+            {
+                AssetLocation path;
+                if (!canjewelry.gems_textures.TryGetValue(stack.Attributes.GetString("gem_1", "none"), out string assetPath))
+                {
+                    path = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    path = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                }
+                newdict["1_gem"] = path;
+                newdict["3_gem"] = path;
 
+                if (!canjewelry.gems_textures.TryGetValue(stack.Attributes.GetString("gem_2", "none"), out assetPath))
+                {
+                    path = new AssetLocation("canjewelry:item/gem/notvis.png");
+                }
+                else
+                {
+                    path = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                }
+                newdict["3_gem"] = path;
+            }
+            else
+            {
+                for (int i = 1; i < 4; i++)
+                {
+                    if (!canjewelry.gems_textures.TryGetValue(stack.Attributes.GetString("gem_" + i.ToString(), "none"), out string assetPath))
+                    {
+                        newdict[i.ToString() + "_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
+                    }
+                    else
+                    {
+                        newdict[i.ToString() + "_gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+                    }
+                }
+            }
+        }
         public Shape GetShape(ItemStack stack, EntityAgent forEntity, string texturePrefixCode)
         {
 
@@ -464,18 +514,10 @@ namespace canjewelry.src.items
 
 
             newdict["carcassus"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
-            for (int i = 1; i < 4; i++)
-            {
-                if (!canjewelry.gems_textures.TryGetValue(stack.Attributes.GetString("gem_" + i.ToString(), "none"), out string assetPath))
-                {
-                    newdict[i.ToString() + "_gem"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                }
-                else
-                {
-                    newdict[i.ToString() + "_gem"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
-                }
-            }
-           
+
+            FillTextureDict(newdict, stack);
+
+
             foreach (var val in newdict)
             {
                 CompositeTexture ctex = new CompositeTexture() { Base = val.Value };

@@ -1,0 +1,14 @@
+[
+  {
+    "op": "add",
+    "path": "/dropsByType/*/0/dropModbyStat",
+    "value": "wildCropDropRate",
+    "file": "game:blocktypes/plant/tallgrass.json"
+  },
+  {
+    "op": "add",
+    "path": "/dropsByType/*/1/dropModbyStat",
+    "value": "wildCropDropRate",
+    "file": "game:blocktypes/plant/tallgrass.json"
+  }
+]

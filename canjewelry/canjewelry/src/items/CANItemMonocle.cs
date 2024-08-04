@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using canjewelry.src.CB;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -302,7 +303,7 @@ namespace canjewelry.src.items
             if (itemStack != null && itemStack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
             {
                 var tree = itemStack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-                int possibleGemsNumber = itemStack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                int possibleGemsNumber = EncrustableCB.GetMaxAmountSockets(itemStack);
                 if (possibleGemsNumber >= 4)
                 {
                     for (int i = 0; i < possibleGemsNumber; i++)

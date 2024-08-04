@@ -7,7 +7,6 @@
       "groupBy": [ "cannecklace-*" ]
     },
     "clothescategory": "head",
-    "canhavesocketsnumber": 3,
     "warmth": 0.5,
     "rackable": true,
     "wearableAttachment": true,
@@ -43,11 +42,6 @@
       }
     ]
   },
-  "behaviors": [
-    {
-      "name": "Encrustable"
-    }
-  ],
   "variantgroups": [
     {
       "code": "construction",

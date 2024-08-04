@@ -26,13 +26,14 @@ using Vintagestory.API.Common.CommandAbbr;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Common.Entities;
-using Realms.Content.systems.locks;
+using Vintagestory.Common;
+using System.Threading;
 
 namespace canjewelry.src
 {
     public class canjewelry: ModSystem
     {
-        public static Harmony harmonyInstance;
+        public Harmony harmonyInstance;
         public const string harmonyID = "canjewelry.Patches";
         public static ICoreClientAPI capi;
         public static ICoreServerAPI sapi;
@@ -68,7 +69,7 @@ namespace canjewelry.src
             api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
             api.RegisterItemClass("CANItemRottenKingMask", typeof(CANItemRottenKingMask));
             api.RegisterItemClass("CANItemCoronet", typeof(CANItemCoronet));
-            //api.RegisterItemClass("CANItemMonocle", typeof(CANItemMonocle));
+            api.RegisterItemClass("CANItemMonocle", typeof(CANItemMonocle));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }
@@ -82,6 +83,9 @@ namespace canjewelry.src
             harmonyInstance.Patch(typeof(Vintagestory.API.Client.GuiElementItemSlotGridBase).GetMethod("ComposeSlotOverlays", BindingFlags.NonPublic | BindingFlags.Instance), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_ComposeSlotOverlays_Add_Socket_Overlays_Not_Draw_ItemDamage")));
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
+
+            harmonyInstance.Patch(typeof(CharacterSystem).GetMethod("StartClientSide"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CharacterSystem_StartClientSide")));
+         
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             clientChannel.SetMessageHandler<SyncCANJewelryPacket>((packet) =>
@@ -110,24 +114,13 @@ namespace canjewelry.src
                     //catch if not present?
                     gems_textures.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
                 }
+
+                clientChannel.SendPacket(new SyncCANJewelryPacket()
+                {
+                    CompressedConfig = ""
+                });
             };
-
-            var parsers = sapi.ChatCommands.Parsers;
-            capi.ChatCommands.Create("cb")
-                                .RequiresPlayer().RequiresPrivilege(Privilege.controlserver)
-                                    .BeginSub("s")
-                                        .HandleWith(checkBlock)
-                                    .EndSub()
-
-                                    ;
-            if (canjewelry.config.debugMode)
-            {
-                sapi.Logger.VerboseDebug("[canjewelry] " + "Server commands registered");
-            }
-
-
         }
-
         public void AddBehaviorAndSocketNumber(bool serverSide = true)
         {
             ICoreAPI api = capi;
@@ -141,10 +134,6 @@ namespace canjewelry.src
                 if(it.Value == null || it.Value.Length == 0)
                 {
                     continue;
-                }
-                if (it.Key.Contains("tiara"))
-                {
-                    var c = 3;
                 }
                 Item[] arrayResult = api.World.SearchItems(new AssetLocation(it.Key));
                 if(arrayResult.Length > 0) 
@@ -164,24 +153,8 @@ namespace canjewelry.src
                             continue;
                         }
 
-   
-                        //make string for jtoken
-                        string s = "[";
-                        bool first = true;
-                        foreach (var socketTier in it.Value)
-                        {
-                            if (!first)
-                            {
-                                s += ",";
-                            }
-                            else
-                            {
-                                first = false;
-                            }
-                            s += socketTier;
-                        }
-                            
-                        s += "]";
+                        string s = JsonConvert.SerializeObject(it.Value);
+
                         //parse it for jarray
                         JToken k = JToken.Parse(s);
                         //set to item general attributes, accessible across all
@@ -227,6 +200,47 @@ namespace canjewelry.src
                 if (config.gem_type_to_buff.ContainsKey(code_item))
                 {
                     gem.Attributes.Token["canGemTypeToAttribute"] = config.gem_type_to_buff[code_item];
+                }
+            }
+
+            foreach(var it in config.custom_variants_sockets_tiers)
+            {
+                Item[] arrayResult = api.World.SearchItems(new AssetLocation(it.ItemCode));
+                if (arrayResult.Length > 0)
+                {
+                    foreach (Item item in arrayResult)
+                    {
+                        if (!item.HasBehavior<EncrustableCB>())
+                        {
+                            item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new EncrustableCB(item));
+                        }
+                        if (item.Attributes == null)
+                        {
+                            JToken jt = JToken.Parse("{}");
+                            item.Attributes = new JsonObject(jt);
+                        }
+
+
+                        string s = JsonConvert.SerializeObject(it.SocketTiers);
+
+                        //parse it for jarray
+                        JToken k = JToken.Parse(s);
+
+                        //set to item general attributes, accessible across all
+                        item.Attributes.Token[CANJWConstants.CAN_CUSTOM_VARIANTS] = k;
+                        item.Attributes.Token[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY] = it.AttributeKey;
+                        //item.Attributes.Token[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
+
+                        //item.Attributes = new JsonObject(item.Attributes.Token);
+                        //api.Logger.VerboseDebug("Added to " + item.Code);
+                    }
+                }
+                else
+                {
+                    if (config.debugMode)
+                    {
+                       // api.Logger.VerboseDebug(String.Format("[canjewelry] Item with \"{0}\" code not found", it.Key));
+                    }
                 }
             }
         }
@@ -346,7 +360,7 @@ namespace canjewelry.src
                                     {
                                         return;
                                     }
-                                    for (int j = 0; j < itemStack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt(); j++)
+                                    for (int j = 0; j < EncrustableCB.GetMaxAmountSockets(itemStack); j++)
                                     {
                                         ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + j.ToString());
                                         if(socketSlot == null)
@@ -388,22 +402,22 @@ namespace canjewelry.src
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
-            var p = harmonyInstance.GetPatchedMethods();
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("DamageItem"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_CollectibleObject_DamageItem")));
-            //GetDrops IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f
-            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.Block).GetMethod("GetDrops"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Prefix_GetDrops")));
+
             api.Event.PlayerNowPlaying += onPlayerPlaying;
             api.Event.PlayerRespawn += onPlayerRespawnRecalculateGemsBuffs;
 
             serverChannel = sapi.Network.RegisterChannel("canjewelry");
             serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
-            api.Event.PlayerNowPlaying += sendNewValues;
             api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, rr);
 
             commands.RegisterCommands.registerServerCommands(sapi);
 
-            
-            foreach(var it in config.gems_drops_table)
+            serverChannel.SetMessageHandler<SyncCANJewelryPacket>((player, packet) =>
+            {
+                sendNewValues(player);
+            });
+            foreach (var it in config.gems_drops_table)
             {
                 Block[] found_blocks = api.World.SearchBlocks(new AssetLocation(it.Key));
                 foreach(var block in found_blocks) 
@@ -441,40 +455,20 @@ namespace canjewelry.src
             }
         }
 
-
-        public static TextCommandResult checkBlock(TextCommandCallingArgs args)
-        {
-            IPlayer player = args.Caller.Player;
-            TextCommandResult tcr = new TextCommandResult();
-            tcr.Status = EnumCommandStatus.Success;
-           // player.Entity.World.Api.Side == EnumAppSide.Server
-
-            var ls = player.Entity.Api.ModLoader.GetModSystem<LockSystem>();
-
-            string targetPlayerName = (string)args.LastArg;
-
-
-            return tcr;
-        }
-
         public void rr()
         {
             AddBehaviorAndSocketNumber();
         }
         public void sendNewValues(IServerPlayer byPlayer)
         {
-            sapi.Event.RegisterCallback((dt =>
+            if (byPlayer.ConnectionState != EnumClientState.Offline)
             {
-                if (byPlayer.ConnectionState == EnumClientState.Playing)
+                serverChannel.SendPacket(new SyncCANJewelryPacket()
                 {
-                    serverChannel.SendPacket(new SyncCANJewelryPacket()
-                    {
-                        CompressedConfig = JsonConvert.SerializeObject(config)
-                    },
-                    byPlayer);
-                }
+                    CompressedConfig = JsonConvert.SerializeObject(config)
+                },
+                byPlayer);
             }
-            ), 10 * 1000);
         }
         private void loadConfig(ICoreAPI api)
         {
@@ -527,6 +521,7 @@ namespace canjewelry.src
                 { 
                     config = new Config();
                     config.FillDefaultValues();
+                    config.config_version = api.ModLoader.Mods.FirstOrDefault(mod => mod.Info.ModID == "canjewelry")?.Info.Version ?? "0.0.0";
                     api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
                     if (config.debugMode)
                     {
@@ -534,7 +529,16 @@ namespace canjewelry.src
                     }
                     return;
                 }
-                
+                var currVersion = api.ModLoader.Mods.FirstOrDefault(mod => mod.Info.ModID == "canjewelry")?.Info.Version ?? "0.0.0";
+                if(currVersion != null) 
+                { 
+                    if(currVersion != config.config_version)
+                    {
+                        config.FillDefaultValues(true);
+                    }
+                }
+
+
                 api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
                 if (config.debugMode)
                 {

@@ -1,14 +1,17 @@
 ﻿using canjewelry.src.cb;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Util;
 
@@ -18,7 +21,7 @@ namespace canjewelry.src.CB
     {
         public EncrustableCB(CollectibleObject collObj) : base(collObj)
         {
-            
+
         }
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
@@ -27,11 +30,12 @@ namespace canjewelry.src.CB
         public static bool TryAddSocket(InventoryBase inventory, ItemSlot encrustable, ItemSlot socketSlot, int socketNumber)
         {
             inventory.TakeLocked = true;
-           // ItemStack encrustable = encrustableSlot.Itemstack;
-            if (encrustable.Itemstack != null && encrustable.Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+            // ItemStack encrustable = encrustableSlot.Itemstack;
+            int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(encrustable.Itemstack);
+            if (encrustable.Itemstack != null && maxSocketNumber > 0)
             {
                 //client can send us anything
-                if (socketNumber + 1 > encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt())
+                if (socketNumber + 1 > maxSocketNumber)
                 {
                     inventory.TakeLocked = false;
                     return false;
@@ -41,7 +45,7 @@ namespace canjewelry.src.CB
                 if (encrustable.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
                 {
                     var tree = encrustable.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-                    if (tree.GetInt(CANJWConstants.SOCKET_ADDED_NUMBER) >= encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt())
+                    if (tree.GetInt(CANJWConstants.SOCKET_ADDED_NUMBER) >= maxSocketNumber)
                     {
                         inventory.TakeLocked = false;
                         return false;
@@ -49,7 +53,7 @@ namespace canjewelry.src.CB
                     else
                     {
                         //if socket is already there, just skip
-                        if(tree.HasAttribute("slot" + socketNumber))
+                        if (tree.HasAttribute("slot" + socketNumber))
                         {
                             inventory.TakeLocked = false;
                             return false;
@@ -65,7 +69,7 @@ namespace canjewelry.src.CB
                         if (encrustable.Itemstack != null && encrustable.Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_TIERS_STRING))
                         {
                             var tiersList = encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
-                            if(tiersList.Count() < tree.GetInt(CANJWConstants.SOCKET_ADDED_NUMBER))
+                            if (tiersList.Count() < tree.GetInt(CANJWConstants.SOCKET_ADDED_NUMBER))
                             {
                                 inventory.TakeLocked = false;
                                 return false;
@@ -93,7 +97,7 @@ namespace canjewelry.src.CB
                 }
                 else
                 {
-                    if (encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt() < 1)
+                    if (maxSocketNumber < 1)
                     {
                         inventory.TakeLocked = false;
                         return false;
@@ -141,14 +145,14 @@ namespace canjewelry.src.CB
             inventory.TakeLocked = true;
             if (encrustable.Itemstack != null && encrustable.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
             {
-                if(gem_slot.Empty || !gem_slot.Itemstack.Collectible.Attributes.KeyExists("canGemType"))
+                if (gem_slot.Empty || !gem_slot.Itemstack.Collectible.Attributes.KeyExists("canGemType"))
                 {
                     inventory.TakeLocked = false;
                     return false;
                 }
                 var tree = encrustable.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
 
-                if(tree.HasAttribute("slot" + socket_number))
+                if (tree.HasAttribute("slot" + socket_number))
                 {
                     ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + socket_number);
                     //socket level is lower than gem type
@@ -170,21 +174,21 @@ namespace canjewelry.src.CB
                     if (gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString().Equals("candurability"))
                     {
 
-                        if(currentMaxDurability < 1)
+                        if (currentMaxDurability < 1)
                         {
                             inventory.TakeLocked = false;
                             return false;
                         }
 
                         string currentGemAttributeBuff = treeSocket.GetString("attributeBuff");
-                        if(currentGemAttributeBuff?.Equals("candurability") ?? false)
+                        if (currentGemAttributeBuff?.Equals("candurability") ?? false)
                         {
                             int currentGemSize = treeSocket.GetInt("size");
                             //here we because the slot already had durability gem buff, if it was lower tier we need add some, same then just replace, higher set lower
                             //if durability left is lower than we can extract then return and do nothing
                             //durability max we get from an item attribute of json
                             int gem_slot_size = gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt();
-                            if(currentGemSize - gem_slot_size < 0) 
+                            if (currentGemSize - gem_slot_size < 0)
                             {
                                 //make higher dur
 
@@ -199,10 +203,10 @@ namespace canjewelry.src.CB
                                 }
                                 newBuff -= currentBuff;
                                 tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuffOnTree + newBuff);
-                                    
-                                
+
+
                             }
-                            else if(currentGemSize - gem_slot_size >= 0)
+                            else if (currentGemSize - gem_slot_size >= 0)
                             {
                                 //why would you replace with the same or lower
                                 inventory.TakeLocked = false;
@@ -223,7 +227,7 @@ namespace canjewelry.src.CB
                             {
                                 tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuff + newAdditionalBuff);
                             }
-                            
+
                             if (currentDurability > 0)
                             {
                                 currentDurability = (int)((float)currentDurability * (1 + newAdditionalBuff));
@@ -231,7 +235,7 @@ namespace canjewelry.src.CB
                             }
 
 
-                            tree.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.ONE_TIME_APPLIED);
+                            treeSocket.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.ONE_TIME_APPLIED);
                         }
                     }
                     else
@@ -255,7 +259,7 @@ namespace canjewelry.src.CB
 
                             currentDurabilityBuffOnTree -= gemyBuffValue;
 
-                            if(currentDurabilityBuffOnTree == 0)
+                            if (currentDurabilityBuffOnTree == 0)
                             {
                                 tree.RemoveAttribute(CANJWConstants.CANDURABILITY_STRING);
                             }
@@ -264,7 +268,7 @@ namespace canjewelry.src.CB
                                 tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuffOnTree);
                             }
                         }
-                        tree.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.STATS_BUFF);
+                        treeSocket.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.STATS_BUFF);
 
                     }
 
@@ -308,6 +312,34 @@ namespace canjewelry.src.CB
                 }
             }
             return false;
+        }
+
+        public static int GetMaxAmountSockets(ItemStack itemstack)
+        {
+            if (itemstack != null)
+            {
+                if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS))
+                {
+                    string searchedValue = itemstack.Attributes.GetString(itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString(), null);
+                    if (searchedValue != null)
+                    {
+                        var f = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
+                        if (f != null)
+                        {
+                            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(f.ToString());
+                            if (valueDict.TryGetValue(searchedValue, out var value))
+                            {
+                                return value.Length;
+                            }
+                        }
+                    }
+                }
+                else if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists("canhavesocketsnumber") && itemstack.ItemAttributes["canhavesocketsnumber"].AsInt() > 0)
+                {
+                    return itemstack.ItemAttributes["canhavesocketsnumber"].AsInt();
+                }
+            }
+            return -1;
         }
     }
 }

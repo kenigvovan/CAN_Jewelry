@@ -21,20 +21,27 @@ namespace canjewelry.src
 
         public Dictionary<string, int> items_codes_with_socket_count = new Dictionary<string, int>();
         public Dictionary<string, int[]> items_codes_with_socket_count_and_tiers = new Dictionary<string, int[]>();
+        public HashSet<CustomVariantSocketsTiers> custom_variants_sockets_tiers = new HashSet<CustomVariantSocketsTiers>();
+
         public int pan_take_per_use;
         public Dictionary<string, string> gem_type_to_buff = new Dictionary<string, string>();
 
         public Dictionary<string, float> max_buff_values = new Dictionary<string, float>();
 
         public Dictionary<string, DropInfo[]> gems_drops_table = new Dictionary<string, DropInfo[]>();
-        
+
         public bool debugMode;
         public float chance_gem_drop_on_item_broken;
 
-        public void FillDefaultValues()
+        public HashSet<string> buffs_to_show_gui = new HashSet<string>();
+        public string config_version;
+
+        public void FillDefaultValues(bool onlyEmptyStructs = false)
         {
-            buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
-            (new Dictionary<string, HashSet<string>> {
+            if (buffNameToPossibleItem.Count == 0)
+            {
+                buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
+                (new Dictionary<string, HashSet<string>> {
                 {"diamond", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "cantiara", "-antique", "cancoronet" } },
                 {"corundum", new HashSet<string>{ "pickaxe", "shovel", "cansimplenecklace", "cantiara", "tunneler", "canrottenkingmask", "cancoronet" } },
                 {"emerald", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace", "-antique" , "cantiara", "canrottenkingmask", "cancoronet" } },
@@ -70,12 +77,14 @@ namespace canjewelry.src
                 {"tourmalineverdelite", new HashSet<string>{ "brigandine", "plate", "chain", "scale", "cansimplenecklace" , "-antique" , "cantiara", "canrottenkingmask", "cancoronet" } },
                 {"tourmalinewatermelon",  new HashSet<string>{ "bow", "cansimplenecklace", "cantiara", "tbow-compound", "canrottenkingmask", "cancoronet" }},
                 {"amethyst", new HashSet<string>{ "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
-                    "bow", "knife", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade", "brigandine", 
+                    "bow", "knife", "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade", "brigandine",
                     "plate", "chain", "scale", "-antique" , "canrottenkingmask", "axe-felling-", "prospectingpick-", "hammer-", "shovel-", "hoe-", "saw-"
-                , "chisel-", "scythe-", "cancoronet"} },
-        });
-
-            gems_buffs = new Dictionary<string, Dictionary<string, float>>
+                , "chisel-", "scythe-", "cancoronet", "pickaxe-"} },
+            });
+            }
+            if (gems_buffs.Count == 0)
+            {
+                gems_buffs = new Dictionary<string, Dictionary<string, float>>
             (new Dictionary<string, Dictionary<string, float>>  {
                 { "walkspeed", new Dictionary<string, float>{
                     { "1", 0.02f },
@@ -200,17 +209,18 @@ namespace canjewelry.src
                     }
                 }
             });
+            }
 
             items_codes_with_socket_count = new Dictionary<string, int>(new Dictionary<string, int>
             {
 
             });
 
-            items_codes_with_socket_count_and_tiers = new Dictionary<string, int[]>()
-        {
-            { "canjewelry:canrottenkingmask-*", new int[1] {3} },
-            { "canjewelry:cansimplenecklace-*", new int[1] {1} },
-            { "canjewelry:cantiara-*", new int[3] {1, 3, 1} },
+
+            if (items_codes_with_socket_count_and_tiers.Count == 0)
+            {
+                items_codes_with_socket_count_and_tiers = new Dictionary<string, int[]>()
+        {           
             { "canjewelry:cancoronet-*", new int[1] {3} },
             { "*knife-generic-gold", new int[1] {3} },
             { "*knife-generic-silver", new int[1] {3} },
@@ -373,10 +383,13 @@ namespace canjewelry.src
 
             { "diamondpick-steel",  new int[3] {3, 3, 3}  },
         };
+            }
 
             pan_take_per_use = 8;
 
-            gem_type_to_buff = new Dictionary<string, string>()
+            if (gem_type_to_buff.Count == 0)
+            {
+                gem_type_to_buff = new Dictionary<string, string>()
                 {
                     { "diamond", "walkspeed"},
                     { "corundum", "miningSpeedMul"},
@@ -411,14 +424,20 @@ namespace canjewelry.src
                     { "tourmalinewatermelon",  "rangedWeaponsAcc"},
                     { "amethyst", "candurability" }
                 };
+            }
 
-            max_buff_values = new Dictionary<string, float>()
+            if (max_buff_values.Count == 0)
+            {
+                max_buff_values = new Dictionary<string, float>()
                 {
                     { "walkspeed", 0.5f},
                     { "maxhealthExtraPoints", 25}
                 };
+            }
 
-            gems_drops_table = new Dictionary<string, DropInfo[]>()
+            if (gems_drops_table.Count == 0)
+            {
+                gems_drops_table = new Dictionary<string, DropInfo[]>()
             {
                  //malachite
                 { "ore-*-malachite-*", new DropInfo[]{
@@ -594,10 +613,60 @@ namespace canjewelry.src
                    }
                 },
             };
+            }
 
             debugMode = false;
             chance_gem_drop_on_item_broken = 0.2f;
+
+            if (buffs_to_show_gui.Count == 0)
+            {
+                buffs_to_show_gui = new HashSet<string> { "walkspeed", "miningSpeedMul", "maxhealthExtraPoints", "meleeWeaponsDamage", "hungerrate", "wildCropDropRate", "wildCropDropRate",
+                "armorDurabilityLoss", "oreDropRate",  "healingeffectivness", "rangedWeaponsDamage", "animalLootDropRate", "vesselContentsDropRate", "bowDrawingStrength", "animalseekingrange",
+                "armorWalkSpeedAffectedness", "rangedWeaponsSpeed", "mechanicalsDamage", "rangedWeaponsAcc"};
+            }
+            //{ "canjewelry:canrottenkingmask-*", new int[1] {3} },
+            if (custom_variants_sockets_tiers.Count == 0)
+            {
+                custom_variants_sockets_tiers.Add(
+                    new CustomVariantSocketsTiers("canjewelry:cantiara-normal-tiara", "carcassus", new Dictionary<string, int[]> {
+                        { "tinbronze", new int[] { 1 } },
+                        { "bismuthbronze", new int[] { 1 } },
+                        { "blackbronze", new int[] { 1 } },
+                         { "gold", new int[] { 1, 1 } },
+                         { "silver", new int[] { 1, 1 } },
+                         { "iron", new int[] { 1, 1, 1 } },
+                         { "meteoriciron", new int[] { 1, 2, 1 } },
+                         { "steel", new int[] { 1, 2, 1 } }
+                    })
+                 );
+                custom_variants_sockets_tiers.Add(
+                    new CustomVariantSocketsTiers("canjewelry:canrottenkingmask-normal", "metal", new Dictionary<string, int[]> {
+                        { "tinbronze", new int[] { 1 } },
+                        { "bismuthbronze", new int[] { 1 } },
+                        { "blackbronze", new int[] { 1 } },
+                         { "gold", new int[] { 1} },
+                         { "silver", new int[] { 1 } },
+                         { "iron", new int[] { 1 } },
+                         { "meteoriciron", new int[] { 2} },
+                         { "steel", new int[] { 2 } }
+                    })
+                 );
+                custom_variants_sockets_tiers.Add(
+                    new CustomVariantSocketsTiers("canjewelry:cansimplenecklace-normal-neck", "loop", new Dictionary<string, int[]> {
+                        { "tinbronze", new int[] { 1 } },
+                        { "bismuthbronze", new int[] { 1 } },
+                        { "blackbronze", new int[] { 1 } },
+                         { "gold", new int[] { 1} },
+                         { "silver", new int[] { 1 } },
+                         { "iron", new int[] { 1 } },
+                         { "meteoriciron", new int[] { 2} },
+                         { "steel", new int[] { 2 } }
+                    })
+                 );
+            }
         }
+
+
 
 
         public class DropInfo
@@ -610,7 +679,7 @@ namespace canjewelry.src
             public string DropModbyStat;
             public string attributes;
 
-            public DropInfo(EnumItemClass TypeCollectable, string NameCollectable, float avg, float var, bool LastDrop, string DropModbyStat = "", string attributes ="")
+            public DropInfo(EnumItemClass TypeCollectable, string NameCollectable, float avg, float var, bool LastDrop, string DropModbyStat = "", string attributes = "")
             {
                 this.TypeCollectable = TypeCollectable;
                 this.NameCollectable = NameCollectable;
@@ -621,5 +690,19 @@ namespace canjewelry.src
                 this.attributes = attributes;
             }
         }
+
+        public class CustomVariantSocketsTiers
+        {
+            public string ItemCode;
+            public string AttributeKey;
+            public Dictionary<string, int[]> SocketTiers;
+            public CustomVariantSocketsTiers(string itemCode, string attributeKey, Dictionary<string, int[]> socketTiers)
+            {
+                this.ItemCode = itemCode;
+                this.AttributeKey = attributeKey;
+                this.SocketTiers = socketTiers;
+            }
+        }
+
     }
 }

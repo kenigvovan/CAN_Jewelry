@@ -232,8 +232,20 @@ namespace canjewelry.src.jewelry
         {
             get
             {
-                Dictionary<string, CompositeTexture> dictionary = this.nowTesselatingObj is Vintagestory.API.Common.Item nowTesselatingObj ? nowTesselatingObj.Textures : (Dictionary<string, CompositeTexture>)(this.nowTesselatingObj as Block).Textures;
-                AssetLocation texturePath = (AssetLocation)null;
+
+                Dictionary<string, CompositeTexture> dictionary;
+                if (this.nowTesselatingObj != null) {
+                     dictionary   = this.nowTesselatingObj is Vintagestory.API.Common.Item nowTesselatingObj ? nowTesselatingObj.Textures : (Dictionary<string, CompositeTexture>)(this.nowTesselatingObj as Block).Textures;
+                }
+                else
+                {
+                    dictionary = new Dictionary<string, CompositeTexture>();
+                    foreach(var it in (this.Block as Block).Textures)
+                    {
+                        dictionary[it.Key] = it.Value;
+                    }
+                }
+                    AssetLocation texturePath = (AssetLocation)null;
                 CompositeTexture compositeTexture;
                 if (dictionary.TryGetValue(textureCode, out compositeTexture))
                     texturePath = compositeTexture.Baked.BakedName;
@@ -432,6 +444,34 @@ namespace canjewelry.src.jewelry
                     mesher.AddMeshData(this.getMesh(inventory[0].Itemstack));
                 }              
             }
+            /*var shape = new Shape
+            {
+                // Создание шейпа куба
+                Elements = new[]
+                {
+                    new ShapeElement
+                    {
+                        From = new double[]{0, 0, 0},
+                        To = new double[]{1, 12, 1},
+                        FacesResolved = new ShapeElementFace[]
+                        {
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" }
+                        }
+                    }
+                }
+            };
+
+            // Применение шейпа к блоку
+            //"jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/jewelgrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f)
+            MeshData modeldata;
+            canjewelry.capi.Tesselator.TesselateShape("block", shape, out modeldata, this);
+            mesher.AddMeshData(modeldata);*/
+
             return false;
         }
     }

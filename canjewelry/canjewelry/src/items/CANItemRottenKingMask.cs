@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -57,6 +58,8 @@ namespace canjewelry.src.items
             this.curOffY = (this.offY = this.FpHandTransform.Translation.Y);
             this.capi = (api as ICoreClientAPI);
 
+            this.AddAllTypesToCreativeInventory();
+
             string value = Attributes["clothescategory"].AsString();
             EnumCharacterDressType result = EnumCharacterDressType.Unknown;
             Enum.TryParse<EnumCharacterDressType>(value, ignoreCase: true, out result);
@@ -89,6 +92,27 @@ namespace canjewelry.src.items
                     api.World.Logger.Error("Failed loading defaultProtLoss for item/block {0}. Will ignore. Exception: {1}", Code, ex2);
                 }
             }
+        }
+        public void AddAllTypesToCreativeInventory()
+        {
+            List<JsonItemStack> list = new List<JsonItemStack>();
+            foreach (string arg in this.Attributes["variantGroups"].AsObject<Dictionary<string, string[]>>(null)["metal"])
+            {
+                list.Add(this.genJstack(string.Format("{{ metal: \"{0}\"}}", arg)));
+            }
+            this.CreativeInventoryStacks = new CreativeTabAndStackList[]
+            {
+                new CreativeTabAndStackList
+                {
+                    Stacks = list.ToArray(),
+                    Tabs = new string[]
+                    {
+                        "general",
+                        "items",
+                        "canjewelry"
+                    }
+                }
+            };
         }
         private JsonItemStack genJstack(string json)
         {
@@ -159,7 +183,7 @@ namespace canjewelry.src.items
             }
 
 
-            string maskMetal = stack.Item.Variant.Get("loop", "steel");
+            string maskMetal = stack.Attributes.GetString("metal", null);
             gearShape.Textures["canjewelry:canrottenkingmask-normal-silver1"] = new AssetLocation("block/metal/sheet/" + maskMetal + "1.png");
             gearShape.Textures["rotten-king-mask"] = new AssetLocation("canjewelry:item/rottenking.png");
             gearShape.Textures["rotten-king-cloth"] = new AssetLocation("canjewelry:item/rottenkingcloth.png");
@@ -309,7 +333,7 @@ namespace canjewelry.src.items
         }
         private MeshData genMesh(ICoreClientAPI capi, ItemStack itemstack, ITexPositionSource texSource)
         {
-            string carcassus = itemstack.Item.Variant.Get("loop", "steel");
+            string carcassus = itemstack.Attributes.GetString("metal", null);
             tmpTextures["silver1"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
             tmpTextures["rotten-king-mask"] = new AssetLocation("canjewelry:item/rottenking.png");
             tmpTextures["rotten-king-cloth"] = new AssetLocation("canjewelry:item/rottenkingcloth.png");

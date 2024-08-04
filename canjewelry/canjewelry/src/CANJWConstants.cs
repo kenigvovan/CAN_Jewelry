@@ -19,5 +19,7 @@ namespace canjewelry.src
         public static string GEM_ATTRIBUTE_BUFF = "attributeBuff";
         public static string GEM_BUFF_TYPE = "gembufftype";
         public static string CANDURABILITY_STRING = "candurability";
+        public static string CAN_CUSTOM_VARIANTS = "cancustomvariants";
+        public static string CAN_CUSTOM_VARIANTS_COMPARE_KEY = "cancustomvariantscomparekey";
     }
 }

@@ -286,5 +286,6 @@
   "item-coronet": " coronet",
   "item-canrottenkingmask": "  leper king mask",
 
-  "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer"
+  "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer",
+  "stats-tab-name": "Stats"
 }

@@ -25,12 +25,21 @@
         },
         "scale": 1
       }
-    }
+    },
+    "variantGroups": {
+      "metal": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ]
+    },
+    "allowedVariants": [
+      {
+        "construction": "normal",
+        "metal": "*"
+      }
+    ]
   },
   "variantgroups": [
     {
-      "code": "loop",
-      "states": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      "code": "construction",
+      "states": [ "normal" ]
     }
   ],
   "creativeinventory": {

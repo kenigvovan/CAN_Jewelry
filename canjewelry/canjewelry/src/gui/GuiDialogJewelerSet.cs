@@ -75,9 +75,10 @@ namespace canjewelry.src.jewelry
             //jewelerComposer.AddInset(slotsEl);
            // slotsEl.BothSizing = ElementSizing.FitToChildren;
             ItemStack encrustable = this.Inventory[0].Itemstack;
-            if (encrustable != null && encrustable.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+            int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(encrustable);
+            if (encrustable != null && maxSocketNumber > 0)
             {               
-                int possibleSockets = encrustable.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                int possibleSockets = maxSocketNumber;
                 ElementBounds tmpEl = slotsEl.FlatCopy().WithFixedSize(scaledSlotSize, scaledSlotSize);
                 double center = slotsEl.fixedWidth / 2;
                 double centerSlot = center - (possibleSockets % 2 == 1 ? scaledSlotSize / 2: 0);
@@ -158,9 +159,9 @@ namespace canjewelry.src.jewelry
             socketsEl.fixedHeight += 40;
             //this.Composers["jewelersetgui" + this.BlockEntityPosition?.ToString()].AddInset(socketsEl);
 
-            if (encrustable != null && encrustable.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+            if (encrustable != null && maxSocketNumber > 0)
             {
-                int possibleSockets = encrustable.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                int possibleSockets = maxSocketNumber;
                 ElementBounds tmpEl = socketsEl.FlatCopy().WithFixedSize(scaledSlotSize, scaledSlotSize);
                 double center = slotsEl.fixedWidth / 2;
                 double centerSlot = center - (possibleSockets % 2 == 1 ? scaledSlotSize / 2 : 0);
@@ -315,7 +316,8 @@ namespace canjewelry.src.jewelry
         }
         public void ComposeAvailableGemTypesGui()
         {
-            if(this.Inventory[0].Itemstack == null || !this.Inventory[0].Itemstack.Collectible.Attributes.KeyExists("canhavesocketsnumber"))
+            int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(this.Inventory[0].Itemstack);
+            if(this.Inventory[0].Itemstack == null || maxSocketNumber < 1)
             {
                 this.Composers.Remove("jewelersetgui-types");
                 return;

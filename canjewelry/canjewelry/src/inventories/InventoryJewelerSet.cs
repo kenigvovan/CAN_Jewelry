@@ -67,7 +67,8 @@ namespace canjewelry.src.inventories
             int sinkId = sinkSlot.Inventory.GetSlotId(sinkSlot);
             if (sinkId == 0)
             {
-                if (sourceSlot.Itemstack.Collectible.HasBehavior<EncrustableCB>() && sourceSlot.Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+                int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(sourceSlot.Itemstack);
+                if (sourceSlot.Itemstack.Collectible.HasBehavior<EncrustableCB>() && maxSocketNumber > 0)
                 {
                     return true;
                 }
@@ -78,9 +79,10 @@ namespace canjewelry.src.inventories
                 {
                     return true;
                 }*/
-                if (slots[0].Itemstack != null && slots[0].Itemstack.Collectible.Attributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+                int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(slots[0].Itemstack);
+                if (slots[0].Itemstack != null && maxSocketNumber > 0)
                 {
-                    int possibleSocketsNumber = slots[0].Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                    int possibleSocketsNumber = maxSocketNumber;
 
                     if (possibleSocketsNumber > 0) 
                     { 
