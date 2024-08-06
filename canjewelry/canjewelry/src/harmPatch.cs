@@ -1,6 +1,7 @@
 ﻿using Cairo;
 using canjewelry.src.cb;
 using canjewelry.src.CB;
+using canjewelry.src.eb;
 using canjewelry.src.items;
 using HarmonyLib;
 using Newtonsoft.Json;
@@ -498,52 +499,9 @@ namespace canjewelry.src
             int fromSlot,
             int toSlot)
         {
-            if(player == null)
+            if(player.Entity.HasBehavior<CANGemBuffAffected>())
             {
-                return;
-            }
-            var playerHotbar = player.InventoryManager.GetHotbarInventory();
-            if(playerHotbar == null)
-            {
-                return;
-            }
-            if (fromSlot < 11 && playerHotbar[fromSlot].Itemstack != null && playerHotbar[fromSlot].Itemstack.Attributes.HasAttribute("canencrusted"))
-            {              
-                if (!(playerHotbar[fromSlot].Itemstack.Item != null && (playerHotbar[fromSlot].Itemstack.Item is ItemWearable || playerHotbar[fromSlot].Itemstack.Item is CANItemWearable)))
-                {
-                    ITreeAttribute encrustTreeHere = playerHotbar[fromSlot].Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    if (encrustTreeHere == null)
-                    {
-                        return;
-                    }
-                    for (int i = 0; i < encrustTreeHere.GetInt("socketsnumber"); i++)
-                    {
-                        ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
-                        if (socketSlot != null)
-                        {
-                            applyBuffFromItemStack(socketSlot, player.Entity, false);
-                        }
-                    }
-                }
-            }
-            if(toSlot < 11 && playerHotbar[toSlot].Itemstack != null && playerHotbar[toSlot].Itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                if (!(playerHotbar[toSlot].Itemstack.Item != null && (playerHotbar[toSlot].Itemstack.Item is ItemWearable || playerHotbar[toSlot].Itemstack.Item is CANItemWearable)))
-                {
-                    ITreeAttribute encrustTree = playerHotbar[toSlot].Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    if (encrustTree == null)
-                    {
-                        return;
-                    }
-                    for (int i = 0; i < encrustTree.GetInt("socketsnumber"); i++)
-                    {
-                        ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + i.ToString());
-                        if (socketSlot != null)
-                        {
-                            applyBuffFromItemStack(socketSlot, player.Entity, true);
-                        }
-                    }
-                }
+                player.Entity.GetBehavior<CANGemBuffAffected>().OnActiveSlotSwapped(player, fromSlot, toSlot);
             }
         }
 

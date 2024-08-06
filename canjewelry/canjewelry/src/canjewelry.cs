@@ -28,6 +28,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.Common;
 using System.Threading;
+using canjewelry.src.eb;
 
 namespace canjewelry.src
 {
@@ -395,14 +396,14 @@ namespace canjewelry.src
             harmonyInstance = new Harmony(harmonyID);
             sapi = api;
             loadConfig(sapi);
-
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryPutInto", new[] { typeof(ItemSlot), typeof(ItemStackMoveOperation).MakeByRefType() }), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryPutInto")));
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TakeOut"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TakeOut")));
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryFlipWith"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryFlipWith")));
+            api.RegisterEntityBehaviorClass("cangembuffaffected", typeof(CANGemBuffAffected));
+            // harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryPutInto", new[] { typeof(ItemSlot), typeof(ItemStackMoveOperation).MakeByRefType() }), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryPutInto")));
+            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TakeOut"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TakeOut")));
+            // harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryFlipWith"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryFlipWith")));
             harmonyInstance.Patch(typeof(Vintagestory.Server.CoreServerEventManager).GetMethod("TriggerAfterActiveSlotChanged"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_TriggerAfterActiveSlotChanged")));
 
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
+            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
+            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("DamageItem"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_CollectibleObject_DamageItem")));
 
             api.Event.PlayerNowPlaying += onPlayerPlaying;

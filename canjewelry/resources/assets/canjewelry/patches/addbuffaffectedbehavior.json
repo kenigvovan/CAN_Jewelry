@@ -1,0 +1,8 @@
+﻿[
+  {
+    "file": "game:entities/humanoid/player.json",
+    "reason": "add",
+    "path": "/server/behaviors/-",
+    "value": { "code": "cangembuffaffected" }
+  }
+]
