@@ -1,0 +1,30 @@
+﻿[
+  {
+
+    "ingredientPattern": "HS",
+    "ingredients": {
+      "S": {
+        "type": "item",
+        "code": "canjewelry:canstrap-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      },
+      "H": {
+        "type": "item",
+        "code": "game:hammer-*",
+        "name": "metal",
+        "isTool": true,
+        "toolDurabilityCost": 10
+      }
+    },
+    "name": "can-monocle-default-crafts",
+    "width": 2,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canwirehank-{metal-type}",
+      "quantity": 3
+    }
+
+  }
+]

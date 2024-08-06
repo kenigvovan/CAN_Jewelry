@@ -1,0 +1,52 @@
+﻿[
+  {
+
+    "ingredientPattern": "M",
+    "ingredients": {
+      "M": {
+        "type": "item",
+        "code": "canjewelry:canmonocle-normal"
+      }
+    },
+    "name": "can-monocle-change-side",
+    "width": 1,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canmonocle-normal",
+      "quantity": 1
+    }
+
+  },
+  {
+
+    "ingredientPattern": "GW,WW",
+    "ingredients": {
+      "W": {
+        "type": "item",
+        "code": "canjewelry:canwirehank-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      },
+      "G": {
+        "type": "block",
+        "code": "game:glassslab-*-down-free",
+        "name": "glass-type",
+        "allowedVariants": [ "blue", "brown", "green", "pink", "plain", "quartz", "quartzglass", "red", "smoky", "vintage", "violet", "yellow" ]
+      }
+    },
+    "name": "can-monocle-default-crafts",
+    "width": 2,
+    "height": 2,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canmonocle-normal",
+      "quantity": 1,
+      "attributes": {
+        "loop": "{metal-type}",
+        "glasstype":"{glass-type}"
+      }
+    }
+
+  }
+]

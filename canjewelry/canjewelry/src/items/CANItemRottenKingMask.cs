@@ -351,9 +351,7 @@ namespace canjewelry.src.items
         }
         public override string GetHeldItemName(ItemStack itemStack)
         {
-
-            string variant = itemStack.Item.Variant.Get("loop");
-            return Lang.Get("game:material-" + variant) + Lang.Get("canjewelry:item-canrottenkingmask");
+            return Lang.Get("game:material-" + itemStack.Attributes.GetString("metal", "default")) + Lang.Get("canjewelry:item-canrottenkingmask");
         }
     }
 }

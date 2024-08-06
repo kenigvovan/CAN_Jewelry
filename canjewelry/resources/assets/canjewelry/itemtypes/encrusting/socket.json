@@ -29,7 +29,6 @@
     "items": [ "*" ],
     "canjewelry": [ "*" ]
   },
-  "heldTpIdleAnimation": "holdunderarm",
   "guiTransform": {
     "translation": {
       "x": 0,

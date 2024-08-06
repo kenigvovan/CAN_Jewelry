@@ -177,19 +177,16 @@ namespace canjewelry.src.items
         {
             List<JsonItemStack> stacks = new List<JsonItemStack>();
             Dictionary<string, string[]> vg = this.Attributes["variantGroups"].AsObject<Dictionary<string, string[]>>(null);
-            foreach (string loop in vg["loop"])
+            Random r = new Random();
+
+            string[] loops = ArrayExtensions.Shuffle(vg["loop"], r)[0..2];
+            string[] sockets = ArrayExtensions.Shuffle(vg["socket"], r)[0..2];
+            foreach (string loop in loops)
             {
-                string construction = this.Construction;
-                if (construction == "normal-neck")
+                foreach (string socket in sockets)
                 {
-                    foreach (string socket in vg["socket"])
-                    {
-                        //foreach (string gem in vg["gem"])
-                        {
-                            stacks.Add(this.genJstack(string.Format("{{ loop: \"{0}\", socket: \"{1}\", gem: \"none\" }}", loop, socket)));
-                        }
-                    }
-                }
+                    stacks.Add(this.genJstack(string.Format("{{ loop: \"{0}\", socket: \"{1}\", gem: \"none\" }}", loop, socket)));                 
+                }             
             }
             this.CreativeInventoryStacks = new CreativeTabAndStackList[]
             {

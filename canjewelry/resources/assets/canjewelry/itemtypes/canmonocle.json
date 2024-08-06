@@ -1,13 +1,12 @@
 {
   "code": "canmonocle",
   "class": "CANItemMonocle",
-  "enabled": false,
   "storageFlags": 128,
   "attributes": {
     "handbook": {
       "groupBy": [ "canmonocle-*" ]
     },
-    "clothescategory": "head",
+    "clothescategory": "face",
     "rackable": true,
     "wearableAttachment": true,
     "groundStorageTransformByType": {
@@ -24,12 +23,23 @@
         },
         "scale": 1
       }
-    }
+    },
+    "variantGroups": {
+      "metal": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ],
+      "glass": [ "blue", "brown", "green", "pink", "plain", "quartz", "quartzglass", "red", "smoky", "vintage", "violet", "yellow" ]
+    },
+    "allowedVariants": [
+      {
+        "construction": "normal",
+        "metal": "*",
+        "glass": "*"
+      }
+    ]
   },
   "variantgroups": [
     {
-      "code": "loop",
-      "states": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      "code": "construction",
+      "states": [ "normal" ]
     }
   ],
   "shapeByType": {
@@ -42,13 +52,6 @@
       "metal": { "base": "game:block/metal/plate/{loop}" }
     }
   },
-  "creativeinventory": {
-    "general": [ "*" ],
-    "items": [ "*" ],
-    "clothing": [ "*" ],
-    "canjewelry": [ "*" ]
-  },
-
   "fpHandTransformByType": {
     "*": {
       "translation": {
@@ -71,39 +74,39 @@
   },
   "tpHandTransform": {
     "translation": {
-      "x": -0.97,
-      "y": -1,
-      "z": -1.3
+      "x": -0.77,
+      "y": -2.1,
+      "z": -0.6
     },
     "rotation": {
-      "x": 22,
-      "y": -69,
-      "z": -30
+      "x": 23,
+      "y": 162,
+      "z": -3
     },
     "origin": {
       "x": 0.5,
       "y": 1.5,
       "z": 0.5
     },
-    "scale": 0.68
+    "scale": 0.86
   },
   "guiTransform": {
     "translation": {
-      "x": 78,
-      "y": -72,
-      "z": 3.6
+      "x": 7,
+      "y": 4,
+      "z": -0.4
     },
     "rotation": {
-      "x": -20,
-      "y": 180,
-      "z": 147
+      "x": 162,
+      "y": -77,
+      "z": 1
     },
     "origin": {
       "x": 0.52,
       "y": 1.6,
       "z": 0.5
     },
-    "scale": 3.01
+    "scale": 4.43
   },
   "groundTransform": {
     "translation": {

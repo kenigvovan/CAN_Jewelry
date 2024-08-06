@@ -284,6 +284,8 @@
   "need_to_be_processed": "<font color=\"#9966ff\">Need to be processed</font>",
 
   "item-coronet": " coronet",
+  "item-monocle": " monocle",
+  "item-wire-hank": " wires",
   "item-canrottenkingmask": "  leper king mask",
 
   "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer",

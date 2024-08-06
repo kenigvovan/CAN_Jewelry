@@ -1,6 +1,7 @@
 ﻿using canjewelry.src.CB;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -61,7 +62,7 @@ namespace canjewelry.src.items
             EnumCharacterDressType result = EnumCharacterDressType.Unknown;
             Enum.TryParse<EnumCharacterDressType>(value, ignoreCase: true, out result);
             //DressType = result;
-
+            AddAllTypesToCreativeInventory();
             JsonObject jsonObject = Attributes?["statModifiers"];
             if (jsonObject != null && jsonObject.Exists)
             {
@@ -90,6 +91,44 @@ namespace canjewelry.src.items
                 }
             }
         }
+        public void AddAllTypesToCreativeInventory()
+        {
+            List<JsonItemStack> stacks = new List<JsonItemStack>();
+            Dictionary<string, string[]> vg = this.Attributes["variantGroups"].AsObject<Dictionary<string, string[]>>(null);
+
+            Random r = new Random();
+            string[] loops = ArrayExtensions.Shuffle(vg["metal"], r)[0..2];
+            string[] glassTypes = ArrayExtensions.Shuffle(vg["glass"], r)[0..2];
+            foreach (string loop in loops)
+            {
+                foreach (var glass in glassTypes)
+                {
+                    stacks.Add(this.genJstack(string.Format("{{ loop: \"{0}\", glasstype: \"{1}\" }}", loop, glass)));
+                }
+            }
+            this.CreativeInventoryStacks = new CreativeTabAndStackList[]
+            {
+                new CreativeTabAndStackList
+                {
+                    Stacks = stacks.ToArray(),
+                    Tabs = new string[]
+                    {
+                        "general",
+                        "items",
+                        "canjewelry"
+                    }
+                }
+            };
+        }
+        private JsonItemStack genJstack(string json)
+        {
+            JsonItemStack jsonItemStack = new JsonItemStack();
+            jsonItemStack.Code = this.Code;
+            jsonItemStack.Type = EnumItemClass.Item;
+            jsonItemStack.Attributes = new JsonObject(JToken.Parse(json));
+            jsonItemStack.Resolve(this.api.World, "canmonocle type", true);
+            return jsonItemStack;
+        }
         public Shape GetShape(ItemStack stack, EntityAgent forEntity, string texturePrefixCode)
         {
             Shape gearShape = null;
@@ -97,7 +136,8 @@ namespace canjewelry.src.items
             JsonObject attrObj = stack.Collectible.Attributes;
             float damageEffect = 0f;
             compGearShape = ((!attrObj["attachShape"].Exists) ? ((stack.Class == EnumItemClass.Item) ? stack.Item.Shape : stack.Block.Shape) : attrObj["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain));
-            AssetLocation shapePath = compGearShape.Base.CopyWithPath("shapes/" + compGearShape.Base.Path + ".json");
+            string eyeSide = stack.Attributes.GetString("eye", "right");
+            AssetLocation shapePath = compGearShape.Base.CopyWithPath("shapes/" + compGearShape.Base.Path + "_" + eyeSide + ".json");
             gearShape = Vintagestory.API.Common.Shape.TryGet(api, shapePath);
             if (gearShape == null)
             {
@@ -111,60 +151,16 @@ namespace canjewelry.src.items
                 return null;
             }
 
-            //gearShape.SubclassForStepParenting(texturePrefixCode, damageEffect);
-            HashSet<string> textureCodes = new HashSet<string>();
-            ShapeElement[] elements = gearShape.Elements;
-            for (int i = 0; i < elements.Length; i++)
-            {
-                elements[i].WalkRecursive(delegate (ShapeElement el)
-                {
-                    el.DamageEffect = damageEffect;
-                    ShapeElementFace[] facesResolved = el.FacesResolved;
-                    foreach (ShapeElementFace shapeElementFace in facesResolved)
-                    {
-                        if (shapeElementFace != null && shapeElementFace.Enabled && !shapeElementFace.Texture.Contains("gems"))
-                        {
-                            textureCodes.Add(shapeElementFace.Texture);
-                            shapeElementFace.Texture = texturePrefixCode + "-" + shapeElementFace.Texture;
-                        }
-                    }
-                });
-            }
-
-            if (gearShape.Textures != null)
-            {
-                KeyValuePair<string, int[]>[] array = gearShape.TextureSizes.ToArray();
-                gearShape.TextureSizes.Clear();
-                KeyValuePair<string, int[]>[] array2 = array;
-                for (int i = 0; i < array2.Length; i++)
-                {
-                    KeyValuePair<string, int[]> keyValuePair = array2[i];
-                    gearShape.TextureSizes[texturePrefixCode + "-" + keyValuePair.Key] = keyValuePair.Value;
-                    textureCodes.Remove(keyValuePair.Key);
-                }
-
-                foreach (string item in textureCodes)
-                {
-                    gearShape.TextureSizes[texturePrefixCode + "-" + item] = new int[2] { gearShape.TextureWidth, gearShape.TextureHeight };
-                }
-            }
-
-
-            canjewelry.gems_textures.TryGetValue("diamond", out string assetPath);
-            string maskMetal = stack.Attributes.GetString("metal", null);
-            gearShape.Textures["canjewelry:cancoronet-tinbronze-gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
-
-            gearShape.Textures["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
-
-
-            FillTextureDict(gearShape.Textures, stack);
+            canjewelry.gems_textures.TryGetValue("fluorite", out string assetPath);
 
 
             Dictionary<string, AssetLocation> newdict = new Dictionary<string, AssetLocation>();
-            FillTextureDict(newdict, stack);
-            newdict["canjewelry:cancoronet-tinbronze-gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+            //FillTextureDict(newdict, stack);
+            string carcassus = stack.Attributes.GetString("loop", null);
+            newdict["brass"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
+            string qurtzType = stack.Attributes.GetString("glasstype", "red");
+            newdict["quartzglass"] = new AssetLocation("block/glass/" + qurtzType + ".png");
 
-            newdict["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
             foreach (var val in newdict)
             {
                 CompositeTexture ctex = new CompositeTexture() { Base = val.Value };
@@ -186,8 +182,6 @@ namespace canjewelry.src.items
                     return null;
                 });
 
-                if (val.Key == null)
-                    continue;
                 ctex.Baked = new BakedCompositeTexture() { BakedName = armorTexLoc, TextureSubId = textureSubId };
 
                 ((EntityClientProperties)forEntity.SidedProperties).Textures[val.Key] = ctex;
@@ -458,26 +452,121 @@ namespace canjewelry.src.items
 
         private MeshData genMesh(ICoreClientAPI capi, ItemStack itemstack, ITexPositionSource texSource)
         {
-            //canjewelry.gems_textures.TryGetValue("diamond", out string assetPath);
-            // tmpTextures["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
-            ContainedTextureSource cnts = new ContainedTextureSource(this.api as ICoreClientAPI, curAtlas, new Dictionary<string, AssetLocation>(), string.Format("For render in shield {0}", this.Code));
-            cnts.Textures.Clear();
+            JsonObject attributes = itemstack.Collectible.Attributes;
+            EntityProperties entityType = capi.World.GetEntityType(new AssetLocation("player"));
+            Shape loadedShape = entityType.Client.LoadedShape;
+            AssetLocation @base = entityType.Client.Shape.Base;
+            Shape shape = new Shape
+            {
+                Elements = loadedShape.CloneElements(),
+                Animations = loadedShape.Animations,
+                AnimationsByCrc32 = loadedShape.AnimationsByCrc32,
+                AttachmentPointsByCode = loadedShape.AttachmentPointsByCode,
+                JointsById = loadedShape.JointsById,
+                TextureWidth = loadedShape.TextureWidth,
+                TextureHeight = loadedShape.TextureHeight,
+                Textures = null
+            };
+            CompositeShape compositeShape = (attributes["attachShape"].Exists ? attributes["attachShape"].AsObject<CompositeShape>(null, itemstack.Collectible.Code.Domain) : ((itemstack.Class == EnumItemClass.Item) ? itemstack.Item.Shape : itemstack.Block.Shape));
 
-             cnts.Textures["metal"] = itemstack.Item.Textures["metal"].Base;
+            string carcassus = itemstack.Attributes.GetString("loop", "steel");
+            string eyeSide = itemstack.Attributes.GetString("eye", "right");
+            if (compositeShape == null)
+            {
+                capi.World.Logger.Warning("Entity armor {0} {1} does not define a shape through either the shape property or the attachShape Attribute. Armor pieces will be invisible.", itemstack.Class, itemstack.Collectible.Code);
+                return null;
+            }
 
-            //cnts.Textures["gems"] = canjewelry.capi.Assets.TryGet(assetPath + ".png").Location;
+            AssetLocation assetLocation = compositeShape.Base.CopyWithPath("shapes/" + compositeShape.Base.Path + "_" + eyeSide + ".json");
+            Shape shape2 = Vintagestory.API.Common.Shape.TryGet(capi, assetLocation);
+            //shape2.Elements[0].From = new double[] { shape2.Elements[0].From[0] + 1, shape2.Elements[0].From[1] + 1, shape2.Elements[0].From[2] + 1 };
 
-            FillTextureDict(cnts.Textures, itemstack);
+            if (shape2 == null)
+            {
+                capi.World.Logger.Warning("Entity wearable shape {0} defined in {1} {2} not found or errored, was supposed to be at {3}. Armor piece will be invisible.", compositeShape.Base, itemstack.Class, itemstack.Collectible.Code, assetLocation);
+                return null;
+            }
+            this.tmpTextures.Clear();
+            tmpTextures["brass"] = new AssetLocation("block/metal/sheet/" + carcassus + "1.png");
+            string qurtzType = itemstack.Attributes.GetString("glasstype", "red");
+            tmpTextures["quartzglass"] = new AssetLocation("block/glass/" + qurtzType + ".png");
+
+            shape.Textures = shape2.Textures;
 
 
-            MeshData mesh;
-            this.capi.Tesselator.TesselateItem(this, out mesh, cnts);
-            return mesh;
+            if (shape2.Textures.Count > 0 && shape2.TextureSizes.Count < shape2.Textures.Count)
+            {
+                shape2.TextureSizes.Clear();
+                foreach (KeyValuePair<string, AssetLocation> texture in shape2.Textures)
+                {
+                    shape2.TextureSizes.Add(texture.Key, new int[2] { shape2.TextureWidth, shape2.TextureHeight });
+                }
+            }
+
+            foreach (KeyValuePair<string, int[]> textureSize in shape2.TextureSizes)
+            {
+                shape.TextureSizes[textureSize.Key] = textureSize.Value;
+            }
+
+            ShapeElement[] elements = shape2.Elements;
+            foreach (ShapeElement shapeElement in elements)
+            {
+                if (shapeElement.StepParentName != null)
+                {
+                    ShapeElement elementByName = shape.GetElementByName(shapeElement.StepParentName);
+                    if (elementByName == null)
+                    {
+                        capi.World.Logger.Warning("Entity wearable shape {0} defined in {1} {2} requires step parent element with name {3}, but no such element was found in shape {3}. Will not be visible.", compositeShape.Base, itemstack.Class, itemstack.Collectible.Code, shapeElement.StepParentName, @base);
+                    }
+                    else if (elementByName.Children == null)
+                    {
+                        elementByName.Children = new ShapeElement[1] { shapeElement };
+                    }
+                    else
+                    {
+                        elementByName.Children = elementByName.Children.Append(shapeElement);
+                    }
+                }
+                else
+                {
+                    capi.World.Logger.Warning("Entity wearable shape element {0} in shape {1} defined in {2} {3} did not define a step parent element. Will not be visible.", shapeElement.Name, compositeShape.Base, itemstack.Class, itemstack.Collectible.Code);
+                }
+            }
+
+            nowTesselatingShape = shape;
+            capi.Tesselator.TesselateShapeWithJointIds("entity", shape, out var modeldata, this, new Vec3f());
+            nowTesselatingShape = null;
+            return modeldata;
         }
         public override string GetHeldItemName(ItemStack itemStack)
         {
-            string variant = itemStack.Item.Variant.Get("loop");
-            return Lang.Get("game:material-" + variant) + Lang.Get("canjewelry:item-coronet");
+            string carcassus = itemStack.Attributes.GetString("loop", "steel");
+            return Lang.Get("game:material-" + carcassus) + Lang.Get("canjewelry:item-monocle");
+        }
+        public override void OnCreatedByCrafting(ItemSlot[] allInputslots, ItemSlot outputSlot, GridRecipe byRecipe)
+        {
+            if(byRecipe.Name.Path == "can-monocle-change-side")
+            {
+                ItemSlot monocleSlot = allInputslots.FirstOrDefault(sl => !sl.Empty);
+                if(monocleSlot != null)
+                {
+                    foreach(var attr in monocleSlot.Itemstack.Attributes)
+                    {
+                        outputSlot.Itemstack.Attributes[attr.Key] = attr.Value;
+                    }
+                    if(outputSlot.Itemstack.Attributes.HasAttribute("eye"))
+                    {
+                        outputSlot.Itemstack.Attributes.SetString("eye", outputSlot.Itemstack.Attributes.GetString("eye") == "left" ? "right" : "left");
+                    }
+                    else
+                    {
+                        outputSlot.Itemstack.Attributes.SetString("eye", "right");
+                    }
+                    return;
+                }
+            }
+            base.OnCreatedByCrafting(allInputslots, outputSlot, byRecipe);
+
         }
     }
 }

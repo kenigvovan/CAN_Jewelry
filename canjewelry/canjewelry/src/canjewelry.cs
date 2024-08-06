@@ -70,6 +70,7 @@ namespace canjewelry.src
             api.RegisterItemClass("CANItemRottenKingMask", typeof(CANItemRottenKingMask));
             api.RegisterItemClass("CANItemCoronet", typeof(CANItemCoronet));
             api.RegisterItemClass("CANItemMonocle", typeof(CANItemMonocle));
+            api.RegisterItemClass("CANItemWireHank", typeof(CANItemWireHank));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
         }

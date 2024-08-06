@@ -1,28 +1,16 @@
 {
-  "code": "canstrap",
+  "code": "canwirehank",
   "maxstacksize": 400,
-  "shape": { "base": "canjewelry:encrusting/strap" },
+  "class": "CANItemWireHank",
+  "shape": { "base": "canjewelry:encrusting/canwirehank" },
   "variantgroups": [
     {
       "code": "metal",
       "states": [ "tinbronze", "bismuthbronze", "blackbronze", "iron", "meteoriciron", "steel", "gold", "copper" ]
     }
   ],
-  "attributes": {
-    "handbook": {
-      "groupBy": [ "helvehammer-*" ]
-    },
-    "levelOfSocketByType": {
-      "cansocket-tinbronze": 1,
-      "cansocket-bismuthbronze": 1,
-      "cansocket-blackbronze": 1,
-      "cansocket-iron": 2,
-      "cansocket-meteoriciron": 2,
-      "cansocket-steel": 3
-    }
-  },
   "textures": {
-    "metal": { "base": "game:block/metal/ingot/{metal}" }
+    "copper": { "base": "game:block/metal/ingot/{metal}" }
   },
   "creativeinventory": {
     "general": [ "*" ],

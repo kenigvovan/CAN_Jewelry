@@ -42,12 +42,6 @@
       "states": [ "normal" ]
     }
   ],
-  "creativeinventory": {
-    "general": [ "*" ],
-    "items": [ "*" ],
-    "clothing": [ "*" ],
-    "canjewelry": [ "*" ]
-  },
 
   "texturesByType": {
     "*": {

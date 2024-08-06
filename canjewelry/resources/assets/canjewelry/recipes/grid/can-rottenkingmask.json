@@ -23,7 +23,10 @@
     "height": 2,
     "output": {
       "type": "item",
-      "code": "canjewelry:canrottenkingmask-{metal-type}",
+      "code": "canjewelry:canrottenkingmask-normal",
+      "attributes": {
+        "metal": "{metal-type}"
+      },
       "quantity": 1
     }
 
