@@ -16,6 +16,10 @@ using Vintagestory.GameContent;
 
 namespace canjewelry.src.eb
 {
+    /***
+     * Behavior tracks player's armor/cloth slots + active hotbar slot and apply buff for the player. 
+     * 
+     */
     public class CANGemBuffAffected : EntityBehavior
     {
         public override string PropertyName()
@@ -54,8 +58,6 @@ namespace canjewelry.src.eb
             this.SerializeBuffs();
             base.OnEntityDespawn(despawn);           
         }
-
-
         private void SerializeBuffs()
         {
             (this.entity as EntityPlayer).Player.WorldData.SetModdata("canjewelrysavedbuffs", SerializerUtil.Serialize(this.savedBuffs));
@@ -186,7 +188,6 @@ namespace canjewelry.src.eb
             }
             return result;
         }
-
         public static void ApplyBuffFromItemStack(Dictionary<string, float> buffsDict, EntityPlayer ep, bool add)
         {
 

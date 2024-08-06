@@ -35,7 +35,96 @@ namespace canjewelry.src.jewelry
         private int nowOutputFace;
         private bool beforeGrinding;
         private ITexPositionSource blockTexSource;
+        public string Material => this.Block.LastCodePart();
+        public float GrindSpeed
+        {
+            get
+            {
+                /* if (this.quantityPlayersGrinding > 0)
+                     return 1f;*/
+                return this.automated && this.mpc.Network != null ? this.mpc.TrueSpeed : 0.0f;
+            }
+        }
+        private MeshData quernBaseMesh
+        {
+            get
+            {
+                object quernBaseMesh;
+                this.Api.ObjectCache.TryGetValue("jewerlgrinder-" + this.Material, out quernBaseMesh);
+                return (MeshData)quernBaseMesh;
+            }
+            set => this.Api.ObjectCache["jewerlgrinder-" + this.Material] = (object)value;
+        }
+        private MeshData quernTopMesh
+        {
+            get
+            {
+                object quernTopMesh = (object)null;
+                this.Api.ObjectCache.TryGetValue("jewerlgrinder-top" + this.Material, out quernTopMesh);
+                return (MeshData)quernTopMesh;
+            }
+            set => this.Api.ObjectCache["jewerlgrinder-top" + this.Material] = (object)value;
+        }
+        public virtual float maxGrindingTime() => 4f;
+        public override string InventoryClassName => "jewelgrinder";
+        public virtual string DialogTitle => Lang.Get("Jewel Grinder");
+        public override InventoryBase Inventory => (InventoryBase)this.inventory;
+        public ItemSlot InputSlot => this.inventory[0];
 
+        public ItemSlot OutputSlot => this.inventory[1];
+
+        public ItemStack InputStack
+        {
+            get => this.inventory[0].Itemstack;
+            set
+            {
+                this.inventory[0].Itemstack = value;
+                this.inventory[0].MarkDirty();
+            }
+        }
+
+        public ItemStack OutputStack
+        {
+            get => this.inventory[1].Itemstack;
+            set
+            {
+                this.inventory[1].Itemstack = value;
+                this.inventory[1].MarkDirty();
+            }
+        }
+
+        public GrindingProperties InputGrindProps
+        {
+            get
+            {
+                ItemSlot itemSlot = this.inventory[0];
+                return itemSlot.Itemstack == null ? (GrindingProperties)null : itemSlot.Itemstack.Collectible.GrindingProps;
+            }
+        }
+
+        public Size2i AtlasSize => (this.Api as ICoreClientAPI).BlockTextureAtlas.Size;
+
+        public TextureAtlasPosition this[string textureCode]
+        {
+            get
+            {
+                CompositeTexture compositeTexture;
+                if (textureCode == "layer" && this.inventory[0].Itemstack != null)
+                {
+                    return this.getOrCreateTexPos(this.tmpTextures[textureCode]);
+                }
+                //var a = this.inventory[0].Itemstack.Item.Textures.TryGetValue(textureCode, out compositeTexture);
+                //var f = (this.Api as ICoreClientAPI).BlockTextureAtlas[compositeTexture.Base];
+                //var c = this.blockTexSource[textureCode];
+                //if(this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Item != null)
+                //textureCode = "metal";
+
+
+                return textureCode == "steel" && this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Item != null && this.inventory[0].Itemstack.Item.Textures.TryGetValue("metal", out compositeTexture)
+                    ? (this.Api as ICoreClientAPI).ItemTextureAtlas[compositeTexture.Base]
+                    : this.blockTexSource[textureCode];
+            }
+        }
         static BEJewelGrinder()
         {
             BEJewelGrinder.FlourParticles.AddPos.Set(17.0 / 16.0, 0.0, 17.0 / 16.0);
@@ -59,56 +148,12 @@ namespace canjewelry.src.jewelry
             BEJewelGrinder.FlourDustParticles.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, 0.4f);
             BEJewelGrinder.FlourDustParticles.OpacityEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -16f);
         }
-
-        public string Material => this.Block.LastCodePart();
-
-        public float GrindSpeed
-        {
-            get
-            {
-               /* if (this.quantityPlayersGrinding > 0)
-                    return 1f;*/
-                return this.automated && this.mpc.Network != null ? this.mpc.TrueSpeed : 0.0f;
-            }
-        }
-
-        private MeshData quernBaseMesh
-        {
-            get
-            {
-                object quernBaseMesh;
-                this.Api.ObjectCache.TryGetValue("jewerlgrinder-" + this.Material, out quernBaseMesh);
-                return (MeshData)quernBaseMesh;
-            }
-            set => this.Api.ObjectCache["jewerlgrinder-" + this.Material] = (object)value;
-        }
-
-        private MeshData quernTopMesh
-        {
-            get
-            {
-                object quernTopMesh = (object)null;
-                this.Api.ObjectCache.TryGetValue("jewerlgrinder-top" + this.Material, out quernTopMesh);
-                return (MeshData)quernTopMesh;
-            }
-            set => this.Api.ObjectCache["jewerlgrinder-top" + this.Material] = (object)value;
-        }
-
-        public virtual float maxGrindingTime() => 4f;
-
-        public override string InventoryClassName => "jewelgrinder";
-
-        public virtual string DialogTitle => Lang.Get("Jewel Grinder");
-
-        public override InventoryBase Inventory => (InventoryBase)this.inventory;
-
         public BEJewelGrinder()
         {
             this.inventory = new InventoryJewelGrinder((string)null, (ICoreAPI)null);
             this.inventory.SlotModified += new Action<int>(this.OnSlotModifid);
             this.inventory[0].MaxSlotStackSize = 1;
         }
-
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
@@ -144,7 +189,6 @@ namespace canjewelry.src.jewelry
 
             
         }
-
         public override void CreateBehaviors(Block block, IWorldAccessor worldForResolve)
         {
             base.CreateBehaviors(block, worldForResolve);
@@ -169,9 +213,134 @@ namespace canjewelry.src.jewelry
                 this.renderer.ShouldRotateAutomated = false;
             });
         }
+        public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
+        {
+            base.FromTreeAttributes(tree, worldForResolving);
+            this.Inventory.FromTreeAttributes(tree.GetTreeAttribute("inventory"));
+            if (this.Api != null)
+                this.Inventory.AfterBlocksLoaded(this.Api.World);
+            //this.inputGrindTime = tree.GetFloat("inputGrindTime");
+            // this.nowOutputFace = tree.GetInt("nowOutputFace");
+            /* if (worldForResolving.Side == EnumAppSide.Client)
+             {
+                 List<int> clientIds = new List<int>((IEnumerable<int>)(tree["clientIdsGrinding"] as IntArrayAttribute).value);
+                 this.quantityPlayersGrinding = clientIds.Count;
+                 foreach (string str in this.playersGrinding.Keys.ToArray<string>())
+                 {
+                     IPlayer player = this.Api.World.PlayerByUid(str);
+                     if (!clientIds.Contains(player.ClientId))
+                         this.playersGrinding.Remove(str);
+                     else
+                         clientIds.Remove(player.ClientId);
+                 }
+                 for (int i = 0; i < clientIds.Count; i++)
+                 {
+                     IPlayer player = ((IEnumerable<IPlayer>)worldForResolving.AllPlayers).FirstOrDefault<IPlayer>((System.Func<IPlayer, bool>)(p => p.ClientId == clientIds[i]));
+                     if (player != null)
+                         this.playersGrinding.Add(player.PlayerUID, worldForResolving.ElapsedMilliseconds);
+                 }
+                 this.updateGrindingState();
+             }*/
+            ICoreAPI api = this.Api;
+            if (api != null ? (api.Side == EnumAppSide.Client) : false)
+            {
+                if (this.renderer != null)
+                {
+                    this.renderer.meshref = (api as ICoreClientAPI).Render.UploadMesh(this.GenMesh("top"));
+                }
+                //this.GenMesh("top");
+            }
+            return;
+            //this.clientDialog.Update(this.inputGrindTime, this.maxGrindingTime());
+        }
+        public override void ToTreeAttributes(ITreeAttribute tree)
+        {
+            base.ToTreeAttributes(tree);
+            ITreeAttribute tree1 = (ITreeAttribute)new TreeAttribute();
+            this.Inventory.ToTreeAttributes(tree1);
+            tree["inventory"] = (IAttribute)tree1;
+            // tree.SetFloat("inputGrindTime", this.inputGrindTime);
+            // tree.SetInt("nowOutputFace", this.nowOutputFace);
+            List<int> intList = new List<int>();
+            foreach (KeyValuePair<string, float> keyValuePair in this.playersGrinding)
+            {
+                IPlayer player = this.Api.World.PlayerByUid(keyValuePair.Key);
+                if (player != null)
+                    intList.Add(player.ClientId);
+            }
+            tree["clientIdsGrinding"] = (IAttribute)new IntArrayAttribute(intList.ToArray());
+        }
+        public override void OnBlockRemoved()
+        {
+            base.OnBlockRemoved();
+            if (this.ambientSound != null)
+            {
+                this.ambientSound.Stop();
+                this.ambientSound.Dispose();
+            }
+            this.renderer?.Dispose();
+            this.renderer = null;
+        }
+        public override void OnBlockBroken(IPlayer byPlayer = null) => base.OnBlockBroken(byPlayer);
+        public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
+        {
+            if (packetid < 1000)
+            {
+                this.Inventory.InvNetworkUtil.HandleClientPacket(player, packetid, data);
+                this.Api.World.BlockAccessor.GetChunkAtBlockPos(this.Pos.X, this.Pos.Y, this.Pos.Z).MarkModified();
+            }
+            else
+            {
+                if (packetid != 1001 || player.InventoryManager == null)
+                    return;
+                player.InventoryManager.CloseInventory((IInventory)this.Inventory);
+            }
+        }
+        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tesselator)
+        {
+            if (this.Block == null)
+                return false;
+            mesher.AddMeshData(this.quernBaseMesh);
+            //if (this.quantityPlayersGrinding == 0 && !this.automated)
+            //{
+            // mesher.AddMeshData(this.quernTopMesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, this.renderer.AngleRad, 0.0f).Translate(0.0f, 11f / 16f, 0.0f));
+            // }
+            return true;
+        }
+        public override void OnStoreCollectibleMappings(
+          Dictionary<int, AssetLocation> blockIdMapping,
+          Dictionary<int, AssetLocation> itemIdMapping)
+        {
+            foreach (ItemSlot itemSlot in this.Inventory)
+            {
+                if (itemSlot.Itemstack != null)
+                {
+                    if (itemSlot.Itemstack.Class == EnumItemClass.Item)
+                        itemIdMapping[itemSlot.Itemstack.Item.Id] = itemSlot.Itemstack.Item.Code;
+                    else
+                        blockIdMapping[itemSlot.Itemstack.Block.BlockId] = itemSlot.Itemstack.Block.Code;
+                }
+            }
+        }
 
+        public override void OnLoadCollectibleMappings(
+          IWorldAccessor worldForResolve,
+          Dictionary<int, AssetLocation> oldBlockIdMapping,
+          Dictionary<int, AssetLocation> oldItemIdMapping,
+          int schematicSeed)
+        {
+            foreach (ItemSlot itemSlot in this.Inventory)
+            {
+                if (itemSlot.Itemstack != null && !itemSlot.Itemstack.FixMapping(oldBlockIdMapping, oldItemIdMapping, worldForResolve))
+                    itemSlot.Itemstack = (ItemStack)null;
+            }
+        }
+        public override void OnBlockUnloaded()
+        {
+            base.OnBlockUnloaded();
+            this.renderer?.Dispose();
+        }
         public void IsGrinding(IPlayer byPlayer) => this.SetPlayerGrinding(byPlayer, true);
-
         private void Every100ms(float dt)
         {
             float grindSpeed = this.GrindSpeed;
@@ -207,7 +376,6 @@ namespace canjewelry.src.jewelry
                 //this.MarkDirty();
             }
         }
-
         private void grindInput()
         {
             ItemStack itemStack = this.InputGrindProps.GroundStack.ResolvedItemstack.Clone();
@@ -229,7 +397,6 @@ namespace canjewelry.src.jewelry
             this.InputSlot.MarkDirty();
             this.OutputSlot.MarkDirty();
         }
-
         private void Every500ms(float dt)
         {
            // if (this.Api.Side == EnumAppSide.Server && ((double)this.GrindSpeed > 0.0 || (double)this.prevInputGrindTime != (double)this.inputGrindTime) && this.inventory[0].Itemstack?.Collectible.GrindingProps != null)
@@ -244,7 +411,6 @@ namespace canjewelry.src.jewelry
                 }
             }*/
         }
-
         public void SetPlayerGrinding(IPlayer player, bool playerGrinding)
         {
            // if (!this.automated)
@@ -261,7 +427,6 @@ namespace canjewelry.src.jewelry
            // }
             //this.updateGrindingState();
         }
-
         private void updateGrindingState()
         {
             if (this.Api?.World == null)
@@ -281,7 +446,6 @@ namespace canjewelry.src.jewelry
             }
             this.beforeGrinding = flag;*/
         }
-
         private void OnSlotModifid(int slotid)
         {
             if(Api is ICoreClientAPI)
@@ -291,14 +455,12 @@ namespace canjewelry.src.jewelry
             if (slotid != 0)
                 return;
         }
-
         private void OnRetesselated()
         {
            if (this.renderer == null)
                 return;
             this.renderer.ShouldRender = this.quantityPlayersGrinding > 0 || this.automated;
         }
-
         internal MeshData GenMesh(string type = "base")
         {
             //this.targetAtlas = targetAtlas;
@@ -323,7 +485,6 @@ namespace canjewelry.src.jewelry
             }
             return modeldata;
         }
-
         public bool CanGrind()
         {
             if (this.InputStack == null)
@@ -347,7 +508,6 @@ namespace canjewelry.src.jewelry
             }
             return -1;
         }
-
         public void doGrind(IPlayer player, float secondsUsed)
         {
             if(canjewelry.sapi == null)
@@ -491,165 +651,11 @@ namespace canjewelry.src.jewelry
             }
 
         }
-        /*public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
-        {
-            if (this.Api.World is IServerWorldAccessor && byPlayer.Entity.ServerControls.CtrlKey)
-            {
-                ((ICoreServerAPI)this.Api).Network.SendBlockEntityPacket((IServerPlayer)byPlayer, this.Pos.X, this.Pos.Y, this.Pos.Z, 1000);
-                byPlayer.InventoryManager.OpenInventory((IInventory)this.inventory);
-            }
-            return true;
-        }*/
-
-        public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
-        {
-            base.FromTreeAttributes(tree, worldForResolving);
-            this.Inventory.FromTreeAttributes(tree.GetTreeAttribute("inventory"));
-            if (this.Api != null)
-                this.Inventory.AfterBlocksLoaded(this.Api.World);
-            //this.inputGrindTime = tree.GetFloat("inputGrindTime");
-           // this.nowOutputFace = tree.GetInt("nowOutputFace");
-           /* if (worldForResolving.Side == EnumAppSide.Client)
-            {
-                List<int> clientIds = new List<int>((IEnumerable<int>)(tree["clientIdsGrinding"] as IntArrayAttribute).value);
-                this.quantityPlayersGrinding = clientIds.Count;
-                foreach (string str in this.playersGrinding.Keys.ToArray<string>())
-                {
-                    IPlayer player = this.Api.World.PlayerByUid(str);
-                    if (!clientIds.Contains(player.ClientId))
-                        this.playersGrinding.Remove(str);
-                    else
-                        clientIds.Remove(player.ClientId);
-                }
-                for (int i = 0; i < clientIds.Count; i++)
-                {
-                    IPlayer player = ((IEnumerable<IPlayer>)worldForResolving.AllPlayers).FirstOrDefault<IPlayer>((System.Func<IPlayer, bool>)(p => p.ClientId == clientIds[i]));
-                    if (player != null)
-                        this.playersGrinding.Add(player.PlayerUID, worldForResolving.ElapsedMilliseconds);
-                }
-                this.updateGrindingState();
-            }*/
-            ICoreAPI api = this.Api;
-            if (api != null ? (api.Side == EnumAppSide.Client) : false)
-            {
-                if (this.renderer != null)
-                {
-                    this.renderer.meshref = (api as ICoreClientAPI).Render.UploadMesh(this.GenMesh("top"));
-                }
-                //this.GenMesh("top");
-            }
-                return;
-            //this.clientDialog.Update(this.inputGrindTime, this.maxGrindingTime());
-        }
-
-        public override void ToTreeAttributes(ITreeAttribute tree)
-        {
-            base.ToTreeAttributes(tree);
-            ITreeAttribute tree1 = (ITreeAttribute)new TreeAttribute();
-            this.Inventory.ToTreeAttributes(tree1);
-            tree["inventory"] = (IAttribute)tree1;
-           // tree.SetFloat("inputGrindTime", this.inputGrindTime);
-           // tree.SetInt("nowOutputFace", this.nowOutputFace);
-            List<int> intList = new List<int>();
-            foreach (KeyValuePair<string, float> keyValuePair in this.playersGrinding)
-            {
-                IPlayer player = this.Api.World.PlayerByUid(keyValuePair.Key);
-                if (player != null)
-                    intList.Add(player.ClientId);
-            }
-            tree["clientIdsGrinding"] = (IAttribute)new IntArrayAttribute(intList.ToArray());
-        }
-
-        public override void OnBlockRemoved()
-        {
-            base.OnBlockRemoved();
-            if (this.ambientSound != null)
-            {
-                this.ambientSound.Stop();
-                this.ambientSound.Dispose();
-            }
-            this.renderer?.Dispose();
-            this.renderer = null;
-        }
-
-        public override void OnBlockBroken(IPlayer byPlayer = null) => base.OnBlockBroken(byPlayer);
-
         ~BEJewelGrinder()
         {
             if (this.ambientSound == null)
                 return;
             this.ambientSound.Dispose();
-        }
-
-        public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
-        {
-            if (packetid < 1000)
-            {
-                this.Inventory.InvNetworkUtil.HandleClientPacket(player, packetid, data);
-                this.Api.World.BlockAccessor.GetChunkAtBlockPos(this.Pos.X, this.Pos.Y, this.Pos.Z).MarkModified();
-            }
-            else
-            {
-                if (packetid != 1001 || player.InventoryManager == null)
-                    return;
-                player.InventoryManager.CloseInventory((IInventory)this.Inventory);
-            }
-        }
-        public ItemSlot InputSlot => this.inventory[0];
-
-        public ItemSlot OutputSlot => this.inventory[1];
-
-        public ItemStack InputStack
-        {
-            get => this.inventory[0].Itemstack;
-            set
-            {
-                this.inventory[0].Itemstack = value;
-                this.inventory[0].MarkDirty();
-            }
-        }
-
-        public ItemStack OutputStack
-        {
-            get => this.inventory[1].Itemstack;
-            set
-            {
-                this.inventory[1].Itemstack = value;
-                this.inventory[1].MarkDirty();
-            }
-        }
-
-        public GrindingProperties InputGrindProps
-        {
-            get
-            {
-                ItemSlot itemSlot = this.inventory[0];
-                return itemSlot.Itemstack == null ? (GrindingProperties)null : itemSlot.Itemstack.Collectible.GrindingProps;
-            }
-        }
-
-        public Size2i AtlasSize => (this.Api as ICoreClientAPI).BlockTextureAtlas.Size;
-
-        public TextureAtlasPosition this[string textureCode]
-        {
-            get
-            {
-                CompositeTexture compositeTexture;
-                if (textureCode == "layer" && this.inventory[0].Itemstack != null)
-                {
-                    return this.getOrCreateTexPos(this.tmpTextures[textureCode]);
-                }
-                //var a = this.inventory[0].Itemstack.Item.Textures.TryGetValue(textureCode, out compositeTexture);
-                //var f = (this.Api as ICoreClientAPI).BlockTextureAtlas[compositeTexture.Base];
-                //var c = this.blockTexSource[textureCode];
-                //if(this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Item != null)
-                //textureCode = "metal";
-
-
-                return textureCode == "steel" && this.inventory[0].Itemstack != null && this.inventory[0].Itemstack.Item != null && this.inventory[0].Itemstack.Item.Textures.TryGetValue("metal", out compositeTexture)
-                    ? (this.Api as ICoreClientAPI).ItemTextureAtlas[compositeTexture.Base]
-                    : this.blockTexSource[textureCode];
-            }
         }
         protected TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
         {
@@ -672,47 +678,7 @@ namespace canjewelry.src.jewelry
                 }
             }
             return texpos;
-        }
-        public override void OnStoreCollectibleMappings(
-          Dictionary<int, AssetLocation> blockIdMapping,
-          Dictionary<int, AssetLocation> itemIdMapping)
-        {
-            foreach (ItemSlot itemSlot in this.Inventory)
-            {
-                if (itemSlot.Itemstack != null)
-                {
-                    if (itemSlot.Itemstack.Class == EnumItemClass.Item)
-                        itemIdMapping[itemSlot.Itemstack.Item.Id] = itemSlot.Itemstack.Item.Code;
-                    else
-                        blockIdMapping[itemSlot.Itemstack.Block.BlockId] = itemSlot.Itemstack.Block.Code;
-                }
-            }
-        }
-
-        public override void OnLoadCollectibleMappings(
-          IWorldAccessor worldForResolve,
-          Dictionary<int, AssetLocation> oldBlockIdMapping,
-          Dictionary<int, AssetLocation> oldItemIdMapping,
-          int schematicSeed)
-        {
-            foreach (ItemSlot itemSlot in this.Inventory)
-            {
-                if (itemSlot.Itemstack != null && !itemSlot.Itemstack.FixMapping(oldBlockIdMapping, oldItemIdMapping, worldForResolve))
-                    itemSlot.Itemstack = (ItemStack)null;
-            }
-        }
-
-        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tesselator)
-        {
-            if (this.Block == null)
-                return false;
-            mesher.AddMeshData(this.quernBaseMesh);
-            //if (this.quantityPlayersGrinding == 0 && !this.automated)
-            //{
-               // mesher.AddMeshData(this.quernTopMesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, this.renderer.AngleRad, 0.0f).Translate(0.0f, 11f / 16f, 0.0f));
-           // }
-            return true;
-        }
+        }    
         private void setRenderer()
         {
             ICoreAPI api = this.Api;
@@ -735,12 +701,7 @@ namespace canjewelry.src.jewelry
             (this.Api as ICoreClientAPI).Event.RegisterRenderer((IRenderer)this.renderer, EnumRenderStage.ShadowFar, "jewelgrinder-top");
             (this.Api as ICoreClientAPI).Event.RegisterRenderer((IRenderer)this.renderer, EnumRenderStage.ShadowNear, "jewelgrinder-top");
             this.renderer.ShouldRender = true;
-        }
-        public override void OnBlockUnloaded()
-        {
-            base.OnBlockUnloaded();
-            this.renderer?.Dispose();
-        }
+        }       
         public string GetMeshCacheKey(ItemStack itemstack)
         {
             if (inventory[0].Itemstack != null)

@@ -15,27 +15,19 @@ namespace canjewelry.src
     public class Config
     {
         public float grindTimeOneTick = 3;
-
         public Dictionary<string, HashSet<string>> buffNameToPossibleItem = new Dictionary<string, HashSet<string>>();
         public Dictionary<string, Dictionary<string, float>> gems_buffs = new Dictionary<string, Dictionary<string, float>>();
-
         public Dictionary<string, int> items_codes_with_socket_count = new Dictionary<string, int>();
         public Dictionary<string, int[]> items_codes_with_socket_count_and_tiers = new Dictionary<string, int[]>();
         public HashSet<CustomVariantSocketsTiers> custom_variants_sockets_tiers = new HashSet<CustomVariantSocketsTiers>();
-
         public int pan_take_per_use;
         public Dictionary<string, string> gem_type_to_buff = new Dictionary<string, string>();
-
         public Dictionary<string, float> max_buff_values = new Dictionary<string, float>();
-
         public Dictionary<string, DropInfo[]> gems_drops_table = new Dictionary<string, DropInfo[]>();
-
         public bool debugMode;
         public float chance_gem_drop_on_item_broken;
-
         public HashSet<string> buffs_to_show_gui = new HashSet<string>();
         public string config_version;
-
         public void FillDefaultValues(bool onlyEmptyStructs = false)
         {
             if (buffNameToPossibleItem.Count == 0)
@@ -665,10 +657,6 @@ namespace canjewelry.src
                  );
             }
         }
-
-
-
-
         public class DropInfo
         {
             public EnumItemClass TypeCollectable;
@@ -690,7 +678,6 @@ namespace canjewelry.src
                 this.attributes = attributes;
             }
         }
-
         public class CustomVariantSocketsTiers
         {
             public string ItemCode;
@@ -703,6 +690,5 @@ namespace canjewelry.src
                 this.SocketTiers = socketTiers;
             }
         }
-
     }
 }

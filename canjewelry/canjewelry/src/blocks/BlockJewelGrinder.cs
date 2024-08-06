@@ -18,11 +18,11 @@ namespace canjewelry.src.blocks
     public class BlockJewelGrinder : BlockMPBase
     {
         public override bool TryPlaceBlock(
-     IWorldAccessor world,
-     IPlayer byPlayer,
-     ItemStack itemstack,
-     BlockSelection blockSel,
-     ref string failureCode)
+         IWorldAccessor world,
+         IPlayer byPlayer,
+         ItemStack itemstack,
+         BlockSelection blockSel,
+         ref string failureCode)
         {
             int num = base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode) ? 1 : 0;
             if (num == 0)

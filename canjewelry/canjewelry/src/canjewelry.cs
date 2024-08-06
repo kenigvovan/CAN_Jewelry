@@ -123,6 +123,76 @@ namespace canjewelry.src
                 });
             };
         }
+        public override void StartServerSide(ICoreServerAPI api)
+        {
+            base.StartServerSide(api);
+
+            harmonyInstance = new Harmony(harmonyID);
+            sapi = api;
+            loadConfig(sapi);
+            api.RegisterEntityBehaviorClass("cangembuffaffected", typeof(CANGemBuffAffected));
+
+            harmonyInstance.Patch(typeof(Vintagestory.Server.CoreServerEventManager).GetMethod("TriggerAfterActiveSlotChanged"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_TriggerAfterActiveSlotChanged")));
+
+            harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("DamageItem"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_CollectibleObject_DamageItem")));
+
+            api.Event.PlayerRespawn += onPlayerRespawnRecalculateGemsBuffs;
+
+            serverChannel = sapi.Network.RegisterChannel("canjewelry");
+            serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
+            api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, () => AddBehaviorAndSocketNumber());
+
+            commands.RegisterCommands.registerServerCommands(sapi);
+
+            serverChannel.SetMessageHandler<SyncCANJewelryPacket>((player, packet) =>
+            {
+                sendNewValues(player);
+            });
+            foreach (var it in config.gems_drops_table)
+            {
+                Block[] found_blocks = api.World.SearchBlocks(new AssetLocation(it.Key));
+                foreach (var block in found_blocks)
+                {
+                    List<BlockDropItemStack> blockDropsToAdd = new List<BlockDropItemStack>();
+                    foreach (var dropInfo in it.Value)
+                    {
+                        ItemStack itemStack;
+                        if (dropInfo.TypeCollectable == EnumItemClass.Item)
+                        {
+                            Item item = sapi.World.GetItem(new AssetLocation(dropInfo.NameCollectable));
+                            if (item == null)
+                            {
+                                sapi.Logger.VerboseDebug(dropInfo.NameCollectable + " not found.");
+                                continue;
+                            }
+                            itemStack = new ItemStack(item);
+                        }
+                        else
+                        {
+                            itemStack = new ItemStack(sapi.World.GetBlock(new AssetLocation(dropInfo.NameCollectable)));
+                        }
+                        BlockDropItemStack additionalDrop = new BlockDropItemStack();
+                        additionalDrop.Type = dropInfo.TypeCollectable;
+                        additionalDrop.Code = itemStack.Collectible.Code;
+                        additionalDrop.ResolvedItemstack = itemStack;
+                        additionalDrop.Quantity.avg = dropInfo.avg;
+                        additionalDrop.Quantity.var = dropInfo.var;
+                        additionalDrop.LastDrop = dropInfo.LastDrop;
+                        additionalDrop.DropModbyStat = null;
+                        blockDropsToAdd.Add(additionalDrop);
+                    }
+                    block.Drops = block.Drops.Append(blockDropsToAdd.ToArray());
+                }
+            }
+        }
+        public override void Dispose()
+        {
+            base.Dispose();
+            if (harmonyInstance != null)
+            {
+                harmonyInstance.UnpatchAll(harmonyID);
+            }
+        }
         public void AddBehaviorAndSocketNumber(bool serverSide = true)
         {
             ICoreAPI api = capi;
@@ -165,7 +235,6 @@ namespace canjewelry.src
                         item.Attributes.Token[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
 
                         item.Attributes = new JsonObject(item.Attributes.Token);
-                        //api.Logger.VerboseDebug("Added to " + item.Code);
                     }
                 }
                 else
@@ -231,10 +300,6 @@ namespace canjewelry.src
                         //set to item general attributes, accessible across all
                         item.Attributes.Token[CANJWConstants.CAN_CUSTOM_VARIANTS] = k;
                         item.Attributes.Token[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY] = it.AttributeKey;
-                        //item.Attributes.Token[CANJWConstants.SOCKETS_NUMBER_STRING] = it.Value.Length;
-
-                        //item.Attributes = new JsonObject(item.Attributes.Token);
-                        //api.Logger.VerboseDebug("Added to " + item.Code);
                     }
                 }
                 else
@@ -246,34 +311,6 @@ namespace canjewelry.src
                 }
             }
         }
-        public void onPlayerPlaying(IServerPlayer byPlayer)
-        {
-
-            
-            IInventory charakterInv = byPlayer.InventoryManager.GetOwnInventory("character");
-            InventoryBasePlayer playerHotbar = (InventoryBasePlayer)byPlayer.InventoryManager.GetOwnInventory("hotbar");
-            charakterInv.SlotModified += (int slotId) => {
-                if (charakterInv[slotId].Itemstack != null && charakterInv[slotId].Itemstack.Attributes.HasAttribute("canencrusted"))
-                {
-                    //do stuff
-                }
-            };
-            playerHotbar.SlotModified += (int slotId) => {
-                if (playerHotbar[slotId].Itemstack != null && playerHotbar[slotId].Itemstack.Attributes.HasAttribute("canencrusted"))
-                {
-                    ITreeAttribute tree = playerHotbar[slotId].Itemstack.Attributes.GetTreeAttribute("canencrusted");
-                    for (int i = 0; i < tree.GetInt("socketsnumber"); i++)
-                    {
-                        ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + i);
-                        /*if (treeSocket.GetInt("size") > 0)
-                        {
-
-                        }*/
-                    }
-                }
-            };
-        }
-
         public static void onPlayerRespawnRecalculateGemsBuffs(IServerPlayer player)
         {
             //TreeAttributeUtil.SetBlockPos(player.Entity.WatchedAttributes.GetOrAddTreeAttribute("not_realms"), "lastBedPos", player.Entity.Pos.AsBlockPos);
@@ -388,79 +425,7 @@ namespace canjewelry.src
                     }
                 }
             }
-        }
-        public override void StartServerSide(ICoreServerAPI api)
-        {
-            base.StartServerSide(api);
-
-            harmonyInstance = new Harmony(harmonyID);
-            sapi = api;
-            loadConfig(sapi);
-            api.RegisterEntityBehaviorClass("cangembuffaffected", typeof(CANGemBuffAffected));
-            // harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryPutInto", new[] { typeof(ItemSlot), typeof(ItemStackMoveOperation).MakeByRefType() }), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryPutInto")));
-            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TakeOut"), prefix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TakeOut")));
-            // harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("TryFlipWith"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_TryFlipWith")));
-            harmonyInstance.Patch(typeof(Vintagestory.Server.CoreServerEventManager).GetMethod("TriggerAfterActiveSlotChanged"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_TriggerAfterActiveSlotChanged")));
-
-            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotLeftClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotLeftClick")));
-            //harmonyInstance.Patch(typeof(Vintagestory.API.Common.ItemSlot).GetMethod("ActivateSlotRightClick", BindingFlags.NonPublic | BindingFlags.Instance), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemSlot_ActivateSlotRightClick")));
-            harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("DamageItem"), transpiler: new HarmonyMethod(typeof(harmPatch).GetMethod("Transpiler_CollectibleObject_DamageItem")));
-
-            api.Event.PlayerNowPlaying += onPlayerPlaying;
-            api.Event.PlayerRespawn += onPlayerRespawnRecalculateGemsBuffs;
-
-            serverChannel = sapi.Network.RegisterChannel("canjewelry");
-            serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
-            api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, rr);
-
-            commands.RegisterCommands.registerServerCommands(sapi);
-
-            serverChannel.SetMessageHandler<SyncCANJewelryPacket>((player, packet) =>
-            {
-                sendNewValues(player);
-            });
-            foreach (var it in config.gems_drops_table)
-            {
-                Block[] found_blocks = api.World.SearchBlocks(new AssetLocation(it.Key));
-                foreach(var block in found_blocks) 
-                {
-                    List<BlockDropItemStack> blockDropsToAdd = new List<BlockDropItemStack>();
-                    foreach(var dropInfo in it.Value)
-                    {
-                        ItemStack itemStack;
-                        if (dropInfo.TypeCollectable == EnumItemClass.Item)
-                        {
-                            Item item = sapi.World.GetItem(new AssetLocation(dropInfo.NameCollectable));
-                            if (item == null)
-                            {
-                                sapi.Logger.VerboseDebug(dropInfo.NameCollectable + " not found.");
-                                continue; 
-                            }
-                            itemStack = new ItemStack(item);
-                        }       
-                        else
-                        {
-                            itemStack = new ItemStack(sapi.World.GetBlock(new AssetLocation(dropInfo.NameCollectable)));
-                        }
-                        BlockDropItemStack additionalDrop = new BlockDropItemStack();
-                        additionalDrop.Type = dropInfo.TypeCollectable;
-                        additionalDrop.Code = itemStack.Collectible.Code;
-                        additionalDrop.ResolvedItemstack = itemStack;
-                        additionalDrop.Quantity.avg = dropInfo.avg;
-                        additionalDrop.Quantity.var = dropInfo.var;
-                        additionalDrop.LastDrop = dropInfo.LastDrop;
-                        additionalDrop.DropModbyStat = null;
-                        blockDropsToAdd.Add(additionalDrop);
-                    }
-                    block.Drops = block.Drops.Append(blockDropsToAdd.ToArray());
-                }
-            }
-        }
-
-        public void rr()
-        {
-            AddBehaviorAndSocketNumber();
-        }
+        }        
         public void sendNewValues(IServerPlayer byPlayer)
         {
             if (byPlayer.ConnectionState != EnumClientState.Offline)
@@ -548,15 +513,6 @@ namespace canjewelry.src
                 }
                 return;
             }
-        }
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (harmonyInstance != null)
-            {
-                harmonyInstance.UnpatchAll(harmonyID);
-            }
-        }
-
+        }      
     }
 }

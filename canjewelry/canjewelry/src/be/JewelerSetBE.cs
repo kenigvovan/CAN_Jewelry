@@ -44,9 +44,7 @@ namespace canjewelry.src.jewelry
             }
         }
         public override InventoryBase Inventory => this.inventory;
-
         public override string InventoryClassName => "canjewelerset";
-
         public Size2i AtlasSize => this.capi.BlockTextureAtlas.Size;
         public JewelerSetBE()
         {
@@ -55,6 +53,241 @@ namespace canjewelry.src.jewelry
 
             this.inventory.OnInventoryClosed += new OnInventoryClosedDelegate(this.OnInventoryClosed);
             this.inventory.OnInventoryOpened += new OnInventoryOpenedDelegate(this.OnInvOpened);        
+        }
+        public override void Initialize(ICoreAPI api)
+        {
+            base.Initialize(api);
+            if (api.Side == EnumAppSide.Server)
+                this.sapi = api as ICoreServerAPI;
+            else
+                this.capi = api as ICoreClientAPI;
+            this.inventory.LateInitialize("canjewelerset-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);
+            this.inventory.Pos = this.Pos;
+            if (this.capi != null)
+            {
+                this.inventory.SlotModified += (int slotId) =>
+                {
+                    if (slotId == 0)
+                    {
+                        this.UpdateMeshes();
+                    }
+
+                };
+                this.UpdateMeshes();
+                Block block = (this.Api as ICoreClientAPI).World.BlockAccessor.GetBlock(this.Pos);
+                this.facing = BlockFacing.FromCode(block.LastCodePart());
+            }
+            foreach (var it in this.inventory)
+            {
+                this.inventory[0].MaxSlotStackSize = 1;
+            }
+
+            this.inventory.SlotModified += (int num) => {
+                if (this.inventory.Api.Side == EnumAppSide.Client)
+                {
+                    this.renameGui.SetupDialog();
+                }
+            };
+
+            this.MarkDirty(true);
+        }
+        public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
+        {
+            base.FromTreeAttributes(tree, worldForResolving);
+            this.inventory.FromTreeAttributes(tree.GetTreeAttribute("inventory"));
+            if (this.Api == null)
+                return;
+            this.inventory.AfterBlocksLoaded(this.Api.World);
+            if (this.Api.Side != EnumAppSide.Client)
+                return;
+        }
+        public override void ToTreeAttributes(ITreeAttribute tree)
+        {
+            base.ToTreeAttributes(tree);
+            ITreeAttribute tree1 = (ITreeAttribute)new TreeAttribute();
+            this.inventory.ToTreeAttributes(tree1);
+            tree["inventory"] = (IAttribute)tree1;
+        }
+        public override void OnReceivedServerPacket(int packetid, byte[] data)
+        {
+            IClientWorldAccessor clientWorldAccessor = (IClientWorldAccessor)Api.World;
+            if (packetid == 5000)
+            {
+                if (renameGui != null)
+                {
+                    if (renameGui?.IsOpened() ?? false)
+                    {
+                        renameGui.TryClose();
+                    }
+
+                    renameGui?.Dispose();
+                    renameGui = null;
+                    return;
+                }
+
+                TreeAttribute treeAttribute = new TreeAttribute();
+                string dialogTitle;
+                int cols;
+                using (MemoryStream input = new MemoryStream(data))
+                {
+                    BinaryReader binaryReader = new BinaryReader(input);
+                    binaryReader.ReadString();
+                    dialogTitle = binaryReader.ReadString();
+                    cols = binaryReader.ReadByte();
+                    treeAttribute.FromBytes(binaryReader);
+                }
+
+                Inventory.FromTreeAttributes(treeAttribute);
+                Inventory.ResolveBlocksOrItems();
+                renameGui = new GuiDialogJewelerSet(dialogTitle, Inventory, Pos, capi);
+                renameGui.TryOpen();
+            }
+
+            if (packetid == 1001)
+            {
+                clientWorldAccessor.Player.InventoryManager.CloseInventory(Inventory);
+                if (renameGui?.IsOpened() ?? false)
+                {
+                    renameGui?.TryClose();
+                }
+
+                renameGui?.Dispose();
+                renameGui = null;
+            }
+        }
+        public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
+        {
+            if (packetid < 1000)
+            {
+                this.inventory.InvNetworkUtil.HandleClientPacket(player, packetid, data);
+                this.Api.World.BlockAccessor.GetChunkAtBlockPos(this.Pos).MarkModified();
+            }
+            else
+            {
+                if (packetid == 1001 && player.InventoryManager != null)
+                {
+
+                    player.InventoryManager.CloseInventory((IInventory)this.inventory);
+                }
+                if (packetid == 1004)
+                {
+                    TreeAttribute tree = new TreeAttribute();
+                    int socketNumber;
+                    int selectedSlotNum;
+                    using (MemoryStream ms = new MemoryStream(data))
+                    {
+                        using (BinaryReader reader = new BinaryReader(ms))
+                        {
+                            tree.FromBytes(reader);
+                            //in which slot in item we want socket to be added
+                            socketNumber = tree.GetInt("selectedSocketSlot");
+                            //which slot of the inventory contains socket item to be added
+                            selectedSlotNum = tree.GetInt("selectedSlotNum");
+                        }
+                    }
+                    EncrustableCB.TryAddSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber);
+
+                    //EncrustableFunctions.TryToAddSocket(this.inventory);
+                }
+                else if (packetid == 1005)
+                {
+                    //check target item is here and has place
+                    //for 1-3 slots
+                    //check if null try to place if slotN exists at target
+                    //set null if taken
+                    TreeAttribute tree = new TreeAttribute();
+                    int socketNumber;
+                    int selectedSlotNum;
+                    using (MemoryStream ms = new MemoryStream(data))
+                    {
+                        using (BinaryReader reader = new BinaryReader(ms))
+                        {
+                            tree.FromBytes(reader);
+                            //in which slot in item we want socket to be added
+                            socketNumber = tree.GetInt("selectedSocketSlot");
+                            //which slot of the inventory contains socket item to be added
+                            selectedSlotNum = tree.GetInt("selectedSlotNum");
+                        }
+                    }
+
+                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber);
+
+                    //EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
+                }
+
+            }
+        }
+        public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (this.Api.World is IServerWorldAccessor)
+            {
+                if (byPlayer.Entity.ServerControls.CtrlKey)
+                {
+                    if (byPlayer.InventoryManager.ActiveHotbarSlot.Empty)
+                    {
+                        this.inventory[0].TryPutInto(byPlayer.Entity.World, byPlayer.InventoryManager.ActiveHotbarSlot, 1);
+                    }
+                    else
+                    {
+                        byPlayer.InventoryManager.ActiveHotbarSlot.TryPutInto(byPlayer.Entity.World, this.inventory[0], 1);
+                    }
+                    return true;
+                }
+                byte[] array;
+                using (MemoryStream output = new MemoryStream())
+                {
+                    BinaryWriter stream = new BinaryWriter((Stream)output);
+                    stream.Write("BlockEntityJewelerSet");
+                    stream.Write("123");
+                    stream.Write((byte)4);
+                    TreeAttribute tree = new TreeAttribute();
+                    this.inventory.ToTreeAttributes((ITreeAttribute)tree);
+                    tree.ToBytes(stream);
+                    array = output.ToArray();
+                }
+         ((ICoreServerAPI)this.Api).Network.SendBlockEntityPacket((IServerPlayer)byPlayer, this.Pos.X, this.Pos.Y, this.Pos.Z, 5000, array);
+                byPlayer.InventoryManager.OpenInventory((IInventory)this.inventory);
+            }
+            return true;
+        }
+        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
+        {
+            for (int index = 0; index < 1; index++)
+            {
+                if (!inventory[0].Empty)
+                {
+                    mesher.AddMeshData(this.getMesh(inventory[0].Itemstack));
+                }
+            }
+            /*var shape = new Shape
+            {
+                // Создание шейпа куба
+                Elements = new[]
+                {
+                    new ShapeElement
+                    {
+                        From = new double[]{0, 0, 0},
+                        To = new double[]{1, 12, 1},
+                        FacesResolved = new ShapeElementFace[]
+                        {
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" },
+                            new ShapeElementFace { Texture = "top" }
+                        }
+                    }
+                }
+            };
+
+            // Применение шейпа к блоку
+            //"jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/jewelgrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f)
+            MeshData modeldata;
+            canjewelry.capi.Tesselator.TesselateShape("block", shape, out modeldata, this);
+            mesher.AddMeshData(modeldata);*/
+
+            return false;
         }
         public void UpdateMeshes()
         {
@@ -184,50 +417,12 @@ namespace canjewelry.src.jewelry
             this.MeshCache[key + this.facing] = mesh;
             return mesh;
         }
-
-
         private void OnInventoryClosed(IPlayer player)
         {
             this.renameGui?.Dispose();
             this.renameGui = (GuiDialogJewelerSet)null;
         }
-        protected virtual void OnInvOpened(IPlayer player) => this.inventory.PutLocked = false;
-        public override void Initialize(ICoreAPI api)
-        {
-            base.Initialize(api);
-            if (api.Side == EnumAppSide.Server)
-                this.sapi = api as ICoreServerAPI;
-            else
-                this.capi = api as ICoreClientAPI;
-            this.inventory.LateInitialize("canjewelerset-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);
-            this.inventory.Pos = this.Pos;
-            if(this.capi != null)
-            {
-                this.inventory.SlotModified += (int slotId) =>
-                {
-                    if (slotId == 0)
-                    {
-                        this.UpdateMeshes();
-                    }
-
-                };               
-                this.UpdateMeshes();
-                Block block = (this.Api as ICoreClientAPI).World.BlockAccessor.GetBlock(this.Pos);
-                this.facing = BlockFacing.FromCode(block.LastCodePart());
-            }
-            foreach (var it in this.inventory)
-            {
-                this.inventory[0].MaxSlotStackSize = 1;
-            }
-
-            this.inventory.SlotModified += (int num) => {
-                if (this.inventory.Api.Side == EnumAppSide.Client)
-                {
-                    this.renameGui.SetupDialog();
-                } };
-            
-            this.MarkDirty(true);
-        }
+        protected virtual void OnInvOpened(IPlayer player) => this.inventory.PutLocked = false;    
         public TextureAtlasPosition this[string textureCode]
         {
             get
@@ -258,70 +453,6 @@ namespace canjewelry.src.jewelry
                 return this.getOrCreateTexPos(texturePath);
             }
         }
-        public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
-        {
-            base.FromTreeAttributes(tree, worldForResolving);
-            this.inventory.FromTreeAttributes(tree.GetTreeAttribute("inventory"));
-            if (this.Api == null)
-                return;
-            this.inventory.AfterBlocksLoaded(this.Api.World);
-            if (this.Api.Side != EnumAppSide.Client)
-                return;
-        }
-        public override void ToTreeAttributes(ITreeAttribute tree)
-        {
-            base.ToTreeAttributes(tree);
-            ITreeAttribute tree1 = (ITreeAttribute)new TreeAttribute();
-            this.inventory.ToTreeAttributes(tree1);
-            tree["inventory"] = (IAttribute)tree1;
-        }
-        public override void OnReceivedServerPacket(int packetid, byte[] data)
-        {
-            IClientWorldAccessor clientWorldAccessor = (IClientWorldAccessor)Api.World;
-            if (packetid == 5000)
-            {
-                if (renameGui != null)
-                {
-                    if (renameGui?.IsOpened() ?? false)
-                    {
-                        renameGui.TryClose();
-                    }
-
-                    renameGui?.Dispose();
-                    renameGui = null;
-                    return;
-                }
-
-                TreeAttribute treeAttribute = new TreeAttribute();
-                string dialogTitle;
-                int cols;
-                using (MemoryStream input = new MemoryStream(data))
-                {
-                    BinaryReader binaryReader = new BinaryReader(input);
-                    binaryReader.ReadString();
-                    dialogTitle = binaryReader.ReadString();
-                    cols = binaryReader.ReadByte();
-                    treeAttribute.FromBytes(binaryReader);
-                }
-
-                Inventory.FromTreeAttributes(treeAttribute);
-                Inventory.ResolveBlocksOrItems();
-                renameGui = new GuiDialogJewelerSet(dialogTitle, Inventory, Pos, capi);
-                renameGui.TryOpen();
-            }
-
-            if (packetid == 1001)
-            {
-                clientWorldAccessor.Player.InventoryManager.CloseInventory(Inventory);
-                if (renameGui?.IsOpened() ?? false)
-                {
-                    renameGui?.TryClose();
-                }
-
-                renameGui?.Dispose();
-                renameGui = null;
-            }
-        }
         private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
         {
             TextureAtlasPosition texPos = this.capi.BlockTextureAtlas[texturePath];
@@ -337,142 +468,6 @@ namespace canjewelry.src.jewelry
                     this.capi.World.Logger.Warning("For render in block " + this.Block.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", (object)this.nowTesselatingObj.Code, (object)texturePath);
             }
             return texPos;
-        }
-
-        public override bool OnPlayerRightClick(IPlayer byPlayer, BlockSelection blockSel)
-        {
-            if (this.Api.World is IServerWorldAccessor)
-            {
-                if (byPlayer.Entity.ServerControls.CtrlKey)
-                {
-                    if (byPlayer.InventoryManager.ActiveHotbarSlot.Empty)
-                    {
-                        this.inventory[0].TryPutInto(byPlayer.Entity.World, byPlayer.InventoryManager.ActiveHotbarSlot, 1);
-                    }
-                    else
-                    {
-                        byPlayer.InventoryManager.ActiveHotbarSlot.TryPutInto(byPlayer.Entity.World, this.inventory[0], 1);
-                    }
-                    return true;
-                }
-                byte[] array;
-                using (MemoryStream output = new MemoryStream())
-                {
-                    BinaryWriter stream = new BinaryWriter((Stream)output);
-                    stream.Write("BlockEntityJewelerSet");
-                    stream.Write("123");
-                    stream.Write((byte)4);
-                    TreeAttribute tree = new TreeAttribute();
-                    this.inventory.ToTreeAttributes((ITreeAttribute)tree);
-                    tree.ToBytes(stream);
-                    array = output.ToArray();
-                }
-         ((ICoreServerAPI)this.Api).Network.SendBlockEntityPacket((IServerPlayer)byPlayer, this.Pos.X, this.Pos.Y, this.Pos.Z, 5000, array);
-                byPlayer.InventoryManager.OpenInventory((IInventory)this.inventory);
-            }
-            return true;
-        }
-
-        public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
-        {
-            if (packetid < 1000)
-            {
-                this.inventory.InvNetworkUtil.HandleClientPacket(player, packetid, data);
-                this.Api.World.BlockAccessor.GetChunkAtBlockPos(this.Pos).MarkModified();
-            }
-            else
-            {
-                if (packetid == 1001 && player.InventoryManager != null)
-                {
-                   
-                    player.InventoryManager.CloseInventory((IInventory)this.inventory);
-                }
-                if (packetid == 1004)
-                {
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            //in which slot in item we want socket to be added
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            //which slot of the inventory contains socket item to be added
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryAddSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber);
-
-                    //EncrustableFunctions.TryToAddSocket(this.inventory);
-                }
-                else if (packetid == 1005)
-                {
-                    //check target item is here and has place
-                    //for 1-3 slots
-                    //check if null try to place if slotN exists at target
-                    //set null if taken
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            //in which slot in item we want socket to be added
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            //which slot of the inventory contains socket item to be added
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-
-                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber);
-                    
-                    //EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
-                }
-
-            }
-        }
-        public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
-        {
-            for (int index = 0; index < 1; index++)
-            {
-                if (!inventory[0].Empty)
-                {
-                    mesher.AddMeshData(this.getMesh(inventory[0].Itemstack));
-                }              
-            }
-            /*var shape = new Shape
-            {
-                // Создание шейпа куба
-                Elements = new[]
-                {
-                    new ShapeElement
-                    {
-                        From = new double[]{0, 0, 0},
-                        To = new double[]{1, 12, 1},
-                        FacesResolved = new ShapeElementFace[]
-                        {
-                            new ShapeElementFace { Texture = "top" },
-                            new ShapeElementFace { Texture = "top" },
-                            new ShapeElementFace { Texture = "top" },
-                            new ShapeElementFace { Texture = "top" },
-                            new ShapeElementFace { Texture = "top" },
-                            new ShapeElementFace { Texture = "top" }
-                        }
-                    }
-                }
-            };
-
-            // Применение шейпа к блоку
-            //"jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/jewelgrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f)
-            MeshData modeldata;
-            canjewelry.capi.Tesselator.TesselateShape("block", shape, out modeldata, this);
-            mesher.AddMeshData(modeldata);*/
-
-            return false;
         }
     }
 }
