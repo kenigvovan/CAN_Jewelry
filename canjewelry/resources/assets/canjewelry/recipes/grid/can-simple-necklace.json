@@ -7,17 +7,18 @@
         "type": "item",
         "code": "game:metalscale-*",
         "name": "metal-socket",
-        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ]
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
       },
       "L": {
         "type": "item",
         "code": "canjewelry:canstrap-*",
-        "name": "metal-strap"
+        "name": "metal-strap",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
       },
       "B": {
         "type": "item",
         "code": "game:metalscale-*",
-        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ]
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
       }
     },
     "name": "can-simplenecklace",

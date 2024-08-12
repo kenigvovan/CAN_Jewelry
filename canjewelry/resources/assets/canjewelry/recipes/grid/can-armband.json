@@ -1,0 +1,25 @@
+﻿[
+  {
+    "ingredientPattern": "WWW,__W,WWW",
+    "ingredients": {
+      "W": {
+        "type": "item",
+        "code": "canjewelry:canwirehank-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      }
+    },
+    "name": "can-armband-default-crafts",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canarmband-normal",
+      "quantity": 1,
+      "attributes": {
+        "loop": "{metal-type}"
+      }
+    }
+
+  }
+]

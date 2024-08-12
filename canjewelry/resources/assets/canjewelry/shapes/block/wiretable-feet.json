@@ -1,0 +1,40 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textureSizes": {
+	},
+	"textures": {
+		"notvis": "canjewelry:item/notvis",
+		"wire": "canjewelry:item/notvis",
+		"base2": "game:block/wood/bark/maple",
+		"bottom": "game:block/wood/table/normal/bottom",
+		"legs": "game:block/wood/table/normal/legs",
+		"platehole": "game:block/metal/sheet/steel1",
+		"pliers": "game:block/metal/sheet/steel1",
+		"sides": "game:block/wood/table/normal/sides",
+		"linen": "game:item/tool/material/linen",
+		"wireready": "canjewelry:item/notvis",
+		"base": "game:block/wood/debarked/maple",
+		"top": "game:block/wood/table/normal/top"
+	},
+	"elements": [
+		{
+			"name": "Cube1",
+			"from": [ 1.0, 0.0, 0.0 ], 
+			"to": [ 15.0, 9.0, 16.0 ], 
+			"rotationOrigin": [ 1.0, -12.0, 0.0 ],
+			"faces": {
+				"north": { "texture": "#notvis", "uv": [ 0.5, 1.5, 14.5, 10.5 ] },
+				"east": { "texture": "#notvis", "uv": [ 0.0, 2.0, 16.0, 11.0 ] },
+				"south": { "texture": "#notvis", "uv": [ 1.0, 5.0, 15.0, 14.0 ] },
+				"west": { "texture": "#notvis", "uv": [ 0.0, 6.0, 16.0, 15.0 ] },
+				"up": { "texture": "#notvis", "uv": [ 1.5, 0.0, 15.5, 16.0 ] },
+				"down": { "texture": "#notvis", "uv": [ 1.5, 0.0, 15.5, 16.0 ] }
+			}
+		}
+	]
+}

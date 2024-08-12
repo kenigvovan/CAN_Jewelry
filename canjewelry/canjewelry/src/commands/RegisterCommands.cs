@@ -1,10 +1,13 @@
-﻿using System;
+﻿using canjewelry.src.eb;
+using canjewelry.src.items;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.CommandAbbr;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
@@ -74,129 +77,68 @@ namespace canjewelry.src.commands
 
         public static TextCommandResult reapplyCancrustedBuffFromPlayer(TextCommandCallingArgs args)
         {
-            IServerPlayer player = args.Caller.Player as IServerPlayer;
+            var pl = args.Caller.Player as IServerPlayer;
+            var beh = pl.Entity.GetBehavior<CANGemBuffAffected>();
             TextCommandResult tcr = new TextCommandResult();
             tcr.Status = EnumCommandStatus.Success;
-
-            string targetPlayerName = (string)args.LastArg;
-            IServerPlayer targetPlayer = null;
-            foreach (var pl in player.Entity.Api.World.AllOnlinePlayers)
-            {
-                if (pl.PlayerName.Equals(targetPlayerName))
-                {
-                    targetPlayer = pl as IServerPlayer;
-                }
-            }
-            if (targetPlayer == null)
+            if (beh == null)
             {
                 return tcr;
             }
-            foreach (KeyValuePair<string, EntityFloatStats> stat in targetPlayer.Entity.Stats)
+            beh.savedBuffs.Clear();
+            foreach (KeyValuePair<string, EntityFloatStats> stat in pl.Entity.Stats)
             {
-                foreach (KeyValuePair<string, EntityStat<float>> keyValuePair in stat.Value.ValuesByKey)
+                foreach (KeyValuePair<string, EntityStat<float>> keyValuePair in stat.Value.ValuesByKey.ToArray())
                 {
                     if (keyValuePair.Key == "canencrusted")
                     {
                         stat.Value.Set(keyValuePair.Key, 0);
-                        //stat.Value.Remove(keyValuePair.Key);
-                        break;
+                        continue;
+                    }
+                    if (keyValuePair.Key == "canencrustedneg")
+                    {
+                        stat.Value.Remove(keyValuePair.Key);
                     }
                 }
-                targetPlayer.Entity.WatchedAttributes.MarkPathDirty("stats");
+                pl.Entity.WatchedAttributes.MarkPathDirty("stats");
             }
             //go through hotbar active slot, character slots and apply all buffs
-            IInventory playerBackpacks = targetPlayer.InventoryManager.GetHotbarInventory();
+            IInventory playerBackpacks = (pl.Entity as EntityPlayer).Player.InventoryManager.GetHotbarInventory();
+            if (playerBackpacks != null)
             {
-                //playerBackpacks.Player
-                if (playerBackpacks != null)
+                ItemSlot activeSlot = (pl.Entity as EntityPlayer).Player.InventoryManager.ActiveHotbarSlot;
+                var itemStack = activeSlot.Itemstack;
+                if (itemStack != null && itemStack.Item is not ItemWearable && itemStack.Item is not CANItemWearable)
                 {
-                    for (int i = 0; i < playerBackpacks.Count; ++i)
-                    {
-                        if (i != player.InventoryManager.ActiveHotbarSlotNumber || playerBackpacks[i].Itemstack == null || playerBackpacks[i].Itemstack.Item is ItemWearable)
-                        {
-                            continue;
-                        }
-                        if (playerBackpacks[i] != null)
-                        {
-                            ItemSlot itemSlot = playerBackpacks[i];
-                            ItemStack itemStack = itemSlot.Itemstack;
-                            if (itemStack != null)
-                            {
-                                if (itemStack.Attributes.HasAttribute("canencrusted"))
-                                {
-                                    ITreeAttribute encrustTree = itemStack.Attributes.GetTreeAttribute("canencrusted");
-                                    if (encrustTree == null)
-                                    {
-                                        continue;
-                                    }
-                                    for (int j = 0; j < encrustTree.GetInt("socketsnumber"); j++)
-                                    {
-                                        ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + j.ToString());
-                                        if (!socketSlot.HasAttribute("attributeBuff"))
-                                        {
-                                            continue;
-                                        }
-                                        if (targetPlayer.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey.ContainsKey("canencrusted"))
-                                        {
-                                            targetPlayer.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", targetPlayer.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value + socketSlot.GetFloat("attributeBuffValue"), true);
-                                        }
-                                        else
-                                        {
-                                            targetPlayer.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", socketSlot.GetFloat("attributeBuffValue"), true);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    var newBuffs = beh.GetItemStackBuffs(itemStack);
+                    CANGemBuffAffected.ApplyBuffFromItemStack(newBuffs, pl.Entity as EntityPlayer, true);
+                    beh.savedBuffs[1 + (int)EnumCharacterDressType.ArmorLegs] = newBuffs;
                 }
             }
 
-            IInventory charakterInv = targetPlayer.InventoryManager.GetOwnInventory("character");
+            IInventory charakterInv = (pl.Entity as EntityPlayer).Player.InventoryManager.GetOwnInventory("character");
+
+            //playerBackpacks.Player
+            if (charakterInv != null)
             {
-                //playerBackpacks.Player
-                if (charakterInv != null)
+                for (int i = 0; i < 16; ++i)
                 {
-                    for (int i = 0; i < charakterInv.Count; ++i)
+                    if (charakterInv[i] != null)
                     {
-                        var f = charakterInv[i];
-                        if (charakterInv[i] != null)
+                        ItemSlot itemSlot = charakterInv[i];
+                        ItemStack itemStack = itemSlot.Itemstack;
+                        if (itemStack != null)
                         {
-                            ItemSlot itemSlot = charakterInv[i];
-                            ItemStack itemStack = itemSlot.Itemstack;
-                            if (itemStack != null)
-                            {
-                                if (itemStack.Attributes.HasAttribute("canencrusted"))
-                                {
-                                    ITreeAttribute encrustTree = itemStack.Attributes.GetTreeAttribute("canencrusted");
-                                    if (encrustTree == null)
-                                    {
-                                        continue;
-                                    }
-                                    for (int j = 0; j < encrustTree.GetInt("socketsnumber"); j++)
-                                    {
-                                        ITreeAttribute socketSlot = encrustTree.GetTreeAttribute("slot" + j.ToString());
-                                        if (!socketSlot.HasAttribute("attributeBuff"))
-                                        {
-                                            continue;
-                                        }
-                                        if (targetPlayer.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey.ContainsKey("canencrusted"))
-                                        {
-                                            targetPlayer.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", targetPlayer.Entity.Stats[socketSlot.GetString("attributeBuff")].ValuesByKey["canencrusted"].Value + socketSlot.GetFloat("attributeBuffValue"), true);
-                                        }
-                                        else
-                                        {
-                                            targetPlayer.Entity.Stats.Set(socketSlot.GetString("attributeBuff"), "canencrusted", socketSlot.GetFloat("attributeBuffValue"), true);
-                                        }
-                                    }
-                                }
-                            }
+                            var newBuffs = beh.GetItemStackBuffs(itemStack);
+                            CANGemBuffAffected.ApplyBuffFromItemStack(newBuffs, pl.Entity as EntityPlayer, true);
+                            beh.savedBuffs[itemSlot.Inventory.GetSlotId(itemSlot)] = newBuffs;
                         }
                     }
                 }
+
             }
 
-            canjewelry.sapi.SendMessage(player, 0, String.Format("Buffs were reapplied for {0}", targetPlayer.PlayerName), EnumChatType.Notification);
+            canjewelry.sapi.SendMessage(pl, 0, String.Format("Buffs were reapplied for {0}", pl.PlayerName), EnumChatType.Notification);
             return tcr;
         }
     }
