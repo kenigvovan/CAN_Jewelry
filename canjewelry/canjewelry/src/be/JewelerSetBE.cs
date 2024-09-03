@@ -325,7 +325,7 @@ namespace canjewelry.src.jewelry
             //this.MeshCache.Clear();
             //here
             MeshData mesh = this.getMesh(stack);
-           
+            //this.MeshCache.Clear();
             if (mesh != null)
             {               
                 return mesh;
@@ -370,6 +370,22 @@ namespace canjewelry.src.jewelry
                 //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
                 mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
                 mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
+            }
+            else if (stack.Item is CANItemRottenKingMask)
+            {
+                mesh.Translate(0, 13f / 16, 0);
+                //mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
+                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
+                //mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
+            }
+            else if (stack.Item is CANItemCoronet)
+            {
+                mesh.Translate(0, 10f / 16, 0);
+                //mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
+                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
+                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
+                //mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
             }
             else if(stack.Item != null && stack.Item.StorageFlags == EnumItemStorageFlags.Outfit)
             {

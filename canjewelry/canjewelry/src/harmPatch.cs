@@ -342,7 +342,7 @@ namespace canjewelry.src
         }
 
         //Prefix_GetDrops
-        public static void Prefix_GetDrops(Vintagestory.API.Common.Block __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1f)
+        public static bool Prefix_GetDrops(Vintagestory.API.Common.Block __instance, IWorldAccessor world, BlockPos pos, IPlayer byPlayer, ref ItemStack[] __result, float dropQuantityMultiplier = 1f)
         {
             var f = 3;
 
@@ -361,7 +361,7 @@ namespace canjewelry.src
                 switch (handling)
                 {
                     case EnumHandling.PreventSubsequent:
-                        return;
+                        return false;
                     case EnumHandling.PreventDefault:
                         flag = true;
                         break;
@@ -370,12 +370,12 @@ namespace canjewelry.src
 
             if (flag)
             {
-                return;
+                return false;
             }
 
             if (__instance.Drops == null)
             {
-                return;
+                return false;
             }
 
             List<ItemStack> list2 = new List<ItemStack>();
@@ -412,7 +412,8 @@ namespace canjewelry.src
             }
 
             list2.AddRange(list);
-            return;
+            __result = list2.ToArray();
+            return false;
         }
 
         public static void Postfix_CollectibleObject_GetMaxDurability(ref int __result, ItemStack itemstack)
@@ -434,10 +435,14 @@ namespace canjewelry.src
         }
         public static void TryDropGems(Entity byEntity, ItemSlot itemslot)
         {
-            if(byEntity.Api.Side == EnumAppSide.Client)
+            if (canjewelry.capi != null)
             {
                 return;
             }
+            /*if(byEntity.Api.Side == EnumAppSide.Client)
+            {
+                return;
+            }*/
             if (itemslot.Itemstack != null && itemslot.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
             {
                 Random r = new Random();
@@ -529,7 +534,6 @@ namespace canjewelry.src
 
             return sb;
         }
-
         private static void composeProgressTab(GuiComposer compo)
         {
             var mainBounds = ElementBounds.Fixed(0.0, 35.0, 355.0, 250);

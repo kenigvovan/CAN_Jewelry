@@ -10,7 +10,7 @@
     }
   ],
   "textures": {
-    "copper": { "base": "game:block/metal/ingot/{metal}" }
+    "metal": { "base": "game:block/metal/ingot/{metal}" }
   },
   "creativeinventory": {
     "general": [ "*" ],

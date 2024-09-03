@@ -64,7 +64,7 @@ namespace canjewelry.src.blocks
                     blockEntity.SetPlayerGrinding(byPlayer, true);
                     return true;
                 }
-            }
+            }           
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
         }
 
