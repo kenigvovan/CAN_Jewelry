@@ -170,7 +170,8 @@ namespace canjewelry.src.jewelry
 
                 var tree = encrustable.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
 
-                JsonObject[] tiersList = tiersList = encrustable.Collectible.Attributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
+                int[] tiersList = tiersList = EncrustableCB.GetSocketsTiers(encrustable);
+                   //encrustable.Collectible.Attributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
                 string green = "#2FE147";
                 string blue = "#2B3FF7";
                 string purple = "#9214C9";
@@ -223,7 +224,7 @@ namespace canjewelry.src.jewelry
                         var elll = ElementBounds.FixedSize(40, 40);
                         if (tiersList != null)
                         {
-                            int curTier = tiersList[i].AsInt();
+                            int curTier = tiersList[i];
                             if (curTier == 1)
                             {
                                 this.Inventory[i + 5].HexBackgroundColor = green;

@@ -106,11 +106,7 @@ namespace canjewelry.src.blocks
             {
                 return;
             }
-            if(base.LastCodePart(1) != "head")
-            {
-                var cc = 3;
-            }
-            string key = base.LastCodePart(0) + base.LastCodePart(1) + "1";
+            string key = base.LastCodePart(0) + base.LastCodePart(1);
             renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, key, delegate
             {
                 var c = base.LastCodePart(1);
@@ -132,7 +128,7 @@ namespace canjewelry.src.blocks
                 return capi.Render.UploadMultiTextureMesh(meshdata);
             });
         }
-        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null, string part = "")
+        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null, string part = "", Vec3f rotationDeg = null)
         {
             if (tesselator == null)
             {
@@ -165,8 +161,8 @@ namespace canjewelry.src.blocks
             }
 
             AtlasSize = capi.BlockTextureAtlas.Size;
-            var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
-            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, new Vec3f(0, f, 0), 0, 0, 0);
+            //var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
+            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, rotationDeg, 0, 0, 0);
             return modeldata;
         }
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)

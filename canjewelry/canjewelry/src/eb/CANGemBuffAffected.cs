@@ -28,6 +28,8 @@ namespace canjewelry.src.eb
         }
         public Dictionary<int, Dictionary<string, float>> savedBuffs;
         int triesToInit = 0;
+        long callbackId = 0;
+        public bool initialized = false;
         public CANGemBuffAffected(Entity entity) : base(entity)
         {
         }
@@ -37,31 +39,32 @@ namespace canjewelry.src.eb
             savedBuffs = new Dictionary<int, Dictionary<string, float>>();
             this.DeserializeBuffs();
             IServerPlayer player = ((this.entity as EntityPlayer).Player as IServerPlayer);
-            if (player != null)
+            /*if (player != null)
             {
                 IInventory characterInv = player.InventoryManager.GetOwnInventory("character");
                 InventoryBasePlayer playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
                 if (characterInv == null || playerHotbar == null)
                 {
-                    EnqueTryAddAndWait();             
+                    //EnqueTryAddAndWait();             
                 }
                 else
                 {
                     characterInv.SlotModified += OnSlotModifiedCharacterInv;
                     //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
                     playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
+                    initialized = true;
                 }
-            }
+            }*/
         }
         private void EnqueTryAddAndWait()
         {           
-            canjewelry.sapi.Event.RegisterCallback((dt =>
+            this.callbackId = canjewelry.sapi.Event.RegisterCallback((dt =>
             {
                 TryToAddSlotModified();
             }
             ), 30 * 1000);
         }
-        private bool TryToAddSlotModified()
+        public bool TryToAddSlotModified()
         {            
             IServerPlayer player = ((this.entity as EntityPlayer).Player as IServerPlayer);
             this.triesToInit++;
@@ -82,6 +85,8 @@ namespace canjewelry.src.eb
                 //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
                 playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
                 canjewelry.sapi.Logger.VerboseDebug(String.Format("[canjewelry] Try #{0} loaded behavior for {1}", this.triesToInit, player.PlayerName));
+                this.callbackId = 0;
+                initialized = true;
                 return true;
             }
         }
@@ -91,7 +96,7 @@ namespace canjewelry.src.eb
             savedBuffs = new Dictionary<int, Dictionary<string, float>>();
             this.DeserializeBuffs();
             IServerPlayer player = ((this.entity as EntityPlayer).Player as IServerPlayer);
-            if (player != null)
+            /*if (player != null)
             {
                 IInventory characterInv = player.InventoryManager.GetOwnInventory("character");
                 characterInv.SlotModified += OnSlotModifiedCharacterInv;
@@ -99,7 +104,8 @@ namespace canjewelry.src.eb
                 InventoryBasePlayer playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
                 //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
                 playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
-            }
+                this.initialized = true;
+            }*/
         }
         public override void OnEntityDespawn(EntityDespawnData despawn)
         {
@@ -107,13 +113,25 @@ namespace canjewelry.src.eb
             if (player != null)
             {
                 IInventory characterInv = player.InventoryManager.GetOwnInventory("character");
-                characterInv.SlotModified -= OnSlotModifiedCharacterInv;
+                if (characterInv != null)
+                {
+                    characterInv.SlotModified -= OnSlotModifiedCharacterInv;
+                }
 
                 InventoryBasePlayer playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
                 //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
-                playerHotbar.SlotModified -= OnSlotModifiedHotbarInv;
+                if (playerHotbar != null)
+                {
+                    playerHotbar.SlotModified -= OnSlotModifiedHotbarInv;
+                }
+            }
+            if(this.callbackId != 0)
+            {
+                canjewelry.sapi.Event.UnregisterCallback(this.callbackId);
+                this.callbackId = 0;
             }
             this.SerializeBuffs();
+            initialized = false;
             base.OnEntityDespawn(despawn);           
         }
         private void SerializeBuffs()
@@ -130,10 +148,25 @@ namespace canjewelry.src.eb
         }
         private void OnSlotModifiedCharacterInv(int i)
         {
-            ItemStack itemStack = ((this.entity as EntityPlayer).Player as IServerPlayer).InventoryManager.GetOwnInventory("character")[i].Itemstack;
+            if(!initialized)
+            {
+                return;
+            }
+            var inv = ((this.entity as EntityPlayer).Player as IServerPlayer).InventoryManager.GetOwnInventory("character");
+            if(inv == null)
+            {
+                return;
+            }
+            ItemStack itemStack = inv[i].Itemstack;
             Dictionary<string, float> newBuffDict = GetItemStackBuffs(itemStack);
             if(savedBuffs.TryGetValue(i, out Dictionary<string, float> currentBuffDict))
             {
+                if(currentBuffDict == null)
+                {
+                    canjewelry.sapi.Logger.VerboseDebug(String.Format("[canjewelry] {0} itemslot buff dict for character inv was null", i));
+                    savedBuffs.Remove(i);
+                    return;
+                }
                 //if there is diff or new buffs are empty
                 if(!currentBuffDict.Equals(newBuffDict))
                 {
@@ -160,10 +193,15 @@ namespace canjewelry.src.eb
         }
         public void OnSlotModifiedHotbarInv(int i)
         {
+            if (!initialized || i > 10)
+            {
+                return;
+            }
             if (i != ((this.entity as EntityPlayer).Player as IServerPlayer).InventoryManager.ActiveHotbarSlotNumber)
             {
                 return;
             }
+            
             ItemStack itemStack = ((this.entity as EntityPlayer).Player as IServerPlayer).InventoryManager.GetOwnInventory("hotbar")[i].Itemstack;
             if (itemStack == null || itemStack.Item == null || itemStack.Item is ItemWearable || itemStack.Item is CANItemWearable)
             {

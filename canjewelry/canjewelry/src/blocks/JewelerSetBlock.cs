@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 
 namespace canjewelry.src.jewelry
 {
@@ -15,6 +16,7 @@ namespace canjewelry.src.jewelry
         }
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
+
             if (!(world.BlockAccessor.GetBlockEntity(blockSel.Position) is JewelerSetBE blockEntity))
                 return base.OnBlockInteractStart(world, byPlayer, blockSel);
             blockEntity.OnPlayerRightClick(byPlayer, blockSel);

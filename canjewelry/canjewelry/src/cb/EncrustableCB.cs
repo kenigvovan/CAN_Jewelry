@@ -2,6 +2,7 @@
 using canjewelry.src.inventories;
 using canjewelry.src.items;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -340,6 +341,38 @@ namespace canjewelry.src.CB
                 }
             }
             return -1;
+        }
+        public static int[] GetSocketsTiers(ItemStack itemstack)
+        {
+            if (itemstack != null)
+            {
+                if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS))
+                {
+                    string searchedValue = itemstack.Attributes.GetString(itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString(), null);
+                    if (searchedValue != null)
+                    {
+                        var f = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
+                        if (f != null)
+                        {
+                            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(f.ToString());
+                            if (valueDict.TryGetValue(searchedValue, out var value))
+                            {
+                                return value;
+                            }
+                        }
+                    }
+                }
+                else if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists("canhavesocketsnumber") && itemstack.ItemAttributes["canhavesocketsnumber"].AsInt() > 0)
+                {
+                    return itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray<int>();
+                    /*var c = itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING];
+                    var f = c.AsArray<int>();
+                    return new int[] { 2 };
+                    return new int[] { 1 };*/
+                        //itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
+                }
+            }
+            return new int[0];
         }
     }
 }

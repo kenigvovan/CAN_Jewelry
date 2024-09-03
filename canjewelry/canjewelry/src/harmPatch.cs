@@ -435,10 +435,14 @@ namespace canjewelry.src
         }
         public static void TryDropGems(Entity byEntity, ItemSlot itemslot)
         {
-            if(byEntity.Api.Side == EnumAppSide.Client)
+            if (canjewelry.capi != null)
             {
                 return;
             }
+            /*if(byEntity.Api.Side == EnumAppSide.Client)
+            {
+                return;
+            }*/
             if (itemslot.Itemstack != null && itemslot.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
             {
                 Random r = new Random();

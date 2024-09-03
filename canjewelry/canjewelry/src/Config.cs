@@ -655,6 +655,18 @@ namespace canjewelry.src
                          { "steel", new int[] { 2 } }
                     })
                  );
+                custom_variants_sockets_tiers.Add(
+                    new CustomVariantSocketsTiers("canjewelry:canmonocle-normal", "loop", new Dictionary<string, int[]> {
+                        { "tinbronze", new int[] { 1 } },
+                        { "bismuthbronze", new int[] { 1 } },
+                        { "blackbronze", new int[] { 1 } },
+                         { "gold", new int[] { 1} },
+                         { "silver", new int[] { 1 } },
+                         { "iron", new int[] { 1 } },
+                         { "meteoriciron", new int[] { 2} },
+                         { "steel", new int[] { 2 } }
+                    })
+                 );
             }
         }
         public class DropInfo

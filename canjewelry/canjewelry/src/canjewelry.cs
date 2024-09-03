@@ -59,9 +59,9 @@ namespace canjewelry.src
             api.RegisterCollectibleBehaviorClass("Encrustable", typeof(EncrustableCB));
 
             api.RegisterBlockClass("BlockJewelGrinder", typeof(BlockJewelGrinder));
-            api.RegisterBlockClass("BlockCANWireDrawingBench", typeof(CANWireDrawingBench));
+           // api.RegisterBlockClass("BlockCANWireDrawingBench", typeof(CANWireDrawingBench));
             api.RegisterBlockEntityClass("BEJewelGrinder", typeof(BEJewelGrinder));
-            api.RegisterBlockEntityClass("BEWireDrawingBench", typeof(CANBEWireDrawingBench));
+           // api.RegisterBlockEntityClass("BEWireDrawingBench", typeof(CANBEWireDrawingBench));
 
             api.RegisterItemClass("GrindLayerBlock", typeof(GrindLayerBlock));
 
@@ -146,7 +146,7 @@ namespace canjewelry.src
             serverChannel = sapi.Network.RegisterChannel("canjewelry");
             serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, () => AddBehaviorAndSocketNumber());
-
+            api.Event.PlayerNowPlaying += OnPlayerNowPlaying;
             commands.RegisterCommands.registerServerCommands(sapi);
 
             serverChannel.SetMessageHandler<SyncCANJewelryPacket>((player, packet) =>
@@ -187,6 +187,17 @@ namespace canjewelry.src
                         blockDropsToAdd.Add(additionalDrop);
                     }
                     block.Drops = block.Drops.Append(blockDropsToAdd.ToArray());
+                }
+            }
+        }
+        public void OnPlayerNowPlaying(IServerPlayer byPlayer)
+        {
+            var plBeh = byPlayer.Entity.GetBehavior<CANGemBuffAffected>();
+            if (plBeh != null)
+            {
+                if(!plBeh.initialized)
+                {
+                    plBeh.TryToAddSlotModified();
                 }
             }
         }

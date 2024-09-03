@@ -276,6 +276,7 @@
   "item-canstrap-steel": "Steel strap",
   "item-canstrap-bismuthbronze": "Bismuth bronze strap",
   "item-canstrap-gold": "Gold strap",
+  "item-canstrap-copper": "Copper strap",
   "block-canpan-steel": "Steel pan",
   "block-canpan-iron": "Iron pan",
   "item-grindlayeritem-rough": "Rough grindlayer",
@@ -285,8 +286,9 @@
 
   "item-coronet": " coronet",
   "item-monocle": " monocle",
+  "item-armband": " armband",
   "item-wire-hank": " wires",
-  "item-canrottenkingmask": "  leper king mask",
+  "item-canrottenkingmask": " leper king mask",
 
   "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer",
   "stats-tab-name": "Stats"
