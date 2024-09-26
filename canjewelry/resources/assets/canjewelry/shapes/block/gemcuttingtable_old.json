@@ -1,0 +1,67 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textureSizes": {
+	},
+	"textures": {
+
+	},
+	"elements": [
+		{
+			"name": "Layer_0_left",
+			"from": [ 2.0, 0.0, 3.0 ], 
+			"to": [ 6.0, 1.0, 13.0 ], 
+			"faces": {
+				"north": { "texture": "#granite", "uv": [ 0.0, 0.0, 4.0, 1.0 ] },
+				"east": { "texture": "#granite", "uv": [ 2.0, 2.5, 12.0, 3.5 ] },
+				"south": { "texture": "#granite", "uv": [ 0.0, 0.0, 4.0, 1.0 ] },
+				"west": { "texture": "#granite", "uv": [ 0.0, 0.0, 10.0, 1.0 ] },
+				"up": { "texture": "#granite", "uv": [ 5.0, 2.0, 9.0, 12.0 ] },
+				"down": { "texture": "#granite", "uv": [ 5.5, 2.5, 9.5, 12.5 ] }
+			}
+		},
+		{
+			"name": "Layer_1",
+			"from": [ 3.0, 1.0, 5.0 ], 
+			"to": [ 13.0, 2.0, 11.0 ], 
+			"faces": {
+				"north": { "texture": "#granite", "uv": [ 0.0, 0.0, 10.0, 1.0 ] },
+				"east": { "texture": "#granite", "uv": [ 0.0, 0.0, 6.0, 1.0 ] },
+				"south": { "texture": "#granite", "uv": [ 0.0, 0.0, 10.0, 1.0 ] },
+				"west": { "texture": "#granite", "uv": [ 0.0, 0.0, 6.0, 1.0 ] },
+				"up": { "texture": "#granite", "uv": [ 2.5, 4.5, 12.5, 10.5 ] },
+				"down": { "texture": "#granite", "uv": [ 1.5, 4.5, 11.5, 10.5 ] }
+			}
+		},
+		{
+			"name": "Layer_0_middle",
+			"from": [ 6.0, 0.0, 4.0 ], 
+			"to": [ 10.0, 1.0, 12.0 ], 
+			"faces": {
+				"north": { "texture": "#granite", "uv": [ 0.0, 0.0, 4.0, 1.0 ] },
+				"east": { "texture": "#granite", "uv": [ 0.0, 0.0, 8.0, 1.0 ] },
+				"south": { "texture": "#granite", "uv": [ 0.0, 0.0, 4.0, 1.0 ] },
+				"west": { "texture": "#granite", "uv": [ 0.0, 1.0, 8.0, 2.0 ] },
+				"up": { "texture": "#granite", "uv": [ 6.5, 4.0, 10.5, 12.0 ] },
+				"down": { "texture": "#granite", "uv": [ 4.0, 2.5, 8.0, 10.5 ] }
+			}
+		},
+		{
+			"name": "Layer_0_right",
+			"from": [ 10.0, 0.0, 3.0 ], 
+			"to": [ 14.0, 1.0, 13.0 ], 
+			"rotationOrigin": [ 1.0, 0.0, 0.0 ],
+			"faces": {
+				"north": { "texture": "#granite", "uv": [ 0.0, 0.0, 4.0, 1.0 ] },
+				"east": { "texture": "#granite", "uv": [ 0.0, 0.0, 10.0, 1.0 ] },
+				"south": { "texture": "#granite", "uv": [ 0.0, 0.0, 4.0, 1.0 ] },
+				"west": { "texture": "#granite", "uv": [ 0.0, 0.0, 10.0, 1.0 ] },
+				"up": { "texture": "#granite", "uv": [ 7.5, 3.5, 11.5, 13.5 ] },
+				"down": { "texture": "#granite", "uv": [ 4.5, 2.0, 8.5, 12.0 ] }
+			}
+		}
+	]}

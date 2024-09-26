@@ -1,7 +1,6 @@
 {
   "code": "canwiredrawingbench",
   "class": "BlockCANWireDrawingBench",
-  "enabled": false,
   "entityClassByType": {
     "*-head-*": "BEWireDrawingBench"
   },

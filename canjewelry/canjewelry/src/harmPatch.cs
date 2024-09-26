@@ -1,4 +1,5 @@
 ﻿using Cairo;
+using canjewelry.src.be;
 using canjewelry.src.cb;
 using canjewelry.src.CB;
 using canjewelry.src.eb;
@@ -293,9 +294,9 @@ namespace canjewelry.src
         bool withDebugInfo)
         {
             ItemStack itemstack = inSlot.Itemstack;
-            if(itemstack.Attributes.HasAttribute("canencrusted"))
-            {
-                var tree = itemstack.Attributes.GetTreeAttribute("canencrusted");
+            if (itemstack.Attributes.HasAttribute("canencrusted"))
+            {             
+                ITreeAttribute tree = itemstack.Attributes.GetTreeAttribute("canencrusted");
                 int maxSocketsNumber = EncrustableCB.GetMaxAmountSockets(itemstack);
                 int canHaveNsocketsMore = maxSocketsNumber - tree.GetInt("socketsnumber");
                 if (canHaveNsocketsMore > 0)
@@ -314,16 +315,42 @@ namespace canjewelry.src
                     dsc.Append("\n");
                     if(treeSlot.GetString("gemtype") != "")
                     {
-                        if (treeSlot.GetString("attributeBuff").Equals("maxhealthExtraPoints"))
+                        if (treeSlot.HasAttribute("attributeBuff"))
                         {
-                            dsc.Append(Lang.Get("canjewelry:socket-has-attribute", i, treeSlot.GetFloat("attributeBuffValue"))).Append(Lang.Get("canjewelry:buff-name-" + treeSlot.GetString("attributeBuff")));
+
+
+                            if (treeSlot.GetString("attributeBuff").Equals("maxhealthExtraPoints"))
+                            {
+                                dsc.Append(Lang.Get("canjewelry:socket-has-attribute", i, treeSlot.GetFloat("attributeBuffValue"))).Append(Lang.Get("canjewelry:buff-name-" + treeSlot.GetString("attributeBuff")));
+                            }
+                            else
+                            {
+                                dsc.Append(Lang.Get("canjewelry:socket-has-attribute-percent", i, treeSlot.GetFloat("attributeBuffValue") * 100)).Append(Lang.Get("canjewelry:buff-name-" + treeSlot.GetString("attributeBuff")));
+                            }                        
+                            dsc.Append('\n');
                         }
                         else
                         {
-                            dsc.Append(Lang.Get("canjewelry:socket-has-attribute-percent", i, treeSlot.GetFloat("attributeBuffValue") * 100)).Append(Lang.Get("canjewelry:buff-name-" + treeSlot.GetString("attributeBuff")));
+                            string[] buffNames = (treeSlot[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
+                            float[] buffValues = (treeSlot[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
+
+                            for (int j = 0; j < buffNames.Length; j++)
+                            {
+                                if (buffNames[j].Equals("maxhealthExtraPoints"))
+                                {
+                                    dsc.Append(Lang.Get("canjewelry:buff-name-" + buffNames[j])).Append(" +" + buffValues[j].ToString());
+                                }
+                                else
+                                {
+                                    if (canjewelry.config.gems_buffs.TryGetValue(buffNames[j], out var buffValuesDict))
+                                    {
+                                        dsc.Append(Lang.Get("canjewelry:buff-name-" + buffNames[j]));
+                                        dsc.Append(buffValues[j] * 100 > 0 ? " +" + Math.Round(buffValues[j] * 100, 3) + "%" : " " + Math.Round(buffValues[j] * 100, 3) + "%");
+                                        dsc.AppendLine();
+                                    }
+                                }
+                            }
                         }
-                        ;
-                        dsc.Append('\n');
                     }
                 }
 
@@ -509,6 +536,23 @@ namespace canjewelry.src
                 DataInt = 2
             });
             ___charDlg.RenderTabHandlers.Add(new Action<GuiComposer>(composeProgressTab));
+        }
+        public static void Postfix_ItemChisel_OnHeldAttackStart(ItemChisel __instance, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandHandling handling)
+        {
+            if (blockSel != null)
+            {
+                BlockEntity be = byEntity.World.BlockAccessor.GetBlockEntity(blockSel.Position);
+                BlockEntityGemCuttingTable bea = be as BlockEntityGemCuttingTable;
+                if (bea == null)
+                {
+                    return;
+                }
+                if (byEntity.World.Side == EnumAppSide.Client)
+                {
+                    bea.OnUseOver((byEntity as EntityPlayer).Player, blockSel.SelectionBoxIndex);
+                    handling = EnumHandHandling.PreventDefault;
+                }
+            }
         }
         public static int lineCounter = 0;
         public static StringBuilder BuildText()

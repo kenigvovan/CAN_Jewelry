@@ -15,6 +15,7 @@ using Vintagestory.API.Util;
 using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 using Vintagestory.GameContent.Mechanics;
+using static canjewelry.src.Config;
 
 namespace canjewelry.src.jewelry
 {
@@ -521,74 +522,27 @@ namespace canjewelry.src.jewelry
             if (secondsUsed - this.playersGrinding[player.PlayerUID] >= 1)
             {
                 this.playersGrinding[player.PlayerUID] = secondsUsed;
-                //ItemStack newIS1 = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canmods:gem-cut-exquisite-diamond")));
-                // player.Entity.TryGiveItemStack(newIS1);
+
                 if (player.InventoryManager.ActiveHotbarSlot.Itemstack == null)
                 {
                     return;
                 }
                 ItemSlot activeSlot = player.InventoryManager.ActiveHotbarSlot;
+                ItemStack activeItemStack = activeSlot.Itemstack;
                 AssetLocation item_code = activeSlot.Itemstack.Collectible.Code;
-            
-                if (item_code.Path.Contains("gem-rough-"))
+
+                if(activeItemStack.Item is not CANCutGemItem)
                 {
-                   
-                    var codeSplits = item_code.Path.Split('-');
-                    string gemBase = codeSplits[3];
-                    string gemSize = codeSplits[2];
-                    ItemStack newIS = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canjewelry:processedgem-" + gemSize + "variant")));
-                    ITreeAttribute tree = new TreeAttribute();
-
-                    tree.SetString("gembase", gemBase);
-                    tree.SetString("gemsize", gemSize);
-                    tree.SetInt("grindtype", 0);
-                    tree.SetInt("grindcounter", 20);
-                    newIS.Attributes["cangrindlayerinfo"] = tree;
-
-                    activeSlot.TakeOut(1);
-                    player.Entity.TryGiveItemStack(newIS);
                     return;
                 }
-                if((WildcardUtil.Match("gem-*-rough", item_code.Path)))
-                {
-                    //geol
-                    var codeSplits = item_code.Path.Split('-');
-                    string gemBase = codeSplits[1];
-                    string gemSize = "chipped";
-                    if (activeSlot.Itemstack.Attributes.HasAttribute("potential"))
-                    {
-                        string potential_val = activeSlot.Itemstack.Attributes.GetString("potential");
-                        if(potential_val == "medium")
-                        {
-                            gemSize = "flawed";
-                        }
-                        else if(potential_val == "high")
-                        {
-                            gemSize = "normal";
-                        }
-                    }
-
-                    ItemStack newIS = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canjewelry:processedgem-" + gemSize + "variant")));
-                    ITreeAttribute tree = new TreeAttribute();
-
-                    tree.SetString("gembase", gemBase);
-                    tree.SetString("gemsize", gemSize);
-                    //tree.SetString("mod", "geology");
-                    tree.SetInt("grindtype", 0);
-                    tree.SetInt("grindcounter", 20);
-                    newIS.Attributes["cangrindlayerinfo"] = tree;
-
-                    activeSlot.TakeOut(1);
-                    player.Entity.TryGiveItemStack(newIS);
-                    return;
-
-
-
-                }
-
 
                 if (!activeSlot.Itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
                 {
+                    ITreeAttribute tree = new TreeAttribute();
+
+                    tree.SetInt("grindtype", 1);
+                    tree.SetInt("grindcounter", 10);
+                    activeItemStack.Attributes["cangrindlayerinfo"] = tree;
                     return;
                 }
                 ITreeAttribute itree = activeSlot.Itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
@@ -600,7 +554,7 @@ namespace canjewelry.src.jewelry
                     float num2 = 5f * grindSpeed;
                     float num3 = 1f * grindSpeed;
                     float num4 = 20f * grindSpeed;
-                    gemTypeToColor.TryGetValue(itree.GetString("gembase"), out int colorParticles);
+                    gemTypeToColor.TryGetValue(activeItemStack.Collectible.Variant["gemtype"], out int colorParticles);
 
                     BEJewelGrinder.FlourDustParticles.Color = -421266951;//colorParticles;
                     BEJewelGrinder.FlourDustParticles.MinQuantity = num1;
@@ -615,26 +569,14 @@ namespace canjewelry.src.jewelry
                     this.Api.World.SpawnParticles((IParticlePropertiesProvider)BEJewelGrinder.FlourDustParticles);
                     if (itree.GetInt("grindcounter") <= 1)
                     {
-                        if(itree.GetInt("grindtype") == 2)
+                        ITreeAttribute cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+                        canjewelry.config.CuttingAttributesDict.TryGetValue(cutGemTree.GetString(CANJWConstants.CUTTING_TYPE), out var cuttingAttributes);
+                        var currentValues = (cutGemTree["buffvalues"] as FloatArrayAttribute).value;
+                        currentValues[0] = currentValues[0] * cuttingAttributes.GrindingBuffIncreaseMultipliers[itree.GetInt("grindtype")];
+                        (cutGemTree["buffvalues"] as FloatArrayAttribute).value = currentValues;
+                        if (itree.GetInt("grindtype") == 2)
                         {
-                            string gemSize = "";
-                            if(itree["gemsize"].GetValue().Equals("normal"))
-                            {
-                                gemSize = "exquisite";
-                            }
-                            else if (itree["gemsize"].GetValue().Equals("flawed"))
-                            {
-                                gemSize = "flawless";
-                            }
-                            else if (itree["gemsize"].GetValue().Equals("chipped"))
-                            {
-                                gemSize = "normal";
-                            }
-
-                            player.InventoryManager.ActiveHotbarSlot.TakeOut(1);
-                  
-                            ItemStack newIS = new ItemStack(player.Entity.Api.World.GetItem(new AssetLocation("canjewelry:gem-cut-" + gemSize + "-" + (itree["gembase"].GetValue().Equals("olivine_peridot") ? "olivine" : itree["gembase"].GetValue()))));
-                            player.Entity.TryGiveItemStack(newIS);
+                            activeItemStack.Attributes.RemoveAttribute("cangrindlayerinfo");                          
                             return;
                         }
                         itree.SetInt("grindtype", itree.GetInt("grindtype") + 1);

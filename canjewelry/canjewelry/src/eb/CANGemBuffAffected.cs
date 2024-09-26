@@ -5,10 +5,12 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
@@ -224,12 +226,12 @@ namespace canjewelry.src.eb
                 {
                     ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
 
-                    if (socketSlot == null || !socketSlot.HasAttribute(CANJWConstants.GEM_ATTRIBUTE_BUFF))
+                    if (socketSlot == null)
                     {
                         continue;
                     }
-                    else
-                    {                     
+                    if (socketSlot.HasAttribute(CANJWConstants.GEM_ATTRIBUTE_BUFF))
+                    {                                      
                         if (socketSlot.HasAttribute(CANJWConstants.GEM_BUFF_TYPE) && (EnumGemBuffType)socketSlot.GetInt(CANJWConstants.GEM_BUFF_TYPE) != EnumGemBuffType.STATS_BUFF)
                         {
                             continue;
@@ -238,10 +240,6 @@ namespace canjewelry.src.eb
                         {
                             continue;
                         }
-                    }
-                    
-                    if (socketSlot != null)
-                    {
                         float additionalValue = socketSlot.GetFloat("attributeBuffValue");
                         string attributeBuffName = socketSlot.GetString("attributeBuff");
                         if (result.TryGetValue(attributeBuffName, out float currentResult))
@@ -251,6 +249,25 @@ namespace canjewelry.src.eb
                         else
                         {
                             result[attributeBuffName] = additionalValue;
+                        }
+                    }
+                    else if (socketSlot.HasAttribute(CANJWConstants.ENCRUSTABLE_BUFFS_NAMES))
+                    {
+                        string[] buffNames = (socketSlot[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
+                        float[] buffValues = (socketSlot[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
+
+                        for (int j = 0; j < buffNames.Length; j++)
+                        {
+                            float additionalValue = buffValues[j];
+                            string attributeBuffName = buffNames[j];
+                            if (result.TryGetValue(attributeBuffName, out float currentResult))
+                            {
+                                result[attributeBuffName] = currentResult + additionalValue;
+                            }
+                            else
+                            {
+                                result[attributeBuffName] = additionalValue;
+                            }
                         }
                     }
                 }

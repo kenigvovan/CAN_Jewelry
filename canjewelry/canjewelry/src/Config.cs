@@ -28,6 +28,11 @@ namespace canjewelry.src
         public float chance_gem_drop_on_item_broken;
         public HashSet<string> buffs_to_show_gui = new HashSet<string>();
         public string config_version;
+        public Dictionary<string, HashSet<string>> PossibleGemBuffs= new Dictionary<string, HashSet<string>>();
+        public Dictionary<string, BuffAttributes> BuffAttributesDict = new Dictionary<string, BuffAttributes>();
+        public Dictionary<string, CuttingAttributes> CuttingAttributesDict = new Dictionary<string, CuttingAttributes>();
+        public static Random rand = new Random();
+        
         public void FillDefaultValues(bool onlyEmptyStructs = false)
         {
             if (buffNameToPossibleItem.Count == 0)
@@ -616,7 +621,7 @@ namespace canjewelry.src
                 "armorDurabilityLoss", "oreDropRate",  "healingeffectivness", "rangedWeaponsDamage", "animalLootDropRate", "vesselContentsDropRate", "bowDrawingStrength", "animalseekingrange",
                 "armorWalkSpeedAffectedness", "rangedWeaponsSpeed", "mechanicalsDamage", "rangedWeaponsAcc"};
             }
-            //{ "canjewelry:canrottenkingmask-*", new int[1] {3} },
+            
             if (custom_variants_sockets_tiers.Count == 0)
             {
                 custom_variants_sockets_tiers.Add(
@@ -668,6 +673,328 @@ namespace canjewelry.src
                     })
                  );
             }
+            PossibleGemBuffs = new Dictionary<string, HashSet<string>> {
+                { "diamond", new HashSet<string>{ "walkspeed", "miningSpeedMul" } },
+                { "corundum", new HashSet<string>{ "miningSpeedMul" } },
+                { "emerald", new HashSet<string>{ "maxhealthExtraPoints" } },
+                { "fluorite", new HashSet<string>{ "meleeWeaponsDamage" } },
+                { "lapislazuli", new HashSet<string>{ "hungerrate" } },
+                { "malachite", new HashSet<string>{ "wildCropDropRate" } },
+                { "olivine_peridot", new HashSet<string>{ "armorDurabilityLoss" } },
+                { "quartz", new HashSet<string>{ "oreDropRate" } },
+                { "uranium", new HashSet<string>{ "healingeffectivness" } },
+                { "ruby", new HashSet<string>{ "rangedWeaponsDamage" } },
+                { "citrine", new HashSet<string>{ "animalLootDropRate" } },
+                { "corundumsapphire", new HashSet<string>{ "vesselContentsDropRate" } },
+                { "garnetalmandine", new HashSet<string>{ "bowDrawingStrength" } },
+                { "garnetandradite", new HashSet<string>{ "animalseekingrange" } },
+                { "garnetuvarovite", new HashSet<string>{ "rangedWeaponsSpeed" } },
+                { "spinelred", new HashSet<string>{ "armorWalkSpeedAffectedness" } },
+                { "topazpink", new HashSet<string>{ "animalharvestingtime" } },
+                { "tourmalineschorl", new HashSet<string>{ "mechanicalsDamage" } },
+                { "tourmalinewatermelon", new HashSet<string>{ "rangedWeaponsAcc" } },
+                { "amethyst", new HashSet<string>{ "candurability" } },
+            };
+            BuffAttributesDict = new Dictionary<string, BuffAttributes>
+            {
+                {"walkspeed",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.03f } },
+                        { 2, new float[]{ 0.04f, 0.06f } },
+                        { 3, new float[]{ 0.07f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.04f, 0.04f } }
+                    },
+                    new HashSet<string>{ "miningSpeedMul" })},
+
+                {"miningSpeedMul",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.03f } },
+                        { 2, new float[]{ 0.04f, 0.06f } },
+                        { 3, new float[]{ 0.07f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.03f } },
+                        { 3, new float[]{ 0.04f, 0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed" })},
+                 {"maxhealthExtraPoints",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 1f, 1.5f } },
+                        { 2, new float[]{ 2f, 2.5f } },
+                        { 3, new float[]{ 4f, 4.5f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.3f, 0.5f } },
+                        { 2, new float[]{ 0.6f, 0.8f } },
+                        { 3, new float[]{ 1f, 1.2f } }
+                    },
+                    new HashSet<string>{ "hungerrate", "animalLootDropRate" })},
+                 {"meleeWeaponsDamage",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.03f } },
+                        { 2, new float[]{ 0.04f, 0.05f } },
+                        { 3, new float[]{ 0.06f, 0.08f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.03f } },
+                        { 3, new float[]{ 0.04f, 0.05f } }
+                    },
+                    new HashSet<string>{ "armorDurabilityLoss", "hungerrate" })},
+                 {"hungerrate",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.03f } },
+                        { 2, new float[]{ -0.04f, -0.06f } },
+                        { 3, new float[]{ -0.07f, -0.1f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.01f } },
+                        { 2, new float[]{ -0.02f, -0.03f } },
+                        { 3, new float[]{ -0.04f, -0.05f } }
+                    },
+                    new HashSet<string>{ "meleeWeaponsDamage",  "walkspeed"})},
+                 {"wildCropDropRate",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.05f } },
+                        { 3, new float[]{ 0.06f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.03f } },
+                        { 3, new float[]{ 0.04f, 0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed", "animalseekingrange" })},
+                 {"armorDurabilityLoss",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.05f } },
+                        { 2, new float[]{ -0.06f, -0.1f } },
+                        { 3, new float[]{ -0.11f, -0.15f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.01f } },
+                        { 2, new float[]{ -0.02f, -0.03f } },
+                        { 3, new float[]{ -0.04f, -0.05f } }
+                    },
+                    new HashSet<string>{ "healingeffectivness", "armorWalkSpeedAffectedness" })},
+                 {"oreDropRate",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.03f } },
+                        { 2, new float[]{ 0.04f, 0.07f } },
+                        { 3, new float[]{ 0.08f, 0.11f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.03f } },
+                        { 3, new float[]{ 0.04f, 0.05f } }
+                    },
+                    new HashSet<string>{ "candurability" })},
+                 {"healingeffectivness",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.05f } },
+                        { 2, new float[]{ 0.06f, 0.1f } },
+                        { 3, new float[]{ 0.11f, 0.13f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.03f } },
+                        { 3, new float[]{ 0.04f, 0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed", "animalharvestingtime" })},
+                 {"rangedWeaponsDamage",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed", "rangedWeaponsAcc", "hungerrate" })}
+                ,
+                 {"animalLootDropRate",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.05f } }
+                    },
+                    new HashSet<string>{ "animalharvestingtime", "hungerrate" })},
+                 {"vesselContentsDropRate",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed", "maxhealthExtraPoints" })},
+                 {"animalseekingrange",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.02f } },
+                        { 2, new float[]{ -0.03f, -0.04f } },
+                        { 3, new float[]{ -0.05f, -0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.01f } },
+                        { 2, new float[]{ -0.02f, -0.02f } },
+                        { 3, new float[]{ -0.03f, -0.05f } }
+                    },
+                    new HashSet<string>{ "hungerrate", "meleeWeaponsDamage" })},
+                 {"rangedWeaponsSpeed",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.08f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.04f } }
+                    },
+                    new HashSet<string>{ "armorWalkSpeedAffectedness", "bowDrawingStrength" })},
+                 {"animalharvestingtime",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.02f } },
+                        { 2, new float[]{ -0.03f, -0.04f } },
+                        { 3, new float[]{ -0.05f, -0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.01f } },
+                        { 2, new float[]{ -0.02f, -0.02f } },
+                        { 3, new float[]{ -0.03f, -0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed", "mechanicalsDamage" })},
+                 {"mechanicalsDamage",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.08f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.05f } }
+                    },
+                    new HashSet<string>{ "maxhealthExtraPoints", "oreDropRate" })},
+                 {"rangedWeaponsAcc",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.07f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.05f } }
+                    },
+                    new HashSet<string>{ "mechanicalsDamage" })},
+                 {"armorWalkSpeedAffectedness",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.02f } },
+                        { 2, new float[]{ -0.03f, -0.04f } },
+                        { 3, new float[]{ -0.05f, -0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ -0.01f, -0.01f } },
+                        { 2, new float[]{ -0.02f, -0.02f } },
+                        { 3, new float[]{ -0.03f, -0.05f } }
+                    },
+                    new HashSet<string>{ "walkspeed", "hungerrate" })},
+                 {"bowDrawingStrength",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.04f } },
+                        { 3, new float[]{ 0.05f, 0.09f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.01f } },
+                        { 2, new float[]{ 0.02f, 0.02f } },
+                        { 3, new float[]{ 0.03f, 0.05f } }
+                    },
+                    new HashSet<string>{ "candurability", "armorDurabilityLoss" })}
+                ,
+                 {"candurability",
+                    new BuffAttributes(
+                       new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.2f } },
+                        { 2, new float[]{ 0.29f, 0.45f } },
+                        { 3, new float[]{ 0.7f, 0.95f } }
+                    }, new Dictionary<int, float[]>
+                    {
+                        { 1, new float[]{ 0.01f, 0.02f } },
+                        { 2, new float[]{ 0.03f, 0.09f } },
+                        { 3, new float[]{ 0.1f, 0.15f } }
+                    },
+                    new HashSet<string>{ "meleeWeaponsDamage", "miningSpeedMul" })}
+            };
+
+            CuttingAttributesDict = new Dictionary<string, CuttingAttributes>
+            {
+                { "round", 
+                     new CuttingAttributes(new float[] { 1, 1.33f, 1.5f })
+                },
+                { "baguette",
+                     new CuttingAttributes(new float[] { 1, 1.33f, 1.5f })
+                },
+                { "square",
+                     new CuttingAttributes(new float[] { 1.7f, 1.1f, 1.06f })
+                },
+
+            };
         }
         public class DropInfo
         {
@@ -700,6 +1027,57 @@ namespace canjewelry.src
                 this.ItemCode = itemCode;
                 this.AttributeKey = attributeKey;
                 this.SocketTiers = socketTiers;
+            }
+        }
+        public class BuffAttributes
+        {
+            public Dictionary<int, float[]> MainStatValueRange;
+            public Dictionary<int, float[]> SecondaryStatValueRange;
+            public HashSet<string> PossibleSecondaryStats;
+
+            public BuffAttributes(Dictionary<int, float[]> mainStatValueRange, Dictionary<int, float[]> secondaryStatValueRange, HashSet<string> possibleSecondaryStats)
+            {
+                MainStatValueRange = mainStatValueRange;
+                SecondaryStatValueRange = secondaryStatValueRange;
+                PossibleSecondaryStats = possibleSecondaryStats;
+            }
+            public float GetRandomMainValue(int tier)
+            {
+                if(this.MainStatValueRange == null || !this.MainStatValueRange.TryGetValue(tier, out float[] valueDict))
+                {
+                    return 0f;
+                }
+                if(valueDict.Count() == 1)
+                {
+                    return valueDict[0];
+                }
+                else
+                {
+                    return (float)(Config.rand.NextDouble() * (valueDict[1] - valueDict[0]) + valueDict[0]);
+                }
+            }
+            public float GetRandomSecondaryValue(int tier)
+            {
+                if (this.SecondaryStatValueRange == null || !this.SecondaryStatValueRange.TryGetValue(tier, out float[] valueDict))
+                {
+                    return 0f;
+                }
+                if (valueDict.Count() == 1)
+                {
+                    return valueDict[0];
+                }
+                else
+                {
+                    return (float)(Config.rand.NextDouble() * (valueDict[1] - valueDict[0]) + valueDict[0]);
+                }
+            }
+        }
+        public class CuttingAttributes
+        {
+            public float[] GrindingBuffIncreaseMultipliers;
+            public CuttingAttributes(float[] grindingBuffIncreaseMultipliers)
+            {
+                GrindingBuffIncreaseMultipliers = grindingBuffIncreaseMultipliers;
             }
         }
     }

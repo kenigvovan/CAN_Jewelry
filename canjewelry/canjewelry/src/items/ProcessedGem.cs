@@ -170,7 +170,6 @@ namespace canjewelry.src.jewelry
             {
                 this.tmpTextures[ctex.Key] = ctex.Value;
             }
-            var f = this.capi.TesselatorManager.GetCachedShape(this.Shape.Base);
             string construction = this.Construction;
             ITreeAttribute itree;
             if (itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
