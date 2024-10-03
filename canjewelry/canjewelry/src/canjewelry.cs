@@ -4,30 +4,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 using canjewelry.src.blocks;
-using System.IO.Compression;
-using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using Newtonsoft.Json;
 using Vintagestory.API.Util;
-using System.Security.Claims;
 using Newtonsoft.Json.Linq;
 using canjewelry.src.jewelry;
 using canjewelry.src.items;
-using System.Numerics;
-using Vintagestory.API.Common.CommandAbbr;
-using Vintagestory.API.Config;
-using Vintagestory.API.MathTools;
-using Vintagestory.API.Common.Entities;
-using Vintagestory.Common;
-using System.Threading;
 using canjewelry.src.eb;
 using canjewelry.src.be;
 
@@ -43,6 +30,7 @@ namespace canjewelry.src
         internal static IClientNetworkChannel clientChannel;
         public static Config config;
         public static Dictionary<string, string> gems_textures = new Dictionary<string, string>();
+        public static List<GemCuttingRecipe> gemCuttingRecipes;
         public override void Start(ICoreAPI api)
         {
             base.Start(api);
@@ -59,9 +47,10 @@ namespace canjewelry.src
             api.RegisterCollectibleBehaviorClass("Encrustable", typeof(EncrustableCB));
 
             api.RegisterBlockClass("BlockJewelGrinder", typeof(BlockJewelGrinder));
-           // api.RegisterBlockClass("BlockCANWireDrawingBench", typeof(CANWireDrawingBench));
+            api.RegisterBlockClass("BlockCANWireDrawingBench", typeof(CANWireDrawingBench));
             api.RegisterBlockEntityClass("BEJewelGrinder", typeof(BEJewelGrinder));
-           // api.RegisterBlockEntityClass("BEWireDrawingBench", typeof(CANBEWireDrawingBench));
+            api.RegisterBlockEntityClass("BEWireDrawingBench", typeof(CANBEWireDrawingBench));
+            api.RegisterBlockEntityClass("BEGemCuttingTable", typeof(BlockEntityGemCuttingTable));
 
             api.RegisterItemClass("GrindLayerBlock", typeof(GrindLayerBlock));
 
@@ -77,8 +66,12 @@ namespace canjewelry.src
             api.RegisterItemClass("CANItemWireHank", typeof(CANItemWireHank));
             api.RegisterItemClass("CANItemArmBand", typeof(CANItemArmBand));
             api.RegisterItemClass("CANItemStrap", typeof(CANItemStrap));
+            api.RegisterItemClass("CANItemGemCuttingWorkItem", typeof(CANItemGemCuttingWorkItem));
+            api.RegisterItemClass("CANItemGemChisel", typeof(CANItemGemChisel));
+            
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
+            api.RegisterBlockClass("BlockGemCuttingTable", typeof(BlockGemCuttingTable));
         }
         public override void StartClientSide(ICoreClientAPI api)
         {
@@ -92,7 +85,9 @@ namespace canjewelry.src
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
 
             harmonyInstance.Patch(typeof(CharacterSystem).GetMethod("StartClientSide"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CharacterSystem_StartClientSide")));
-         
+
+            harmonyInstance.Patch(typeof(ItemChisel).GetMethod("OnHeldAttackStart"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemChisel_OnHeldAttackStart")));
+
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             clientChannel.SetMessageHandler<SyncCANJewelryPacket>((packet) =>
@@ -121,11 +116,28 @@ namespace canjewelry.src
                     //catch if not present?
                     gems_textures.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
                 }
-
-                clientChannel.SendPacket(new SyncCANJewelryPacket()
+                if (clientChannel.Connected)
                 {
-                    CompressedConfig = ""
-                });
+                    clientChannel.SendPacket(new SyncCANJewelryPacket()
+                    {
+                        CompressedConfig = ""
+                    });
+                }
+                else
+                {
+                   
+                    canjewelry.sapi.Event.RegisterCallback((dt =>
+                    {
+                        if (clientChannel.Connected)
+                        {
+                            clientChannel.SendPacket(new SyncCANJewelryPacket()
+                            {
+                                CompressedConfig = ""
+                            });
+                        }
+                    }
+                    ), 60 * 1000);
+                }
             };
         }
         public override void StartServerSide(ICoreServerAPI api)

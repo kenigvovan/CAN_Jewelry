@@ -1,0 +1,44 @@
+﻿[
+  {
+    "ingredientPattern": "F__,ATI,PPP",
+    "ingredients": {
+      "A": {
+        "type": "block",
+        "code": "game:woodenaxle-ud"
+      },
+      "F": {
+        "type": "item",
+        "code": "game:flaxtwine",
+        "quantity": 2
+      },
+      "I": {
+        "type": "item",
+        "code": "game:ingot-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      },
+      "P": {
+        "type": "block",
+        "code": "game:planks-*-ud",
+        "name": "wood-type",
+        "allowedVariants": [ "birch", "oak", "maple", "pine", "acacia", "kapok", "baldcypress", "larch", "redwood", "ebony", "walnut", "purpleheart" ]
+      },
+      "T": {
+        "type": "item",
+        "code": "game:fat",
+        "quantity": 2
+      }
+    },
+    "name": "canwiredrawingbench",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "block",
+      "code": "canjewelry:canwiredrawingbench-head-west",
+      "quantity": 1,
+      "attributes": {
+        "type": "{wood-type}"
+      }
+    }
+  }
+]

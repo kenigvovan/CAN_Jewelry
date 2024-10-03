@@ -21,5 +21,11 @@ namespace canjewelry.src
         public static string CANDURABILITY_STRING = "candurability";
         public static string CAN_CUSTOM_VARIANTS = "cancustomvariants";
         public static string CAN_CUSTOM_VARIANTS_COMPARE_KEY = "cancustomvariantscomparekey";
+        public static string CUTTING_TYPE = "cuttingtype";
+        public static string CUT_GEM_BUFF_VALUE = "cutgetmbuffvalue";
+        public static string CUT_GEM_TREE = "cutgemtree";
+        public static string CUT_GEM_MAIN_STAT_NAME = "cutgemmainstatname";
+        public static string ENCRUSTABLE_BUFFS_NAMES = "encrustablebuffsnames";
+        public static string ENCRUSTABLE_BUFFS_VALUES = "encrustablebuffsvalues";
     }
 }

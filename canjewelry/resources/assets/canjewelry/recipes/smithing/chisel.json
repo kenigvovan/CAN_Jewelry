@@ -1,0 +1,13 @@
+{
+	ingredient: { type: "item", code: "game:ingot-*", name: "metal", allowedVariants: ["copper", "tinbronze", "bismuthbronze", "blackbronze", "iron", "meteoriciron", "steel"] },
+	pattern: [[
+		"________#_#____",
+		"_##########____",
+		"________#_#____",
+	]],
+	name: "gem cutting chisel",
+	output: {
+		"type": "item",
+		"code": "canjewelry:cangemchisel-{metal}"
+	}
+}

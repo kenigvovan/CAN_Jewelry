@@ -51,7 +51,7 @@ namespace canjewelry.src.be
         public override InventoryBase Inventory => this.inventory;
 
         public override string InventoryClassName => "canwiredrawingbench";
-        public string woodType = "oak";
+        public string woodType;
 
         public TextureAtlasPosition this[string textureCode]
         {
@@ -111,7 +111,7 @@ namespace canjewelry.src.be
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
-            this.inventory.LateInitialize("canjewelerset-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);
+            this.inventory.LateInitialize("canwiredrawingbench-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);
             this.facing = BlockFacing.FromCode(base.Block.LastCodePart(0));
             
            // this.Block.Textures
@@ -135,7 +135,8 @@ namespace canjewelry.src.be
                 string part = this.Block.LastCodePart(1);
                 string orient = this.Block.LastCodePart(0);
                 string wire = GetWireType();
-                if (this.defaultMesh == null)
+
+                if (this.defaultMesh == null && woodType is not null)
                 {
                     this.defaultMesh = this.getMesh(canjewelry.capi.Tesselator, part, this.animRot);
                     if (!this.inventory[0].Empty)
@@ -252,6 +253,7 @@ namespace canjewelry.src.be
             string part = this.Block.LastCodePart(1);
             if (!base.OnTesselation(mesher, tessThreadTesselator))
             {
+                //this.defaultMesh = this.getMesh(tessThreadTesselator, part);
                 if (this.defaultMesh == null)
                 {
                     this.defaultMesh = this.getMesh(tessThreadTesselator, part);
@@ -278,7 +280,22 @@ namespace canjewelry.src.be
             if (((byItemStack != null) ? byItemStack.Attributes : null) != null)
             {
                 this.woodType = byItemStack.Attributes.GetString("type", "oak");
-                
+                string part = this.Block.LastCodePart(1);
+                string orient = this.Block.LastCodePart(0);
+                string wire = GetWireType();
+
+                if (this.Api.Side == EnumAppSide.Client && this.defaultMesh == null && woodType is not null)
+                {
+                    //this.capi = canjewelry.capi;
+                    //this.defaultMesh = this.getMesh(canjewelry.capi.Tesselator, part, this.animRot);
+                    if (!this.inventory[0].Empty)
+                    {
+                        this.defaultMesh = animUtil.InitializeAnimator("wiring2" + string.Concat(new string[]
+                        {
+                        "head", orient, wire, woodType
+                        }), Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), this, this.animRot);
+                    }
+                }
             }
             if (this.Api.Side == EnumAppSide.Client)
             {
@@ -326,7 +343,29 @@ namespace canjewelry.src.be
             return lanternMeshes[string.Concat(new string[]
             {
                 part, orient, wire, woodType
-            })] = block.GenMesh(this.Api as ICoreClientAPI, null,  tesselator, this, part, rotationDeg);
+            })] = GenMesh(this.Api as ICoreClientAPI, null,  tesselator, this, part, rotationDeg);
+        }
+        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null, string part = "", Vec3f rotationDeg = null)
+        {         
+            if (shape == null)
+            {
+                if (part == "head")
+                {
+                    shape = Vintagestory.API.Common.Shape.TryGet(this.capi, "canjewelry:shapes/block/wiretable.json");
+                }
+                else
+                {
+                    shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/wiretable-feet.json");
+                }
+            }
+
+            if (shape == null)
+            {
+                return null;
+            }
+
+            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, rotationDeg, 0, 0, 0);
+            return modeldata;
         }
         public void UpdateWirePart()
         {
@@ -356,26 +395,19 @@ namespace canjewelry.src.be
             string orient = block.LastCodePart(0);
             string wire = GetWireType();
             string part = block.LastCodePart(1);
-            
-            if (lanternMeshes.TryGetValue(string.Concat(new string[]
+            string key = string.Concat(new string[]
             {
                 "head", orient, wire, woodType
-            }), out mesh))
+            });
+
+            if (lanternMeshes.TryGetValue(key, out mesh))
             {
                 this.defaultMesh = mesh;
             }
-            //this.defaultMesh = 
-            animUtil.InitializeAnimator("wiring2" + string.Concat(new string[]
-            {
-                "head", orient, wire, woodType
-            }), Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), this, this.animRot);
-            var f = this.animRot.Clone();
-            //f.Y += 360;
-            this.defaultMesh = block.GenMesh(this.Api as ICoreClientAPI, null, canjewelry.capi.Tesselator, this, "head", this.animRot);
-            lanternMeshes[string.Concat(new string[]
-            {
-                "head", orient, wire, woodType
-            })] = this.defaultMesh;
+            animUtil.InitializeAnimator("wiring2" + key, Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), this, this.animRot);
+
+            this.defaultMesh = GenMesh(this.Api as ICoreClientAPI, null, canjewelry.capi.Tesselator, this, "head", this.animRot);
+            lanternMeshes[key] = this.defaultMesh;
         }
         private BlockFacing facing;
 }

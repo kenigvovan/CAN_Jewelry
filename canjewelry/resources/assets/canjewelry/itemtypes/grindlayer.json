@@ -7,8 +7,7 @@
       "code": "metal",
       "states": [
         "fine",
-        "rough",
-        "medium"
+        "rough"
       ]
     }
   ],
@@ -30,8 +29,7 @@
     },
     "cangrindinfoByType": {
       "*-rough": 0,
-      "*-medium": 1,
-      "*-fine": 2
+      "*-fine": 1
     },
 
     "displaycaseable": true,

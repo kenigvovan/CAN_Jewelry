@@ -5,10 +5,12 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
@@ -39,22 +41,6 @@ namespace canjewelry.src.eb
             savedBuffs = new Dictionary<int, Dictionary<string, float>>();
             this.DeserializeBuffs();
             IServerPlayer player = ((this.entity as EntityPlayer).Player as IServerPlayer);
-            /*if (player != null)
-            {
-                IInventory characterInv = player.InventoryManager.GetOwnInventory("character");
-                InventoryBasePlayer playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
-                if (characterInv == null || playerHotbar == null)
-                {
-                    //EnqueTryAddAndWait();             
-                }
-                else
-                {
-                    characterInv.SlotModified += OnSlotModifiedCharacterInv;
-                    //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
-                    playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
-                    initialized = true;
-                }
-            }*/
         }
         private void EnqueTryAddAndWait()
         {           
@@ -82,7 +68,6 @@ namespace canjewelry.src.eb
                 characterInv = player.InventoryManager.GetOwnInventory("character");
                 playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
                 characterInv.SlotModified += OnSlotModifiedCharacterInv;
-                //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
                 playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
                 canjewelry.sapi.Logger.VerboseDebug(String.Format("[canjewelry] Try #{0} loaded behavior for {1}", this.triesToInit, player.PlayerName));
                 this.callbackId = 0;
@@ -96,16 +81,6 @@ namespace canjewelry.src.eb
             savedBuffs = new Dictionary<int, Dictionary<string, float>>();
             this.DeserializeBuffs();
             IServerPlayer player = ((this.entity as EntityPlayer).Player as IServerPlayer);
-            /*if (player != null)
-            {
-                IInventory characterInv = player.InventoryManager.GetOwnInventory("character");
-                characterInv.SlotModified += OnSlotModifiedCharacterInv;
-
-                InventoryBasePlayer playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
-                //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
-                playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
-                this.initialized = true;
-            }*/
         }
         public override void OnEntityDespawn(EntityDespawnData despawn)
         {
@@ -117,9 +92,7 @@ namespace canjewelry.src.eb
                 {
                     characterInv.SlotModified -= OnSlotModifiedCharacterInv;
                 }
-
                 InventoryBasePlayer playerHotbar = (InventoryBasePlayer)player.InventoryManager.GetOwnInventory("hotbar");
-                //(player.Entity.Api as ICoreServerAPI).Event.AfterActiveSlotChanged += OnSlotModifiedHotbarInv;
                 if (playerHotbar != null)
                 {
                     playerHotbar.SlotModified -= OnSlotModifiedHotbarInv;
@@ -241,8 +214,6 @@ namespace canjewelry.src.eb
         }
         public void OnActiveSlotSwapped(IServerPlayer player, int from, int to)
         {
-            int i = to;
-            //OnSlotModifiedHotbarInv(from);
             OnSlotModifiedHotbarInv(to);
         }
         public Dictionary<string, float> GetItemStackBuffs(ItemStack itemStack)
@@ -255,12 +226,12 @@ namespace canjewelry.src.eb
                 {
                     ITreeAttribute socketSlot = encrustTreeHere.GetTreeAttribute("slot" + i.ToString());
 
-                    if (socketSlot == null || !socketSlot.HasAttribute(CANJWConstants.GEM_ATTRIBUTE_BUFF))
+                    if (socketSlot == null)
                     {
                         continue;
                     }
-                    else
-                    {                     
+                    if (socketSlot.HasAttribute(CANJWConstants.GEM_ATTRIBUTE_BUFF))
+                    {                                      
                         if (socketSlot.HasAttribute(CANJWConstants.GEM_BUFF_TYPE) && (EnumGemBuffType)socketSlot.GetInt(CANJWConstants.GEM_BUFF_TYPE) != EnumGemBuffType.STATS_BUFF)
                         {
                             continue;
@@ -269,10 +240,6 @@ namespace canjewelry.src.eb
                         {
                             continue;
                         }
-                    }
-                    
-                    if (socketSlot != null)
-                    {
                         float additionalValue = socketSlot.GetFloat("attributeBuffValue");
                         string attributeBuffName = socketSlot.GetString("attributeBuff");
                         if (result.TryGetValue(attributeBuffName, out float currentResult))
@@ -284,12 +251,39 @@ namespace canjewelry.src.eb
                             result[attributeBuffName] = additionalValue;
                         }
                     }
+                    else if (socketSlot.HasAttribute(CANJWConstants.ENCRUSTABLE_BUFFS_NAMES))
+                    {
+                        string[] buffNames = (socketSlot[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
+                        float[] buffValues = (socketSlot[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
+
+                        for (int j = 0; j < buffNames.Length; j++)
+                        {
+                            float additionalValue = buffValues[j];
+                            string attributeBuffName = buffNames[j];
+                            if (attributeBuffName.Equals("candurability"))
+                            {
+                                continue;
+                            }
+                            if (result.TryGetValue(attributeBuffName, out float currentResult))
+                            {
+                                result[attributeBuffName] = currentResult + additionalValue;
+                            }
+                            else
+                            {
+                                result[attributeBuffName] = additionalValue;
+                            }
+                        }
+                    }
                 }
             }
             return result;
         }
         public static void ApplyBuffFromItemStack(Dictionary<string, float> buffsDict, EntityPlayer ep, bool add)
         {
+            if (buffsDict == null)
+            {
+                return;
+            }
             foreach (var buff in buffsDict)
             {
                 string attributeBuffName = buff.Key;
@@ -366,71 +360,8 @@ namespace canjewelry.src.eb
                             }
                         }
                     }
-
                 }
-
-
-
-                /*if (add)
-                {
-                    //overflow already present just add to neg part and standard part
-                    if (ep.Stats[attributeBuffName].ValuesByKey.ContainsKey("canencrustedneg"))
-                    {
-                        ep.Stats.Set(attributeBuffName, "canencrusted", ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value + additionalValue, true);
-                        if (additionalValue > 0)
-                        {
-                            ep.Stats.Set(attributeBuffName, "canencrustedneg", (ep.Stats[attributeBuffName].ValuesByKey["canencrustedneg"].Value) - additionalValue, true);
-                        }
-                        else
-                        {
-                            ep.Stats.Set(attributeBuffName, "canencrustedneg", (ep.Stats[attributeBuffName].ValuesByKey["canencrustedneg"].Value) + additionalValue, true);
-                        }
-                        //ep.Stats.Set(attributeBuffName, "canencrustedneg", ep.Stats[attributeBuffName].ValuesByKey["canencrustedneg"].Value + additionalValue, true);
-                    }
-                    //no neg part, add additional and add neg difference
-                    else if (buffThreshold != 0 && additionalValue > 0 ? Math.Abs(ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value + additionalValue) > buffThreshold : (ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value + additionalValue) < buffThreshold)
-                    {
-                        ep.Stats.Set(attributeBuffName, "canencrusted", ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value + additionalValue, true);
-                        if (additionalValue > 0)
-                        {
-                            ep.Stats.Set(attributeBuffName, "canencrustedneg", -((ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value) - buffThreshold), true);
-                        }
-                        else
-                        {
-                            ep.Stats.Set(attributeBuffName, "canencrustedneg", -(((ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value) - buffThreshold)), true);
-                        }
-                    }
-                    //no neg part and under threshold
-                    else
-                    {
-                        ep.Stats.Set(attributeBuffName, "canencrusted", ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value + additionalValue, true);
-                    }
-                }
-                else
-                {
-                    //overflow already present
-                    if (ep.Stats[attributeBuffName].ValuesByKey.ContainsKey("canencrustedneg"))
-                    {
-                        ep.Stats.Set(attributeBuffName, "canencrusted", ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value - additionalValue, true);
-                        if (additionalValue > 0 ? ep.Stats[attributeBuffName].ValuesByKey["canencrustedneg"].Value - additionalValue <= 0
-                                                : ep.Stats[attributeBuffName].ValuesByKey["canencrustedneg"].Value + additionalValue <= 0)
-                        {
-                            ep.Stats[attributeBuffName].Remove("canencrustedneg");
-                        }
-                        else
-                        {
-                            ep.Stats.Set(attributeBuffName, "canencrustedneg", ep.Stats[attributeBuffName].ValuesByKey["canencrustedneg"].Value - additionalValue, true);
-                        }
-                    }
-                    else
-                    {
-                        ep.Stats.Set(attributeBuffName, "canencrusted", ep.Stats[attributeBuffName].ValuesByKey["canencrusted"].Value - additionalValue, true);
-                    }
-                }*/
             }
-            //ep.Stats[attributeBuffName].Remove("canencrustedneg");
-
-            //canjewelry.sapi.SendMessage(ep.Player, 0, add.ToString() + ep.Stats[attributeBuffName].GetBlended().ToString() + attributeBuffName, EnumChatType.Notification);
         }
 
         public override void OnEntityRevive()

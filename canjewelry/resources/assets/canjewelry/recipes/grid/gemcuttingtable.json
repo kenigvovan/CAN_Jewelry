@@ -1,0 +1,32 @@
+﻿[
+  {
+
+    "ingredientPattern": "_S_,SRS,_S_",
+    "ingredients": {
+      "R": {
+        "type": "block",
+        "code": "game:rockpolished-*",
+        "name": "stone-type",
+        "allowedVariants": [ "andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite" ]
+      },
+      "S": {
+        "type": "item",
+        "code": "canjewelry:canstrap-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      }
+    },
+    "name": "canjewelgrinder",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "block",
+      "code": "canjewelry:cangemcuttingtable",
+      "quantity": 1,
+      "attributes": {
+        "metal": "{metal-type}",
+        "stone": "{stone-type}"
+      }
+    }
+  }
+]

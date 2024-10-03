@@ -1,0 +1,85 @@
+{
+	"code": "gemcuttingworkitem",
+	"class": "CANItemGemCuttingWorkItem",
+	"maxstacksize": 1,
+	"storageFlags": 5,
+	"materialDensity": 7000,
+	"texture": { "base": "game:block/metal/ingot/iron" },
+	"creativeinventory": {
+		"general": [ "" ],
+		"items": [ "" ]
+	},
+	"guiTransform": {
+		"translation": {
+			"x": 0,
+			"y": 0,
+			"z": 0
+		},
+		"rotation": {
+			"x": 47,
+			"y": -42,
+			"z": 0
+		},
+		"origin": {
+			"x": 0.43,
+			"y": 0.3,
+			"z": 0.48
+		},
+		"scale": 1.46
+	},
+	"fpHandTransform": {
+		"translation": {
+			"x": 0,
+			"y": 0,
+			"z": 0
+		},
+		"rotation": {
+			"x": 180,
+			"y": 63,
+			"z": 20
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.38,
+			"z": 0.5
+		},
+		"scale": 1.47
+	},
+	"tpHandTransform": {
+		"translation": {
+			"x": -1.7,
+			"y": -0.65,
+			"z": -1.5
+		},
+		"rotation": {
+			"x": -10,
+			"y": -4,
+			"z": 7
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.2,
+			"z": 0.5
+		},
+		"scale": 0.35
+	},
+
+	"groundTransform": {
+		"translation": {
+			"x": 0,
+			"y": 0.2,
+			"z": 0
+		},
+		"rotation": {
+			"x": 0,
+			"y": 0,
+			"z": 0
+		},
+		"origin": {
+			"x": 0.5,
+			"y": 0.6,
+			"z": 0.5
+		},
+		"scale": 2.2
+	}
+}

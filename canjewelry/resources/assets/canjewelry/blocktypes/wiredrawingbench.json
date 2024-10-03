@@ -1,16 +1,15 @@
 {
   "code": "canwiredrawingbench",
   "class": "BlockCANWireDrawingBench",
-  "enabled": false,
   "entityClassByType": {
     "*-head-*": "BEWireDrawingBench"
   },
   "entityBehaviors": [ { "name": "Animatable" } ],
   "attributes": {
     "variantGroups": {
-     "woodType": [ "acacia", "birch", "kapok", "maple", "oak", "pine", "aged", "baldcypress", "larch", "redwood", "ebony", "walnut", "purpleheart", "log" ]
+     "woodType": [ "acacia", "birch", "kapok", "maple", "oak", "pine", "aged", "baldcypress", "larch", "redwood", "ebony", "walnut", "purpleheart" ]
     }
-    },
+   },
   "sidesolid": {
     "all": false
   },
@@ -30,30 +29,8 @@
 
   ],
   "creativeinventory": {
-    "general": [ "*-head-north" ],
-    "decorative": [ "*-head-north" ]
+
   },
-  "creativeinventoryStacks": [
-    {
-      "tabs": [ "canjewelry" ],
-      "stacks": [
-        {
-          "type": "block",
-          "code": "canwiredrawingbench-head-north",
-          "attributes": {
-            "type": "pine"
-          }
-        },
-        {
-          "type": "block",
-          "code": "canwiredrawingbench-head-north",
-          "attributes": {
-            "type": "acacia"
-          }
-        }
-      ]
-    }
-  ],
   "shapebytype": {
     "*-feet-north": {
       "base": "canjewelry:block/wiretable-feet",

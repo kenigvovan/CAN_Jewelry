@@ -291,5 +291,19 @@
   "item-canrottenkingmask": " leper king mask",
 
   "blockhelp-jewelgrinder-addremovelayer": "Add/remove grind layer",
-  "stats-tab-name": "Stats"
+  "stats-tab-name": "Stats",
+  "block-cangemcuttingtable": "Gem cutting table",
+  "block-canwiredrawingbench": "Wire drawing bench",
+  "item-cangemchisel-tinbronze": "Tin bronze gem cutting chisel",
+  "item-cangemchisel-bismuthtinbronze": "Bismuth bronze gem cutting chisel",
+  "item-cangemchisel-iron": "Iron gem cutting chisel",
+  "item-cangemchisel-blackbronze": "Black bronze gem cutting chisel",
+  "item-cangemchisel-meteoriciron": "Meteorice iron gem cutting chisel",
+  "item-cangemchisel-steel": "Steel gem cutting chisel",
+  "item-cangemchisel-bismuthbronze": "Bismuth bronze gem cutting chisel",
+  "item-cangemchisel-gold": "Gold gem cutting chisel",
+  "item-cangemchisel-copper": "Copper gem cutting chisel",
+  "rough-gem-possible-stats-header": "Possible stats:",
+  "item-gemcuttingworkitem": "Unfinished gem"
+
 }

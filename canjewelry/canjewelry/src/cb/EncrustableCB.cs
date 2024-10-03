@@ -152,7 +152,12 @@ namespace canjewelry.src.CB
                     return false;
                 }
                 var tree = encrustable.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-
+                var cutGemTree = gem_slot.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+                if(cutGemTree == null)
+                {
+                    inventory.TakeLocked = false;
+                    return false;
+                }
                 if (tree.HasAttribute("slot" + socket_number))
                 {
                     ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + socket_number);
@@ -171,115 +176,99 @@ namespace canjewelry.src.CB
 
                     int currentMaxDurability = encrustable.Itemstack.Collectible.GetMaxDurability(encrustable.Itemstack);
                     int currentDurability = encrustable.Itemstack.Attributes.GetInt("durability", 0);
+                    string[] newBuffNames = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
+                    float[] newBuffValues = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
 
-                    if (gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString().Equals("candurability"))
+                    string[] currentBuffNames = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value;
+                    float[] currentBuffValues = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value;
+
+
+                    if(currentMaxDurability < 1)
                     {
-
-                        if (currentMaxDurability < 1)
+                        if((newBuffNames?.Contains("candurability") ?? false))
                         {
                             inventory.TakeLocked = false;
                             return false;
                         }
-
-                        string currentGemAttributeBuff = treeSocket.GetString("attributeBuff");
-                        if (currentGemAttributeBuff?.Equals("candurability") ?? false)
+                        else if((currentBuffNames?.Contains("candurability") ?? false))
                         {
-                            int currentGemSize = treeSocket.GetInt("size");
-                            //here we because the slot already had durability gem buff, if it was lower tier we need add some, same then just replace, higher set lower
-                            //if durability left is lower than we can extract then return and do nothing
-                            //durability max we get from an item attribute of json
-                            int gem_slot_size = gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt();
-                            if (currentGemSize - gem_slot_size < 0)
+                            inventory.TakeLocked = false;
+                            return false;
+                        }
+                    }
+
+                    //Go through current buffs
+                    if (currentBuffNames != null)
+                    {
+                        for (int i = 0; i < currentBuffNames.Length; i++)
+                        {
+                            string tmpName = currentBuffNames[i];
+                            float tmpValue = currentBuffValues[i];
+
+                            //if it is dur buff then remove it's part
+                            if (tmpName.Equals("candurability"))
                             {
-                                //make higher dur
-
                                 float currentDurabilityBuffOnTree = tree.TryGetFloat(CANJWConstants.CANDURABILITY_STRING).GetValueOrDefault();
-                                float currentBuff = canjewelry.config.gems_buffs[gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString()][currentGemSize.ToString()];
-                                float newBuff = canjewelry.config.gems_buffs[gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString()][gem_slot_size.ToString()];
-
                                 if (currentDurability > 0)
                                 {
-                                    currentDurability = (int)((float)currentDurability / (1 + currentBuff) * (1 + newBuff));
+                                    currentDurability = (int)((float)currentDurability / (1 + tmpValue));
+                                    //currentDurability = 1;
                                     encrustable.Itemstack.Attributes.SetInt("durability", currentDurability);
                                 }
-                                newBuff -= currentBuff;
-                                tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuffOnTree + newBuff);
 
+                                currentDurabilityBuffOnTree -= tmpValue;
 
+                                if (currentDurabilityBuffOnTree == 0)
+                                {
+                                    tree.RemoveAttribute(CANJWConstants.CANDURABILITY_STRING);
+                                }
+                                else
+                                {
+                                    tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuffOnTree);
+                                }
                             }
-                            else if (currentGemSize - gem_slot_size >= 0)
-                            {
-                                //why would you replace with the same or lower
-                                inventory.TakeLocked = false;
-                                return false;
-                            }
-
                         }
-                        else
+                    }
+                    for (int i = 0; i < newBuffNames.Length; i++)
+                    {
+                        string tmpName = newBuffNames[i];
+                        float tmpValue = newBuffValues[i];
+
+                        if (tmpName.Equals("candurability"))
                         {
-                            //here we just add durability
                             float currentDurabilityBuff = tree.TryGetFloat(CANJWConstants.CANDURABILITY_STRING).GetValueOrDefault();
-                            float newAdditionalBuff = canjewelry.config.gems_buffs[gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString()][gem_slot.Itemstack.Collectible.Attributes["canGemType"].ToString()];
                             if (currentDurabilityBuff == 0)
                             {
-                                tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, newAdditionalBuff);
+                                tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, tmpValue);
                             }
                             else
                             {
-                                tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuff + newAdditionalBuff);
+                                tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuff + tmpValue);
                             }
 
                             if (currentDurability > 0)
                             {
-                                currentDurability = (int)((float)currentDurability * (1 + newAdditionalBuff));
+                                currentDurability = (int)((float)currentDurability * (1 + tmpValue));
                                 encrustable.Itemstack.Attributes.SetInt("durability", currentDurability);
                             }
-
-
-                            treeSocket.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.ONE_TIME_APPLIED);
                         }
+
+
+                    }
+                    treeSocket.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.STATS_BUFF);
+                    treeSocket.SetInt("size", gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt());
+                    treeSocket.SetString("gemtype", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
+                    if(!treeSocket.HasAttribute(CANJWConstants.ENCRUSTABLE_BUFFS_NAMES))
+                    {
+                        treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] = new StringArrayAttribute(newBuffNames);
+                        treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute(newBuffValues);
                     }
                     else
                     {
-                        //but we also can have different or no gem encrusted but want to add durability now
-                        //need to calculate how many to adds
-                        string currentGemAttributeBuff = treeSocket.GetString("attributeBuff");
-                        if (currentGemAttributeBuff != null && currentGemAttributeBuff.Equals("candurability"))
-                        {
-                            float currentDurabilityBuff = tree.TryGetFloat(CANJWConstants.CANDURABILITY_STRING).GetValueOrDefault();
-                            int currentGemSize = treeSocket.GetInt("size");
-                            float currentDurabilityBuffOnTree = tree.TryGetFloat(CANJWConstants.CANDURABILITY_STRING).GetValueOrDefault();
-                            float gemyBuffValue = treeSocket.GetFloat("attributeBuffValue");
-
-                            if (currentDurability > 0)
-                            {
-                                currentDurability = (int)((float)currentDurability / (1 + gemyBuffValue));
-                                //currentDurability = 1;
-                                encrustable.Itemstack.Attributes.SetInt("durability", currentDurability);
-                            }
-
-                            currentDurabilityBuffOnTree -= gemyBuffValue;
-
-                            if (currentDurabilityBuffOnTree == 0)
-                            {
-                                tree.RemoveAttribute(CANJWConstants.CANDURABILITY_STRING);
-                            }
-                            else
-                            {
-                                tree.SetFloat(CANJWConstants.CANDURABILITY_STRING, currentDurabilityBuffOnTree);
-                            }
-                        }
-                        treeSocket.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.STATS_BUFF);
-
+                        (treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value = newBuffNames;
+                        (treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value = newBuffValues;
                     }
-
-                    treeSocket.SetInt("size", gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt());
-                    treeSocket.SetString("gemtype", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
-                    treeSocket.SetString("attributeBuff", gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].AsString());
-
-
-                    treeSocket.SetFloat("attributeBuffValue", canjewelry.config.gems_buffs
-                        [gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
+                    
                     if (encrustable.Itemstack.Item is CANItemSimpleNecklace)
                     {
                         encrustable.Itemstack.Attributes.SetString("gem", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
