@@ -139,7 +139,7 @@ namespace canjewelry.src.items
             MeshData slagVoxOffset = slagVoxelMesh.Clone();
             for (int x = 0; x < 16; x++)
             {
-                for (int y = 0; y < 6; y++)
+                for (int y = 0; y < 7; y++)
                 {
                     for (int z = 0; z < 16; z++)
                     {
@@ -236,7 +236,7 @@ namespace canjewelry.src.items
         }
         public ItemStack GetBaseMaterial(ItemStack stack)
         {
-            Item item = api.World.GetItem(AssetLocation.Create("canjewelry:gem-rough-chipped-" + stack.Attributes.GetString("gemtype")));
+            Item item = api.World.GetItem(AssetLocation.Create("canjewelry:gem-rough-" + stack.Attributes.GetString(CANJWConstants.ENCRUSTED_GEM_SIZE) + "-" + stack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET)));
             //Item item = api.World.GetItem(AssetLocation.Create("ingot-" + Variant["metal"], Attributes?["baseMaterialDomain"].AsString("game")));
             if (item == null)
             {

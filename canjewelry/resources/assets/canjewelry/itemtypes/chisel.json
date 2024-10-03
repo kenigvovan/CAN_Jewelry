@@ -66,7 +66,7 @@
 			"states": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "iron", "meteoriciron", "steel" ]
 		}
 	],
-	"shape": { "base": "game:item/tool/chisel" },
+	"shape": { "base": "canjewelry:item/cangemchisel" },
 	"tool": "Chisel",
 	"heldRightReadyAnimation": "chiselready",
 	"heldTpHitAnimation": "chiselhit",
@@ -74,7 +74,8 @@
 	"creativeinventory": {
 		"general": [ "*" ],
 		"items": [ "*" ],
-		"tools": [ "*" ]
+		"tools": [ "*" ],
+		"canjewelry": [ "*" ]
 	},
 	"textures": {
 		"metal": { "base": "game:block/metal/ingot/{material}" }

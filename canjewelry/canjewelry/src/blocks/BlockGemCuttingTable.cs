@@ -1,27 +1,83 @@
 ﻿using canjewelry.src.be;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
+using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
 namespace canjewelry.src.blocks
 {
-     public class BlockGemCuttingTable : Block
+    public class BlockGemCuttingTable : Block, ITexPositionSource
     {
         WorldInteraction[] interactions;
+        public ITexPositionSource tmpTextureSource;
+        //private ITexPositionSource ownTextureSource;
+        private ICoreClientAPI capi;
+        private ITextureAtlasAPI curAtlas;
 
+        public Size2i AtlasSize { get; set; }
+        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
+        private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
+        {
+            /*if (texturePath == null)
+            {
+                var c3 = 3;
+            }*/
+            TextureAtlasPosition texPos = curAtlas[texturePath];
+            if (texPos == null)
+            {
+                IAsset asset = canjewelry.capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
+                if (asset != null)
+                {
+                    BitmapRef bitmap = asset.ToBitmap(canjewelry.capi);
+                    canjewelry.capi.BlockTextureAtlas.InsertTextureCached(texturePath, (IBitmap)bitmap, out int _, out texPos);
+                }
+                else
+                {
+                    canjewelry.capi.World.Logger.Warning("For render in block " + this.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", "", (object)texturePath);
+                }
+            }
+            return texPos;
+        }
+        public TextureAtlasPosition this[string textureCode]
+        {
+            get
+            {
+                if (tmpAssets.TryGetValue(textureCode, out var assetCode))
+                {
+                    return this.getOrCreateTexPos(assetCode);
+                }
+
+                Dictionary<string, CompositeTexture> dictionary;
+                dictionary = new Dictionary<string, CompositeTexture>();
+                foreach (var it in this.Textures)
+                {
+                    dictionary.Add(it.Key, it.Value);
+                }
+                AssetLocation texturePath = (AssetLocation)null;
+                CompositeTexture compositeTexture;
+                if (dictionary.TryGetValue(textureCode, out compositeTexture))
+                    texturePath = compositeTexture.Baked.BakedName;
+                if ((object)texturePath == null && dictionary.TryGetValue("all", out compositeTexture))
+                    texturePath = compositeTexture.Baked.BakedName;
+
+                return this.getOrCreateTexPos(texturePath);
+            }
+        }
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
-
+            AddAllTypesToCreativeInventory();
             if (api.Side != EnumAppSide.Client) return;
             ICoreClientAPI capi = api as ICoreClientAPI;
+
+            this.AtlasSize = capi.BlockTextureAtlas.Size;
 
             Dictionary<string, MetalPropertyVariant> metalsByCode = new Dictionary<string, MetalPropertyVariant>();
 
@@ -126,7 +182,42 @@ namespace canjewelry.src.blocks
             });
         }
 
+        public void AddAllTypesToCreativeInventory()
+        {
+            List<JsonItemStack> stacks = new List<JsonItemStack>();
+            Dictionary<string, string[]> vg = this.Attributes["variantGroups"].AsObject<Dictionary<string, string[]>>(null);
 
+            string[] metals = vg["metal"][0..2];
+            string[] stones = vg["stone"][0..2];
+            foreach (string metal in metals) 
+            {
+                foreach (string stone in stones)
+                {
+                    stacks.Add(this.genJstack(string.Format("{{ metal: \"{0}\", stone: \"{1}\"}}", metal, stone)));
+                }
+            }
+            this.CreativeInventoryStacks = new CreativeTabAndStackList[]
+            {
+                new CreativeTabAndStackList
+                {
+                    Stacks = stacks.ToArray(),
+                    Tabs = new string[]
+                    {
+                        "general",
+                        "canjewelry"
+                    }
+                }
+            };
+        }
+        private JsonItemStack genJstack(string json)
+        {
+            JsonItemStack jsonItemStack = new JsonItemStack();
+            jsonItemStack.Code = this.Code;
+            jsonItemStack.Type = EnumItemClass.Block;
+            jsonItemStack.Attributes = new JsonObject(JToken.Parse(json));
+            jsonItemStack.Resolve(this.api.World, "gemcuttingtable type", true);
+            return jsonItemStack;
+        }
         public override void OnDecalTesselation(IWorldAccessor world, MeshData decalMesh, BlockPos pos)
         {
             base.OnDecalTesselation(world, decalMesh, pos);
@@ -205,5 +296,61 @@ namespace canjewelry.src.blocks
 
             return val;
         }
+        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null)
+        {
+            if (tesselator == null)
+            {
+                tesselator = capi.Tesselator;
+            }
+            curAtlas = capi.BlockTextureAtlas;
+            if (textureSource != null)
+            {
+                tmpTextureSource = textureSource;
+            }
+            else
+            {
+                tmpTextureSource = tesselator.GetTextureSource(this);
+            }
+            if (shape == null)
+            {
+                shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");               
+            }
+
+            if (shape == null)
+            {
+                return null;
+            }
+            
+            AtlasSize = capi.BlockTextureAtlas.Size;
+            //var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
+            tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, this);
+            return modeldata;
+        }
+        public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
+        {
+            if (((itemstack != null) ? itemstack.Attributes : null) != null)
+            {
+                string stoneType = itemstack.Attributes.GetString("stone", "granite");
+                string metalType = itemstack.Attributes.GetString("metal", "copper");
+                this.tmpAssets["granite"] = new AssetLocation("game:block/stone/polishedrock/" + stoneType + ".png");
+                this.tmpAssets["iron"] = new AssetLocation("game:block/metal/sheet/" + metalType + "1.png");
+
+                string key = stoneType + metalType;
+                renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, key, delegate
+                {
+                    var c = base.LastCodePart(1);
+                    Shape shape = null;
+                    shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
+                    this.AtlasSize = capi.BlockTextureAtlas.Size;
+                    //this.matTexPosition = capi.BlockTextureAtlas.GetPosition(block, "up", false);
+                    this.tmpTextureSource = capi.Tesselator.GetTextureSource(this);
+                    MeshData meshdata;
+                    meshdata = GenMesh(capi, shape, null, this);
+                   // capi.Tesselator.TesselateShape("gemcuttingtable", shape, out meshdata, this);
+                    return capi.Render.UploadMultiTextureMesh(meshdata);
+                });
+            }
+        }
+        
     }
 }

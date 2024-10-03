@@ -8,16 +8,16 @@
     }
   ],
   "attributes": {
+    "__comment": "Note: variantgroups inside attributes. Used to generate all variants for the creative inventory dynamically, and for valid recipe checking",
+    "variantGroups": {
+      "metal": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
+      "stone": [ "andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite" ]
+    }
   },
   "entityClass": "BEGemCuttingTable",
   "enabled": true,
   "heldTpIdleAnimation": "holdunderarm",
-  "variantgroups": [
-    {
-      "code": "metal",
-      "states": [ "andesite", "chalk", "chert", "conglomerate", "limestone", "claystone", "granite", "sandstone", "shale", "basalt", "peridotite", "phyllite", "slate", "bauxite" ]
-    }
-  ],
+
   "shapeByType": {
     "@anvil-(iron|meteoriciron|steel)": {
       "base": "game:block/metal/anvil/iron"
@@ -36,7 +36,7 @@
   "lightAbsorption": 0,
   "maxStackSize": 1,
   "textures": {
-    "granite": { "base": "game:block/stone/polishedrock/{metal}" },
+    "granite": { "base": "game:block/stone/polishedrock/granite" },
     "all": { "base": "game:block/metal/anvil/{metal}" },
     "ironbloom": { "base": "game:item/resource/ironbloom" },
     "blistersteel": { "base": "game:block/metal/ingot/blistersteel" },

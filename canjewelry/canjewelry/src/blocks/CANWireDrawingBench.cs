@@ -29,16 +29,30 @@ namespace canjewelry.src.blocks
         public ITexPositionSource tmpTextureSource;
         
         private ITextureAtlasAPI curAtlas;
-        
+        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
         public TextureAtlasPosition this[string textureCode]
         {
             get
             {
-                if (tmpTextureSource == null)
+                if (tmpAssets.TryGetValue(textureCode, out var assetCode))
                 {
-                    return this.ownTextureSource[textureCode];
+                    return this.getOrCreateTexPos(assetCode);
                 }
-                return this.tmpTextureSource[textureCode];
+
+                Dictionary<string, CompositeTexture> dictionary;
+                dictionary = new Dictionary<string, CompositeTexture>();
+                foreach (var it in this.Textures)
+                {
+                    dictionary.Add(it.Key, it.Value);
+                }
+                AssetLocation texturePath = (AssetLocation)null;
+                CompositeTexture compositeTexture;
+                if (dictionary.TryGetValue(textureCode, out compositeTexture))
+                    texturePath = compositeTexture.Baked.BakedName;
+                if ((object)texturePath == null && dictionary.TryGetValue("all", out compositeTexture))
+                    texturePath = compositeTexture.Baked.BakedName;
+
+                return this.getOrCreateTexPos(texturePath);
             }
         }
         private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
@@ -61,7 +75,8 @@ namespace canjewelry.src.blocks
         {
             base.OnLoaded(api);
             string part = base.LastCodePart(1);
-            if (part == "head")
+            string heading = this.Variant["side"];
+            if (part == "head" && heading.Equals("west"))
             {
                 AddAllTypesToCreativeInventory();
             }
@@ -72,7 +87,7 @@ namespace canjewelry.src.blocks
             Dictionary<string, string[]> vg = this.Attributes["variantGroups"].AsObject<Dictionary<string, string[]>>(null);
             Random r = new Random();
 
-            string[] woodType = ArrayExtensions.Shuffle(vg["woodType"], r)[0..2];
+            string[] woodType = vg["woodType"][0..2];
             foreach (string loop in woodType)
             {
                 stacks.Add(this.genJstack(string.Format("{{ type: \"{0}\" }}", loop)));            
@@ -90,6 +105,7 @@ namespace canjewelry.src.blocks
                 }
             };
         }
+        
         private JsonItemStack genJstack(string json)
         {
             JsonItemStack jsonItemStack = new JsonItemStack();
@@ -106,7 +122,11 @@ namespace canjewelry.src.blocks
             {
                 return;
             }
-            string key = base.LastCodePart(0) + base.LastCodePart(1);
+            string woodType = itemstack.Attributes.GetString("type", "oak");
+            //this.tmpAssets["plank"] = new AssetLocation("game:block/wood/planks/" + woodType + "1.png");
+           // this.tmpAssets["debarked"] = new AssetLocation("game:block/wood/debarked/" + woodType + ".png");
+
+            string key = "draw" + base.LastCodePart(0) + base.LastCodePart(1) + woodType;
             renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, key, delegate
             {
                 var c = base.LastCodePart(1);
@@ -123,8 +143,13 @@ namespace canjewelry.src.blocks
                 this.AtlasSize = capi.BlockTextureAtlas.Size;
                 //this.matTexPosition = capi.BlockTextureAtlas.GetPosition(block, "up", false);
                 this.ownTextureSource = capi.Tesselator.GetTextureSource(this, 0, false);
+                
+                string metalType = itemstack.Attributes.GetString("metal", "copper");
+                this.tmpAssets["plank"] = new AssetLocation("game:block/wood/planks/" + woodType + "1.png");
+                this.tmpAssets["debarked"] = new AssetLocation("game:block/wood/debarked/" + woodType + ".png");
                 MeshData meshdata;
-                capi.Tesselator.TesselateShape("filledpan", shape, out meshdata, this, new Vec3f(0, 0, 0), 0, 0, 0, null, null);
+                meshdata = GenMesh(capi, shape, null, this);
+                //capi.Tesselator.TesselateShape("filledpan", shape, out meshdata, this, new Vec3f(0, 0, 0), 0, 0, 0, null, null);
                 return capi.Render.UploadMultiTextureMesh(meshdata);
             });
         }
@@ -274,7 +299,14 @@ namespace canjewelry.src.blocks
 
             return Vintagestory.API.Common.Shape.TryGet(api, shapePath);
         }
-
+        public override string GetPlacedBlockName(IWorldAccessor world, BlockPos pos)
+        {
+            return Lang.Get("canjewelry:block-canwiredrawingbench");
+        }
+        public override string GetHeldItemName(ItemStack itemStack)
+        {
+            return Lang.Get("canjewelry:block-canwiredrawingbench");
+        }
         public override void OnBlockRemoved(IWorldAccessor world, BlockPos pos)
         {
             string headfoot = base.LastCodePart(1);

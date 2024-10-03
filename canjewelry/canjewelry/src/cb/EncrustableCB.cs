@@ -155,6 +155,7 @@ namespace canjewelry.src.CB
                 var cutGemTree = gem_slot.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
                 if(cutGemTree == null)
                 {
+                    inventory.TakeLocked = false;
                     return false;
                 }
                 if (tree.HasAttribute("slot" + socket_number))
@@ -181,10 +182,19 @@ namespace canjewelry.src.CB
                     string[] currentBuffNames = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value;
                     float[] currentBuffValues = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value;
 
-                    if ((newBuffNames?.Contains("candurability") ?? false) || (currentBuffNames?.Contains("candurability") ?? false) || currentMaxDurability < 1)
+
+                    if(currentMaxDurability < 1)
                     {
-                        inventory.TakeLocked = false;
-                        return false;
+                        if((newBuffNames?.Contains("candurability") ?? false))
+                        {
+                            inventory.TakeLocked = false;
+                            return false;
+                        }
+                        else if((currentBuffNames?.Contains("candurability") ?? false))
+                        {
+                            inventory.TakeLocked = false;
+                            return false;
+                        }
                     }
 
                     //Go through current buffs
@@ -259,9 +269,6 @@ namespace canjewelry.src.CB
                         (treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value = newBuffValues;
                     }
                     
-
-                    treeSocket.SetFloat("attributeBuffValue", canjewelry.config.gems_buffs
-                        [gem_slot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString()][gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
                     if (encrustable.Itemstack.Item is CANItemSimpleNecklace)
                     {
                         encrustable.Itemstack.Attributes.SetString("gem", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());

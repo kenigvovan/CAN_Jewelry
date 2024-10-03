@@ -123,6 +123,21 @@ namespace canjewelry.src
                         CompressedConfig = ""
                     });
                 }
+                else
+                {
+                   
+                    canjewelry.sapi.Event.RegisterCallback((dt =>
+                    {
+                        if (clientChannel.Connected)
+                        {
+                            clientChannel.SendPacket(new SyncCANJewelryPacket()
+                            {
+                                CompressedConfig = ""
+                            });
+                        }
+                    }
+                    ), 60 * 1000);
+                }
             };
         }
         public override void StartServerSide(ICoreServerAPI api)

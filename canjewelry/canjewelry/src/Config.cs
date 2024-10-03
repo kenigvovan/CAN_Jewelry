@@ -680,7 +680,7 @@ namespace canjewelry.src
                 { "fluorite", new HashSet<string>{ "meleeWeaponsDamage" } },
                 { "lapislazuli", new HashSet<string>{ "hungerrate" } },
                 { "malachite", new HashSet<string>{ "wildCropDropRate" } },
-                { "olivine_peridot", new HashSet<string>{ "armorDurabilityLoss" } },
+                { "olivine", new HashSet<string>{ "armorDurabilityLoss" } },
                 { "quartz", new HashSet<string>{ "oreDropRate" } },
                 { "uranium", new HashSet<string>{ "healingeffectivness" } },
                 { "ruby", new HashSet<string>{ "rangedWeaponsDamage" } },
@@ -985,13 +985,13 @@ namespace canjewelry.src
             CuttingAttributesDict = new Dictionary<string, CuttingAttributes>
             {
                 { "round", 
-                     new CuttingAttributes(new float[] { 1, 1.33f, 1.5f })
+                     new CuttingAttributes(new float[] { 1, 1.33f, 1.65f })
                 },
                 { "baguette",
                      new CuttingAttributes(new float[] { 1, 1.33f, 1.5f })
                 },
-                { "square",
-                     new CuttingAttributes(new float[] { 1.7f, 1.1f, 1.06f })
+                { "pear",
+                     new CuttingAttributes(new float[] { 1.7f, 1.05f, 1.05f })
                 },
 
             };

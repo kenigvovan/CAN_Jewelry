@@ -311,7 +311,7 @@ namespace canjewelry.src
                     {
                         continue;
                     } 
-                    dsc.Append(Lang.Get("canjewelry:item-socket-tier", treeSlot.GetAsInt("sockettype")));
+                    dsc.Append("<icon name=wpStar1></icon>" +  Lang.Get("canjewelry:item-socket-tier", treeSlot.GetAsInt("sockettype")));
                     dsc.Append("\n");
                     if(treeSlot.GetString("gemtype") != "")
                     {

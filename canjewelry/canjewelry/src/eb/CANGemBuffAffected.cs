@@ -260,6 +260,10 @@ namespace canjewelry.src.eb
                         {
                             float additionalValue = buffValues[j];
                             string attributeBuffName = buffNames[j];
+                            if (attributeBuffName.Equals("candurability"))
+                            {
+                                continue;
+                            }
                             if (result.TryGetValue(attributeBuffName, out float currentResult))
                             {
                                 result[attributeBuffName] = currentResult + additionalValue;

@@ -1,5 +1,7 @@
-﻿using canjewelry.src.items;
+﻿using canjewelry.src.blocks;
+using canjewelry.src.items;
 using canjewelry.src.jewelry;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +18,7 @@ using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 using Vintagestory.ServerMods;
 using static canjewelry.src.Config;
+using static canjewelry.src.OldConfig;
 
 namespace canjewelry.src.be
 {
@@ -27,7 +30,7 @@ namespace canjewelry.src.be
         Placeholder1 = 3,
     }
 
-    public class BlockEntityGemCuttingTable : BlockEntity, IRotatable
+    public class BlockEntityGemCuttingTable : BlockEntity, IRotatable, ITexPositionSource
     {
         #region Particle
 
@@ -94,13 +97,10 @@ namespace canjewelry.src.be
 
         }
         #endregion
-
         // Permanent data
         ItemStack workItemStack;
         public int SelectedRecipeId = -1;
         public byte[,,] Voxels = new byte[16, 14, 16]; // Only the first 2 bits of each byte are used and serialized
-
-
         // Temporary data
         float voxYOff = 10 / 16f;
         Cuboidf[] selectionBoxes = new Cuboidf[1];
@@ -159,10 +159,116 @@ namespace canjewelry.src.be
         {
             get { return workItemStack; }
         }
+        private ICoreClientAPI capi;
+        public Size2i AtlasSize => this.capi.BlockTextureAtlas.Size;
+        public string stoneType = "granite";
+        public string metalType = "copper";
+        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
 
+        public TextureAtlasPosition this[string textureCode]
+        {
+            get
+            {
+                if (tmpAssets.TryGetValue(textureCode, out var assetCode))
+                {
+                    return this.getOrCreateTexPos(assetCode);
+                }
+
+                Dictionary<string, CompositeTexture> dictionary;
+                dictionary = new Dictionary<string, CompositeTexture>();
+                foreach (var it in this.Block.Textures)
+                {
+                    dictionary.Add(it.Key, it.Value);
+                }
+                AssetLocation texturePath = (AssetLocation)null;
+                CompositeTexture compositeTexture;
+                if (dictionary.TryGetValue(textureCode, out compositeTexture))
+                    texturePath = compositeTexture.Baked.BakedName;
+                if ((object)texturePath == null && dictionary.TryGetValue("all", out compositeTexture))
+                    texturePath = compositeTexture.Baked.BakedName;
+
+                return this.getOrCreateTexPos(texturePath);
+            }
+        }
+        private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
+        {
+            /*if (texturePath == null)
+            {
+                var c3 = 3;
+            }*/
+            TextureAtlasPosition texPos = this.capi.BlockTextureAtlas[texturePath];
+            if (texPos == null)
+            {
+                IAsset asset = this.capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
+                if (asset != null)
+                {
+                    BitmapRef bitmap = asset.ToBitmap(this.capi);
+                    this.capi.BlockTextureAtlas.InsertTextureCached(texturePath, (IBitmap)bitmap, out int _, out texPos);
+                }
+                else
+                {
+                    this.capi.World.Logger.Warning("For render in block " + this.Block.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", "", (object)texturePath);
+                }
+            }
+            return texPos;
+        }
+        private MeshData getMesh(ITesselatorAPI tesselator)
+        {
+            Dictionary<string, MeshData> lanternMeshes = ObjectCacheUtil.GetOrCreate<Dictionary<string, MeshData>>(this.Api, "gemCuttingTableBlockMeshes", () => new Dictionary<string, MeshData>());
+            MeshData mesh = null;
+            BlockGemCuttingTable block = this.Api.World.BlockAccessor.GetBlock(this.Pos) as BlockGemCuttingTable;
+            if (block == null)
+            {
+                return null;
+            }
+            lanternMeshes.Clear();
+            this.tmpAssets["granite"] = new AssetLocation("game:block/stone/polishedrock/" + this.stoneType + ".png");
+            this.tmpAssets["iron"] = new AssetLocation("game:block/metal/sheet/" + this.metalType + "1.png");
+            if (lanternMeshes.TryGetValue(string.Concat(new string[]
+            {
+                this.stoneType, this.metalType
+            }), out mesh))
+            {
+                return mesh;
+            }
+
+            return lanternMeshes[string.Concat(new string[]
+            {
+                this.stoneType, this.metalType
+            })] = GenMesh(this.Api as ICoreClientAPI, null, tesselator, this);
+        }
+        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null)
+        {
+            /*if (tesselator == null)
+            {
+                tesselator = capi.Tesselator;
+            }*/
+            //curAtlas = capi.BlockTextureAtlas;
+            /*if (textureSource != null)
+            {
+                tmpTextureSource = textureSource;
+            }
+            else
+            {
+                tmpTextureSource = tesselator.GetTextureSource(this);
+            }*/
+            if (shape == null)
+            {
+                shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
+            }
+
+            if (shape == null)
+            {
+                return null;
+            }
+
+            //AtlasSize = capi.BlockTextureAtlas.Size;
+            //var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
+            tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, this);
+            return modeldata;
+        }
         public BlockEntityGemCuttingTable() : base() { }
-
-
+        
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
@@ -171,20 +277,26 @@ namespace canjewelry.src.be
 
             if (api is ICoreClientAPI capi)
             {
+                this.capi = api as ICoreClientAPI;
+                if(currentMesh == null)
+                {
+                    this.currentMesh = this.getMesh(canjewelry.capi.Tesselator);
+                }
                 capi.Event.RegisterRenderer(workitemRenderer = new GemCuttingWorkItemRenderer(this, Pos, capi), EnumRenderStage.Opaque);
                 capi.Event.RegisterRenderer(workitemRenderer, EnumRenderStage.AfterFinalComposition);
 
                 RegenMeshAndSelectionBoxes();
-                capi.Tesselator.TesselateBlock(Block, out currentMesh);
+                //this.currentMesh = this.getMesh(canjewelry.capi.Tesselator);
+                //capi.Tesselator.TesselateBlock(Block, out this.getMesh(canjewelry.capi.Tesselator));
                 capi.Event.ColorsPresetChanged += RegenMeshAndSelectionBoxes;
             }
-
-            string metalType = Block.Variant["metal"];
-            MetalPropertyVariant var;
-            if (api.ModLoader.GetModSystem<SurvivalCoreSystem>().metalsByCode.TryGetValue(metalType, out var))
+            //string metalType = Block.Variant["metal"];
+            //MetalPropertyVariant var;
+           /* if (api.ModLoader.GetModSystem<SurvivalCoreSystem>().metalsByCode.TryGetValue(metalType, out var))
             {
+              
                 OwnMetalTier = var.Tier;
-            }
+            }*/
         }
 
 
@@ -260,7 +372,10 @@ namespace canjewelry.src.be
 
             IGemCuttingWorkable workableobj = stack.Collectible as IGemCuttingWorkable;
 
-
+           /* foreach (var it in canjewelry.gemCuttingRecipes)
+            {
+                canjewelry.capi.Logger.Error(it.Output.Code.ToString());
+            }*/
 
             if (workableobj == null) return false;
             int requiredTier = workableobj.GetRequiredGemCuttingTableTier(stack);
@@ -273,7 +388,7 @@ namespace canjewelry.src.be
 
                 return false;
             }
-
+            
             ItemStack newWorkItemStack = workableobj.TryPlaceOn(stack, this);
             if (newWorkItemStack != null)
             {
@@ -324,7 +439,19 @@ namespace canjewelry.src.be
         {
         }
 
-
+        public override void OnBlockPlaced(ItemStack byItemStack = null)
+        {
+            if (((byItemStack != null) ? byItemStack.Attributes : null) != null)
+            {
+                this.stoneType = byItemStack.Attributes.GetString("stone", "granite");
+                this.metalType = byItemStack.Attributes.GetString("metal", "copper");
+            }
+            base.OnBlockPlaced(byItemStack);
+            if (this.Api.Side == EnumAppSide.Client)
+            {
+                this.currentMesh = this.getMesh(canjewelry.capi.Tesselator);
+            }
+        }
 
 
         internal void OnUseOver(IPlayer byPlayer, int selectionBoxIndex)
@@ -641,7 +768,7 @@ namespace canjewelry.src.be
 
                     outstack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
                 }
-                else if(cuttingType == "square")
+                else if(cuttingType == "pear")
                 {
                     canjewelry.config.CuttingAttributesDict.TryGetValue(cuttingType, out var cuttingAttributes);
                     float buffValue = buffAttributes.GetRandomMainValue(outstack.Collectible.Attributes["canGemType"].AsInt());
@@ -741,7 +868,9 @@ namespace canjewelry.src.be
                 {
                     for (int z = 0; z < 16; z++)
                     {
-                        byte desiredMat = (byte)(recipeVoxels[x, y, z] ? EnumVoxelMaterial.Metal : EnumVoxelMaterial.Empty);
+                        byte desiredMat = (byte)(recipeVoxels[x, y, z]
+                                                ? EnumVoxelMaterial.Metal 
+                                                : EnumVoxelMaterial.Empty);
 
                         if (Voxels[x, y, z] != desiredMat)
                         {
@@ -1099,26 +1228,15 @@ namespace canjewelry.src.be
             Voxels = deserializeVoxels(tree.GetBytes("voxels"));
             workItemStack = tree.GetItemstack("workItemStack");
             SelectedRecipeId = tree.GetInt("selectedRecipeId", -1);
-            rotation = tree.GetInt("rotation");
-
+            this.stoneType = tree.GetString("stoneType");
+            this.metalType = tree.GetString("metalType");
+            
             if (Api != null && workItemStack != null)
             {
                 workItemStack.ResolveBlockOrItem(Api.World);
             }
 
             RegenMeshAndSelectionBoxes();
-
-            MeshAngle = tree.GetFloat("meshAngle", MeshAngle);
-
-            if (Api?.Side == EnumAppSide.Client)
-            {
-                MeshData newMesh;
-                ((ICoreClientAPI)Api).Tesselator.TesselateBlock(Block, out newMesh);
-
-                currentMesh = newMesh; // Needed so we don't get race conditions
-
-                MarkDirty(true);
-            }
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)
@@ -1127,14 +1245,13 @@ namespace canjewelry.src.be
             tree.SetBytes("voxels", serializeVoxels(Voxels));
             tree.SetItemstack("workItemStack", workItemStack);
             tree.SetInt("selectedRecipeId", SelectedRecipeId);
-            tree.SetInt("rotation", rotation);
-            tree.SetFloat("meshAngle", MeshAngle);
+            tree.SetString("stoneType", this.stoneType);
+            tree.SetString("metalType", this.metalType);
         }
 
 
         static int bitsPerByte = 2;
         static int partsPerByte = 8 / bitsPerByte;
-
         public static byte[] serializeVoxels(byte[,,] voxels)
         {
             byte[] data = new byte[16 * 14 * 16 / partsPerByte];
@@ -1155,7 +1272,6 @@ namespace canjewelry.src.be
 
             return data;
         }
-
         public static byte[,,] deserializeVoxels(byte[] data)
         {
             byte[,,] voxels = new byte[16, 14, 16];
@@ -1180,9 +1296,6 @@ namespace canjewelry.src.be
 
             return voxels;
         }
-
-
-
         protected void SendUseOverPacket(IPlayer byPlayer, Vec3i voxelPos)
         {
             byte[] data;
@@ -1202,8 +1315,6 @@ namespace canjewelry.src.be
                 data
             );
         }
-
-
         public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
         {
             if (packetid == (int)EnumAnvilPacket.SelectRecipe)
@@ -1217,7 +1328,6 @@ namespace canjewelry.src.be
                     ditchWorkItemStack(player);
                     return;
                 }
-
                 var list = (WorkItemStack?.Collectible as CANItemGemCuttingWorkItem)?.GetMatchingRecipes(workItemStack);
                 if (list == null || list.FirstOrDefault(r => r.RecipeId == recipeid) == null)
                 {
@@ -1252,9 +1362,6 @@ namespace canjewelry.src.be
                 OnUseOver(player, voxelPos, new BlockSelection() { Position = Pos });
             }
         }
-
-
-
         internal void OpenDialog(ItemStack ingredient)
         {
             List<GemCuttingRecipe> recipes = (ingredient.Collectible as IGemCuttingWorkable).GetMatchingRecipes(ingredient);
@@ -1284,8 +1391,6 @@ namespace canjewelry.src.be
 
             dlg.TryOpen();
         }
-
-
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
             /*dsc.AppendLine(Lang.Get("Tier {0} anvil", OwnMetalTier));
@@ -1314,9 +1419,6 @@ namespace canjewelry.src.be
                 dsc.AppendLine(Lang.Get("Too cold to work"));
             }*/
         }
-
-
-
         public override void OnLoadCollectibleMappings(IWorldAccessor worldForResolve, Dictionary<int, AssetLocation> oldBlockIdMapping, Dictionary<int, AssetLocation> oldItemIdMapping, int schematicSeed, bool resolveImports)
         {
             if (workItemStack?.FixMapping(oldBlockIdMapping, oldItemIdMapping, worldForResolve) == false)
@@ -1325,7 +1427,6 @@ namespace canjewelry.src.be
             }
             workItemStack?.Collectible.OnLoadCollectibleMappings(Api.World, new DummySlot(workItemStack), oldBlockIdMapping, oldItemIdMapping, resolveImports);
         }
-
         public override void OnStoreCollectibleMappings(Dictionary<int, AssetLocation> blockIdMapping, Dictionary<int, AssetLocation> itemIdMapping)
         {
             if (workItemStack != null)
@@ -1341,7 +1442,6 @@ namespace canjewelry.src.be
                 workItemStack.Collectible.OnStoreCollectibleMappings(Api.World, new DummySlot(workItemStack), blockIdMapping, itemIdMapping);
             }
         }
-
         public override void OnBlockUnloaded()
         {
             workitemRenderer?.Dispose();
@@ -1349,13 +1449,15 @@ namespace canjewelry.src.be
             dlg?.Dispose();
             if (Api is ICoreClientAPI capi) capi.Event.ColorsPresetChanged -= RegenMeshAndSelectionBoxes;
         }
-
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tesselator)
         {
-            mesher.AddMeshData(currentMesh.Clone().Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, MeshAngle, 0));
+            if(currentMesh == null)
+            {
+                return false;
+            }
+            mesher.AddMeshData(currentMesh.Clone());
             return true;
         }
-
         public void OnTransformed(IWorldAccessor worldAccessor, ITreeAttribute tree, int degreeRotation,
             Dictionary<int, AssetLocation> oldBlockIdMapping, Dictionary<int, AssetLocation> oldItemIdMapping, EnumAxis? flipAxis)
         {
