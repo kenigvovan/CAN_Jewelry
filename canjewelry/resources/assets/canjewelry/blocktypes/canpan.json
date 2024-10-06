@@ -863,10 +863,6 @@
   "doNotRenderAtLod2": true,
   "blockmaterial": "Wood",
   "materialDensity": 450,
-  "durabilitybytype": {
-    "*-iron": 300,
-    "*-steel": 800
-  },
   "randomizeRotations": true,
   "sideopaque": { "all": false },
   "sidesolid": { "all": false },
