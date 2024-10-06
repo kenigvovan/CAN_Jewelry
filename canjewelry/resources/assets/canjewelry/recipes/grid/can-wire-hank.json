@@ -23,7 +23,7 @@
     "output": {
       "type": "item",
       "code": "canjewelry:canwirehank-{metal-type}",
-      "quantity": 3
+      "quantity": 2
     }
 
   }

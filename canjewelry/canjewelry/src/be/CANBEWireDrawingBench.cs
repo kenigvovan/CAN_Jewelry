@@ -104,6 +104,19 @@ namespace canjewelry.src.be
         public long listenerId;
         private float secondsPassed;
         public bool resultReady;
+        private float meshangle;
+        public virtual float MeshAngle
+        {
+            get
+            {
+                return this.meshangle;
+            }
+            set
+            {
+                this.meshangle = value;
+                this.animRot.Y = value;
+            }
+        }
         public CANBEWireDrawingBench() {
             this.inventory = new InventoryGeneric(1, this.InventoryClassName + "-" + this.Pos, null);
             this.inventory.Pos = this.Pos;
@@ -113,10 +126,13 @@ namespace canjewelry.src.be
             base.Initialize(api);
             this.inventory.LateInitialize("canwiredrawingbench-" + this.Pos.X.ToString() + "/" + this.Pos.Y.ToString() + "/" + this.Pos.Z.ToString(), api);
             this.facing = BlockFacing.FromCode(base.Block.LastCodePart(0));
-            
-           // this.Block.Textures
+
+            // this.Block.Textures
             if (api.Side == EnumAppSide.Server)
+            {
                 this.sapi = api as ICoreServerAPI;
+                this.MeshAngle = (BlockFacing.FromCode(base.Block.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
+            }
             else
                 this.capi = api as ICoreClientAPI;
             if (api.Side == EnumAppSide.Client)
@@ -126,8 +142,9 @@ namespace canjewelry.src.be
                 {
                     return;
                 }
-                var rotatedIndex = (BlockFacing.FromCode(base.Block.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
-                animRot.Y = rotatedIndex;
+                //var rotatedIndex = (BlockFacing.FromCode(base.Block.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
+                this.MeshAngle = (BlockFacing.FromCode(base.Block.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
+                //animRot.Y = rotatedIndex;
                 //animUtil.InitializeAnimator("wiring", (base.Block as CANWireDrawingBench).GetShape(EnumCurdsBundleState.BundledStick), null, this.animRot);
                 var f = this.Pos.AddCopy(BlockFacing.FromCode(base.Block.LastCodePart(0)).GetCW());
                 Block secondPlock = api.World.BlockAccessor.GetBlock(f);
@@ -161,7 +178,7 @@ namespace canjewelry.src.be
                 }
                 if(this.Api.Side == EnumAppSide.Server && !this.inventory[0].Empty)
                 {
-                    this.inventory[0].Itemstack = new ItemStack(canjewelry.sapi.World.GetItem(new AssetLocation("canjewelry:canwirehank-" + GetWireType())), 1);
+                    this.inventory[0].Itemstack = new ItemStack(canjewelry.sapi.World.GetItem(new AssetLocation("canjewelry:canwirehank-" + GetWireType())), canjewelry.config.wirehank_per_strap);
                 }
                 else
                 {
@@ -231,6 +248,12 @@ namespace canjewelry.src.be
             {
                 this.tmpAssets["wireready"] = new AssetLocation("canjewelry:item/gem/notvis.png");
             }
+            this.MeshAngle = tree.GetFloat("meshAngle", this.MeshAngle);
+            bool updateMesh = false;
+            if(this.woodType is null)
+            {
+                updateMesh = true;
+            }
             this.woodType = tree.GetString("woodType");
             if (this.Api != null && this.Api.Side == EnumAppSide.Client)
             {
@@ -247,6 +270,7 @@ namespace canjewelry.src.be
             tree["inventory"] = (IAttribute)tree1;
             tree.SetBool("resultReady", this.resultReady);
             tree.SetString("woodType", this.woodType);
+            tree.SetFloat("meshAngle", this.MeshAngle);
         }
         public override bool OnTesselation(ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
         {
@@ -297,7 +321,7 @@ namespace canjewelry.src.be
                     }
                 }
             }
-            if (this.Api.Side == EnumAppSide.Client)
+            if (this.Api.Side == EnumAppSide.Client && byItemStack != null)
             {
                 this.UpdateWirePart();
             }
@@ -364,7 +388,7 @@ namespace canjewelry.src.be
                 return null;
             }
 
-            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, rotationDeg, 0, 0, 0);
+            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, this.animRot, 0, 0, 0);
             return modeldata;
         }
         public void UpdateWirePart()

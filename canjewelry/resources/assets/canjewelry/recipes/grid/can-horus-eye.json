@@ -1,0 +1,35 @@
+[
+  {
+
+    "ingredientPattern": "_W_,WWW,WSS",
+    "ingredients": {
+      "S": {
+        "type": "item",
+        "code": "game:cloth-*",
+        "name": "silk-type",
+        "allowedVariants": [ "black", "blue", "brown", "gray", "green", "normal", "orange", "pink", "purple", "red", "white", "yellow" ],
+        "quantity": 1
+      },
+      "W": {
+        "type": "item",
+        "code": "canjewelry:canwirehank-*",
+        "name": "metal-type",
+        "allowedVariants": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel", "copper" ]
+      }
+    },
+    "name": "can-canhoruseye",
+    "width": 3,
+    "height": 3,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canhoruseye-normal",
+      "quantity": 1,
+      "attributes": {
+        "metal": "{metal-type}",
+        "silk": "{silk-type}",
+        "gem": "none"
+      }
+    }
+
+  }
+]

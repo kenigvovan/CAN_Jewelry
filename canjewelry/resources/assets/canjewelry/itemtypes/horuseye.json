@@ -1,0 +1,173 @@
+﻿{
+  "code": "canhoruseye",
+  "class": "CANItemHorusEye",
+  "storageFlags": 128,
+
+  "attributes": {
+    "displaycaseable": true,
+    "onDisplayTransform": {
+      "translation": {
+        "x": -0.5,
+        "y": -1.2,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -39
+      }
+    },
+    "handbook": {
+      "groupBy": [ "canhoruseye-*" ]
+    },
+    "clothescategory": "neck",
+    "canhavesocketsnumber": 1,
+    "warmth": 0.5,
+    "wearableAttachment": true,
+    "groundStorageTransformByType": {
+      "*": {
+        "translation": {
+          "x": -0.42,
+          "y": -0.45,
+          "z": -0.045
+        },
+        "rotation": {
+          "x": 21,
+          "y": 179,
+          "z": -90
+        },
+        "scale": 1
+      }
+    },
+    "__comment": "Note: variantgroups inside attributes. Used to generate all variants for the creative inventory dynamically, and for valid recipe checking",
+    "variantGroups": {
+      "metal": [ "tinbronze", "bismuthbronze", "blackbronze", "gold", "silver", "iron", "meteoriciron", "steel" ],
+      "silk": [ "black", "blue", "brown", "gray", "green", "normal", "orange", "pink", "purple", "red", "white", "yellow" ],
+      "gem": [ "none", "diamond", "corundum", "emerald", "fluorite", "lapislazuli", "malachite", "olivine", "quartz", "uranium", "ruby", "citrine" ]
+    },
+    "allowedVariants": [
+      {
+        "construction": "normal",
+        "metal": "*",
+        "silk": "*",
+        "gem": "*"
+      }
+    ]
+  },
+  "behaviors": [
+    {
+      "name": "Encrustable"
+    }
+  ],
+  "variantgroups": [
+    {
+      "code": "construction",
+      "states": [ "normal" ]
+    }
+  ],
+  "creativeinventory": {
+
+  },
+  "texturesByType": {
+    "*": {
+      "seraph": { "base": "game:block/transparent" }
+    }
+  },
+  "shapeByType": {
+    "normal": { "base": "canjewelry:item/horuseye" },
+    "*": { "base": "canjewelry:item/horuseye" }
+  },
+  "fpHandTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0.3,
+      "z": 0.3
+    },
+    "rotation": {
+      "x": 65,
+      "y": -81,
+      "z": 67
+    },
+    "origin": {
+      "x": 0.1,
+      "y": -0.9,
+      "z": 0.5
+    },
+    "scale": 1.00
+  },
+  "tpHandTransform": {
+    "translation": {
+      "x": -1,
+      "y": -2.15,
+      "z": -0.74
+    },
+    "rotation": {
+      "x": 1,
+      "y": -180,
+      "z": 25
+    },
+    "origin": {
+      "x": 0.5,
+      "y": 1.9,
+      "z": 0.5
+    },
+    "scale": 0.71
+  },
+  "guiTransform": {
+    "translation": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "rotation": {
+      "x": -152,
+      "y": 86,
+      "z": 3
+    },
+    "origin": {
+      "x": 0.35,
+      "y": 1.31,
+      "z": 0.47
+    },
+    "scale": 3.62
+  },
+  "groundTransformByType": {
+    "*-copper-torc": {
+      "translation": {
+        "x": 0,
+        "y": 0.05,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -180
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 0.5
+      },
+      "scale": 3.06
+    },
+    "*": {
+      "translation": {
+        "x": 0,
+        "y": -0.05,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": -90
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 1.5,
+        "z": 0.5
+      },
+      "scale": 3.06
+    }
+  }
+
+}

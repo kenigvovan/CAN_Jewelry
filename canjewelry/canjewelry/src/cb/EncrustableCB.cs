@@ -269,7 +269,7 @@ namespace canjewelry.src.CB
                         (treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value = newBuffValues;
                     }
                     
-                    if (encrustable.Itemstack.Item is CANItemSimpleNecklace)
+                    if (encrustable.Itemstack.Item is CANItemSimpleNecklace || encrustable.Itemstack.Item is CANItemHorusEye)
                     {
                         encrustable.Itemstack.Attributes.SetString("gem", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
                     }
