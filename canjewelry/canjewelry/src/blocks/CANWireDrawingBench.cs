@@ -261,7 +261,7 @@ namespace canjewelry.src.blocks
                                 }
                             }                         
                         }
-                        if (blockEntity.inventory[0].TryPutInto(world, byPlayer.InventoryManager.ActiveHotbarSlot, 1) > 0)
+                        if (blockEntity.inventory[0].TryPutInto(world, byPlayer.InventoryManager.ActiveHotbarSlot, blockEntity.inventory[0].StackSize) > 0)
                         {
                             blockEntity.resultReady = false;
                             blockEntity.MarkDirty(true);

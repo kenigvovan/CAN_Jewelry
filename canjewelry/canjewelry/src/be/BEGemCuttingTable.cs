@@ -307,7 +307,7 @@ namespace canjewelry.src.be
 
         internal bool OnPlayerInteract(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack?.Collectible.Tool == EnumTool.Hammer)
+            if (byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack?.Collectible is CANItemGemChisel)
             {
                 return RotateWorkItem(byPlayer.Entity.Controls.ShiftKey);
             }

@@ -68,9 +68,6 @@
 	],
 	"shape": { "base": "canjewelry:item/cangemchisel" },
 	"tool": "Chisel",
-	"heldRightReadyAnimation": "chiselready",
-	"heldTpHitAnimation": "chiselhit",
-	"heldTpUseAnimation": "chiselhit",
 	"creativeinventory": {
 		"general": [ "*" ],
 		"items": [ "*" ],
