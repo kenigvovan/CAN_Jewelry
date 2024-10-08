@@ -571,9 +571,9 @@ namespace canjewelry.src.jewelry
                     {
                         ITreeAttribute cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
                         canjewelry.config.CuttingAttributesDict.TryGetValue(cutGemTree.GetString(CANJWConstants.CUTTING_TYPE), out var cuttingAttributes);
-                        var currentValues = (cutGemTree["buffvalues"] as FloatArrayAttribute).value;
+                        var currentValues = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
                         currentValues[0] = currentValues[0] * cuttingAttributes.GrindingBuffIncreaseMultipliers[itree.GetInt("grindtype")];
-                        (cutGemTree["buffvalues"] as FloatArrayAttribute).value = currentValues;
+                        (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value = currentValues;
                         if (itree.GetInt("grindtype") == 2)
                         {
                             activeItemStack.Attributes.RemoveAttribute("cangrindlayerinfo");                          

@@ -675,7 +675,7 @@ namespace canjewelry.src
                  );
             }
             PossibleGemBuffs = new Dictionary<string, HashSet<string>> {
-                { "diamond", new HashSet<string>{ "walkspeed", "miningSpeedMul" } },
+                { "diamond", new HashSet<string>{ "walkspeed" } },
                 { "corundum", new HashSet<string>{ "miningSpeedMul" } },
                 { "emerald", new HashSet<string>{ "maxhealthExtraPoints" } },
                 { "fluorite", new HashSet<string>{ "meleeWeaponsDamage" } },

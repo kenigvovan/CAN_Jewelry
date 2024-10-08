@@ -710,7 +710,7 @@ namespace canjewelry.src.be
 
             return null;
         }
-        private void ApplyCuttingBuff(ItemStack outstack)
+        public static void ApplyCuttingBuff(ItemStack outstack)
         {
             if(outstack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
             {

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using canjewelry.src.be;
 using canjewelry.src.CB;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
@@ -70,12 +71,35 @@ namespace canjewelry.src.jewelry
                     if (slotId == 0)
                     {
                         this.UpdateMeshes();
-                    }
-
+                    }                   
                 };
                 this.UpdateMeshes();
                 Block block = (this.Api as ICoreClientAPI).World.BlockAccessor.GetBlock(this.Pos);
                 this.facing = BlockFacing.FromCode(block.LastCodePart());
+            }
+            if(this.Api.Side == EnumAppSide.Server)
+            {
+                this.inventory.SlotModified += (int slotId) =>
+                {
+                    if (slotId == 1)
+                    {
+                        ItemStack gemStack = this.inventory[slotId].Itemstack;
+                        if (gemStack != null)
+                        {
+                            if(!gemStack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
+                            {
+                                Random r = new Random();
+                                string selectedCutting = canjewelry.config.CuttingAttributesDict.Keys.ToArray().Shuffle(r).FirstOrDefault("round");
+                                ITreeAttribute tree = new TreeAttribute();
+                                //gemStack.Attributes.SetString(CANJWConstants.CUTTING_TYPE, selectedCutting);
+                                tree.SetString(CANJWConstants.CUTTING_TYPE, selectedCutting);
+                                gemStack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
+                                BlockEntityGemCuttingTable.ApplyCuttingBuff(gemStack);
+                                this.inventory[slotId].MarkDirty();
+                            }
+                        }
+                    }
+                };
             }
             foreach (var it in this.inventory)
             {

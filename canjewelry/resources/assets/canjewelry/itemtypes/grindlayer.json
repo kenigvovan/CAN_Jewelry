@@ -28,8 +28,8 @@
 
     },
     "cangrindinfoByType": {
-      "*-rough": 0,
-      "*-fine": 1
+      "*-rough": 1,
+      "*-fine": 2
     },
 
     "displaycaseable": true,
