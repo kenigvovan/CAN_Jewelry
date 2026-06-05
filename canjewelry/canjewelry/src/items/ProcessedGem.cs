@@ -169,7 +169,7 @@ namespace canjewelry.src.jewelry
                 
                 gemBase = itree.GetString("gembase");
 
-                if (gemBase.Equals("olivine_peridot"))
+                if ("olivine_peridot".Equals(gemBase))
                 {
                     gemBase = "olivine";
                 }
@@ -197,7 +197,7 @@ namespace canjewelry.src.jewelry
             }
             else
             {
-                if (gemBase.Equals("olivine_peridot"))
+                if ("olivine_peridot".Equals(gemBase))
                 {
                     gemBase = "olivine";
                 }
@@ -234,7 +234,7 @@ namespace canjewelry.src.jewelry
 
                 gemBase = itree.GetString("gembase");
 
-                if (gemBase.Equals("olivine_peridot"))
+                if ("olivine_peridot".Equals(gemBase))
                 {
                     gemBase = "olivine";
                 }
@@ -262,7 +262,7 @@ namespace canjewelry.src.jewelry
             }
             else
             {
-                if (gemBase.Equals("olivine_peridot"))
+                if ("olivine_peridot".Equals(gemBase))
                 {
                     gemBase = "olivine";
                 }
