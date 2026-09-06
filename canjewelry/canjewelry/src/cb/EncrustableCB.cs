@@ -696,9 +696,11 @@ namespace canjewelry.src.CB
                 && canjewelry.config.CuttingAttributesDict.TryGetValue(cuttingType, out var cutAttrs))
             {
                 float newMain = (float)Math.Round(mainAttrs.GetRandomMainValue(smallerTier), 3) * cutAttrs.GrindingBuffIncreaseMultipliers[0];
-                if (originalNames.Length >= 2)
+                float newSecondary = originalNames.Length >= 2
+                    ? RollSecondaryValue(originalNames[1], smallerTier, cutAttrs)
+                    : 0f;
+                if (newSecondary != 0)
                 {
-                    float newSecondary = (float)Math.Round(mainAttrs.GetRandomSecondaryValue(smallerTier), 3) / 100f;
                     newTree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] = new StringArrayAttribute(new[] { originalNames[0], originalNames[1] });
                     newTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute(new[] { newMain, newSecondary });
                 }
@@ -870,6 +872,21 @@ namespace canjewelry.src.CB
 
         private static string PickRandom(ICollection<string> values) => values.ElementAt(Config.rand.Next(values.Count));
 
+        /// <summary>
+        /// Rolls a baguette's secondary buff value. The range comes from the entry of the stat picked
+        /// as secondary, not from the main stat's entry - the units belong to the stat that owns them.
+        /// Returns 0 when the config has no range for it, which callers read as "no secondary buff".
+        /// </summary>
+        private static float RollSecondaryValue(string secondaryBuffName, int gemTier, CuttingAttributes cuttingAttributes)
+        {
+            if (!canjewelry.config.BuffAttributesDict.TryGetValue(secondaryBuffName, out BuffAttributes secondaryAttributes))
+            {
+                return 0f;
+            }
+            return (float)Math.Round(secondaryAttributes.GetRandomSecondaryValue(gemTier), 3)
+                   * cuttingAttributes.GrindingBuffIncreaseMultipliers[0];
+        }
+
         public static void ApplyCuttingBuff(ItemStack outstack)
         {
             if (outstack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
@@ -921,10 +938,11 @@ namespace canjewelry.src.CB
                     && buffAttributes.PossibleSecondaryStats != null
                     && buffAttributes.PossibleSecondaryStats.Count > 0)
                 {
-                    float secondaryBuffValue = (float)Math.Round(buffAttributes.GetRandomSecondaryValue(gemTier), 3) / 100;
+                    string secondaryBuffName = PickRandom(buffAttributes.PossibleSecondaryStats);
+                    float secondaryBuffValue = RollSecondaryValue(secondaryBuffName, gemTier, cuttingAttributes);
                     if (secondaryBuffValue != 0)
                     {
-                        buffNames.Add(PickRandom(buffAttributes.PossibleSecondaryStats));
+                        buffNames.Add(secondaryBuffName);
                         buffValues.Add(secondaryBuffValue);
                     }
                 }
