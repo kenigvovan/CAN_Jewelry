@@ -1873,6 +1873,8 @@ namespace canjewelry.src
         {
             [JsonProperty(ItemConverterType = typeof(utils.CompactFloatArrayConverter))]
             public Dictionary<int, float[]> MainStatValueRange;
+            // What this stat pays out when another gem rolls it as its baguette secondary, in this
+            // stat's own units (maxhealthExtraPoints counts health points, the rest fractions).
             [JsonProperty(ItemConverterType = typeof(utils.CompactFloatArrayConverter))]
             public Dictionary<int, float[]> SecondaryStatValueRange;
             [JsonConverter(typeof(utils.CompactStringSetConverter))]

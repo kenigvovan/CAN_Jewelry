@@ -568,11 +568,19 @@ namespace canjewelry.src.jewelry
                     if (itree.GetInt("grindcounter") <= 1)
                     {
                         cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
-                        canjewelry.config.CuttingAttributesDict.TryGetValue(cutGemTree.GetString(CANJWConstants.CUTTING_TYPE), out var cuttingAttributes);
-                        var currentValues = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
                         int grindStage = itree.GetInt("grindtype");
+                        // An unknown cutting type or a short multiplier array used to throw here.
+                        canjewelry.config.CuttingAttributesDict.TryGetValue(cutGemTree.GetString(CANJWConstants.CUTTING_TYPE), out var cuttingAttributes);
+                        float stageMult = cuttingAttributes?.GrindingBuffIncreaseMultipliers != null
+                            && grindStage < cuttingAttributes.GrindingBuffIncreaseMultipliers.Length
+                            ? cuttingAttributes.GrindingBuffIncreaseMultipliers[grindStage] : 1f;
+                        var currentValues = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
                         float companionMult = EncrustableCB.FireGrindStepEvent(player, activeItemStack, grindStage);
-                        currentValues[0] = currentValues[0] * cuttingAttributes.GrindingBuffIncreaseMultipliers[grindStage] * companionMult;
+                        // Every buff grinds, not just the main one - the baguette secondary used to stay put.
+                        for (int i = 0; i < currentValues.Length; i++)
+                        {
+                            currentValues[i] = currentValues[i] * stageMult * companionMult;
+                        }
                         (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value = currentValues;
                         if (itree.GetInt("grindtype") == 2)
                         {
