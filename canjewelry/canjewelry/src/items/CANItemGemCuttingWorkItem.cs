@@ -181,10 +181,7 @@ namespace canjewelry.src.items
         public List<GemCuttingRecipe> GetMatchingRecipes(ItemStack stack)
         {
             stack = this.GetBaseMaterial(stack);
-            return (from r in canjewelry.gemCuttingRecipes
-                    where r.Ingredient.SatisfiesAsIngredient(stack, true)
-                    orderby r.Output.ResolvedItemstack.Collectible.Code
-                    select r).ToList<GemCuttingRecipe>();
+            return cb.CANGemCuttableCB.FindMatchingRecipes(stack, checkRecipeAttributes: false);
         }
         /*public bool CanWork(ItemStack stack)
         {

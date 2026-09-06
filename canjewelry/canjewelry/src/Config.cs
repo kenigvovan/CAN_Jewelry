@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using canjewelry.src.api;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +49,51 @@ namespace canjewelry.src
         public float minFineForMistake = 0.01f;
         public float maxFineForMistake = 0.08f;
         public bool TurnOffBuffs = false;
+        // Accessibility settings for the gem cutting table, for players who have a hard time
+        // picking out single voxels. Both are off/neutral by default, so an existing world plays
+        // exactly as before. The whole config is mirrored to clients on join, so both sides
+        // evaluate these identically and the voxel grid stays in sync.
+        //
+        // How many chisel strikes one click performs. Every strike past the first picks its own
+        // target: the next voxel that the recipe does not want. Only applies to the 1x1 tool mode,
+        // because the line modes already clear a whole row or layer per click.
+        public int cuttingVoxelsPerClick = 1;
+        // Whether each of those extra strikes costs chisel durability. Off means one click still
+        // costs one point of durability no matter how many voxels it took off.
+        public bool cuttingDurabilityPerVoxel = true;
+        // Completes the selected recipe on the first strike. Blunt, but it is the only option that
+        // helps a player who cannot work the grid at all.
+        public bool cuttingInstantComplete = false;
+        // Milliseconds between strikes while the attack button is held down on the table. 0 keeps
+        // the vanilla behaviour of one strike per click.
+        public int cuttingHoldStrikeIntervalMs = 0;
+        // Makes the line tool modes skip voxels the recipe still needs, the way the 1x1 mode
+        // already does. Without it a single mistimed line strike ruins the piece, which is the
+        // failure these settings exist to prevent.
+        public bool cuttingSpareRecipeVoxels = false;
+        // Who the settings above apply to: "disabled", "enabled", "whitelist" or "blacklist".
+        // The lists hold player names, matched case sensitively, same as the buff commands.
+        public string cuttingAccessMode = "enabled";
+        [JsonConverter(typeof(utils.CompactStringSetConverter))]
+        public HashSet<string> cuttingWhitelist = new HashSet<string>();
+        [JsonConverter(typeof(utils.CompactStringSetConverter))]
+        public HashSet<string> cuttingBlacklist = new HashSet<string>();
+
+        /// <summary>
+        /// Whether the cutting accessibility settings apply to this player. Deliberately answered
+        /// from the config alone, which every client receives in full on join: client and server
+        /// both resolve a strike, so they have to agree on this without an extra round trip.
+        /// </summary>
+        public bool IsEasyCuttingEnabledFor(string playerName)
+        {
+            switch ((cuttingAccessMode ?? "enabled").ToLowerInvariant())
+            {
+                case "disabled": return false;
+                case "whitelist": return playerName != null && cuttingWhitelist != null && cuttingWhitelist.Contains(playerName);
+                case "blacklist": return playerName != null && (cuttingBlacklist == null || !cuttingBlacklist.Contains(playerName));
+                default: return true;
+            }
+        }
         // When a mod update adds support for new items or metals, an existing config does not know
         // about them and that gear silently ends up without sockets. Turning this on lets the mod
         // append the missing entries on a version change, without touching anything already there.
@@ -72,12 +118,32 @@ namespace canjewelry.src
         public bool canExtractSocket = true;
         public float socketExtractionReturnChance = 0.25f;
         public Dictionary<string, int> LevelOfSocketByType = new Dictionary<string, int>();
+        // Silences the startup banner shown when the adornments content mod is absent. For servers
+        // that deliberately run the core alone and have already dealt with the display stands.
+        public bool suppressAdornmentsWarning = false;
 
-        private static readonly HashSet<string> JewelrySets = new HashSet<string>
+        // Empty on purpose: the adornments live in canjewelryadornments and register themselves
+        // through CANJewelryRegistry.RegisterItemGroupMembers("jewelry", ...). The key itself stays
+        // declared below so "$jewelry" in existing configs still resolves — to an empty list when
+        // the core runs alone.
+        private static readonly HashSet<string> BaseJewelrySets = new HashSet<string>();
+
+        /// <summary>
+        /// Base members plus anything content mods registered for the group. Deliberately computed
+        /// on every read rather than cached in a static field: a content mod fills the registry from
+        /// its own StartPre, which can run before this class is first touched.
+        /// </summary>
+        private static HashSet<string> ComposeGroup(string groupName, HashSet<string> baseMembers)
         {
-            "cansimplenecklace", "cantiara", "cancoronet", "canhoruseye",
-            "canmonocle", "canarmband", "cannadiyannecklace", "canring", "canrottenkingmask"
-        };
+            var result = new HashSet<string>(baseMembers);
+            if (CANJewelryRegistry.ExtraItemGroupMembers.TryGetValue(groupName, out var extra))
+            {
+                result.UnionWith(extra);
+            }
+            return result;
+        }
+
+        private static HashSet<string> JewelrySets => ComposeGroup("jewelry", BaseJewelrySets);
 
         // The vanillaarmory entries used to be appended per gem by AddVanillaArmoryCompat, which
         // meant every gem carried them as literals and no group could be folded around them.
@@ -129,20 +195,27 @@ namespace canjewelry.src
         // Seed contents for the "$armor" style groups. Declared after the sets above because
         // static fields initialize in declaration order. Only ever used to fill a config that
         // has no item_groups yet - see item_groups for why they are not merged afterwards.
-        private static readonly Dictionary<string, HashSet<string>> DefaultItemGroups = new Dictionary<string, HashSet<string>>
+        private static Dictionary<string, HashSet<string>> DefaultItemGroups => new Dictionary<string, HashSet<string>>
         {
-            { "armor",   ArmorSets },
+            { "armor",   ComposeGroup("armor",   ArmorSets) },
             { "jewelry", JewelrySets },
-            { "melee",   MeleeWeaponSets },
-            { "mining",  MiningToolSets },
-            { "ranged",  RangedSets },
-            { "shield",  ShieldSets },
+            { "melee",   ComposeGroup("melee",   MeleeWeaponSets) },
+            { "mining",  ComposeGroup("mining",  MiningToolSets) },
+            { "ranged",  ComposeGroup("ranged",  RangedSets) },
+            { "shield",  ComposeGroup("shield",  ShieldSets) },
         };
+
+        private static Dictionary<string, HashSet<string>> activeItemGroups;
 
         // The groups the serializer folds item lists against. Points at the loaded config's
         // item_groups once ExpandItemGroups has run; until then the defaults stand in, which is
-        // what a config being created from scratch needs.
-        internal static Dictionary<string, HashSet<string>> ActiveItemGroups = DefaultItemGroups;
+        // what a config being created from scratch needs. Resolved lazily so a content mod's
+        // registrations are not missed by a static initializer that ran too early.
+        internal static Dictionary<string, HashSet<string>> ActiveItemGroups
+        {
+            get => activeItemGroups ??= DefaultItemGroups;
+            set => activeItemGroups = value;
+        }
 
         public void FillDefaultValues(bool onlyEmptyStructs = false)
         {
@@ -243,39 +316,42 @@ namespace canjewelry.src
         private void FillBuffItemSets()
         {
             var armorAndShield = ArmorSets.Union(ShieldSets);
+            // Snapshot once — JewelrySets is a property that recomposes the set on every read, and
+            // the table below reads it three dozen times.
+            var jewelrySets = JewelrySets;
             buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
             {
-                {"diamond",             armorAndShield.Union(JewelrySets).Union(new[]{"firearm-", "exoskeleton-", "walkingstick"}).ToHashSet()},
+                {"diamond",             armorAndShield.Union(jewelrySets).Union(new[]{"firearm-", "exoskeleton-", "walkingstick"}).ToHashSet()},
 
-                {"corundum",           MiningToolSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"emerald",            armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"fluorite",           MeleeWeaponSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"lapislazuli",        armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"malachite",          ArmorSets.Union(JewelrySets).Union(new[]{"knife", "scythe", "exoskeleton-", "hidden-blade"}).ToHashSet()},
-                {"olivine",            armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"uranium",            armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"quartz",             MiningToolSets.Union(JewelrySets).Union(new[]{"tspaxel", "exoskeleton-"}).ToHashSet()},
-                {"ruby",               JewelrySets.Union(new[]{"bow", "tbow-compound", "firearm-", "walkingstick-sling", "hidden-gun", "exoskeleton-"}).ToHashSet()},
-                {"citrine",            JewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
-                {"berylaquamarine",    armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-", "walkingstick"}).ToHashSet()},
-                {"berylbixbite",       MiningToolSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"corundumruby",       JewelrySets.Union(new[]{"bow", "tbow-compound", "walkingstick-sling", "hidden-gun", "exoskeleton-"}).ToHashSet()},
-                {"corundumsapphire",   MiningToolSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"garnetalmandine",    JewelrySets.Union(new[]{"bow", "tspaxel", "tbow-compound", "walkingstick-sling", "exoskeleton-"}).ToHashSet()},
-                {"garnetandradite",    armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"garnetgrossular",    MeleeWeaponSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"garnetpyrope",       JewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
-                {"garnetspessartine",  JewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
-                {"garnetuvarovite",    JewelrySets.Union(new[]{"bow", "walkingstick-sling", "exoskeleton-"}).ToHashSet()},
-                {"spinelred",          armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"topazamber",         ArmorSets.Union(JewelrySets).Union(new[]{"knife", "exoskeleton-", "cutlass", "hasta", "canopener", "walkingstick", "hidden-blade"}).ToHashSet()},
-                {"topazblue",          ArmorSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"topazpink",          JewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
-                {"tourmalinerubellite",ArmorSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"tourmalineschorl",   MeleeWeaponSets.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"tourmalineverdelite",armorAndShield.Union(JewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
-                {"tourmalinewatermelon",JewelrySets.Union(new[]{"bow", "tbow-compound", "walkingstick-sling", "hidden-gun", "exoskeleton-"}).ToHashSet()},
-                {"amethyst",           MeleeWeaponSets.Union(ArmorSets).Union(JewelrySets).Union(ShieldSets)
+                {"corundum",           MiningToolSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"emerald",            armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"fluorite",           MeleeWeaponSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"lapislazuli",        armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"malachite",          ArmorSets.Union(jewelrySets).Union(new[]{"knife", "scythe", "exoskeleton-", "hidden-blade"}).ToHashSet()},
+                {"olivine",            armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"uranium",            armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"quartz",             MiningToolSets.Union(jewelrySets).Union(new[]{"tspaxel", "exoskeleton-"}).ToHashSet()},
+                {"ruby",               jewelrySets.Union(new[]{"bow", "tbow-compound", "firearm-", "walkingstick-sling", "hidden-gun", "exoskeleton-"}).ToHashSet()},
+                {"citrine",            jewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
+                {"berylaquamarine",    armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-", "walkingstick"}).ToHashSet()},
+                {"berylbixbite",       MiningToolSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"corundumruby",       jewelrySets.Union(new[]{"bow", "tbow-compound", "walkingstick-sling", "hidden-gun", "exoskeleton-"}).ToHashSet()},
+                {"corundumsapphire",   MiningToolSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"garnetalmandine",    jewelrySets.Union(new[]{"bow", "tspaxel", "tbow-compound", "walkingstick-sling", "exoskeleton-"}).ToHashSet()},
+                {"garnetandradite",    armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"garnetgrossular",    MeleeWeaponSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"garnetpyrope",       jewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
+                {"garnetspessartine",  jewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
+                {"garnetuvarovite",    jewelrySets.Union(new[]{"bow", "walkingstick-sling", "exoskeleton-"}).ToHashSet()},
+                {"spinelred",          armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"topazamber",         ArmorSets.Union(jewelrySets).Union(new[]{"knife", "exoskeleton-", "cutlass", "hasta", "canopener", "walkingstick", "hidden-blade"}).ToHashSet()},
+                {"topazblue",          ArmorSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"topazpink",          jewelrySets.Union(new[]{"knife", "exoskeleton-", "hidden-blade"}).ToHashSet()},
+                {"tourmalinerubellite",ArmorSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"tourmalineschorl",   MeleeWeaponSets.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"tourmalineverdelite",armorAndShield.Union(jewelrySets).Union(new[]{"exoskeleton-"}).ToHashSet()},
+                {"tourmalinewatermelon",jewelrySets.Union(new[]{"bow", "tbow-compound", "walkingstick-sling", "hidden-gun", "exoskeleton-"}).ToHashSet()},
+                {"amethyst",           MeleeWeaponSets.Union(ArmorSets).Union(jewelrySets).Union(ShieldSets)
                                            .Union(new[]{"bow", "knife", "axe-felling-", "prospectingpick-", "hammer-",
                                                        "shovel-", "hoe-", "saw-", "chisel-", "scythe-", "pickaxe-",
                                                        "tunneler", "firearm-", "exoskeleton-", "walkingstick-sling", "hidden-gun"}).ToHashSet()},
@@ -430,13 +506,10 @@ namespace canjewelry.src
 
         private static Dictionary<string, int[]> BuildDefaultSocketCounts()
         {
-            return new Dictionary<string, int[]>()
+            var defaults = new Dictionary<string, int[]>()
         {
-            #region CAN Jewelry
-            { "canjewelry:canring-*", new int[1] {1} },
-            { "canjewelry:cancoronet-*", new int[1] {3} },
-            { "canjewelry:canarmband-*", new int[1] {2} },
-            #endregion
+            // The adornments' own socket defaults come from the canjewelryadornments mod through
+            // CANJewelryRegistry — see the merge at the end of this method.
             #region Vanilla
             { "*knife-generic-gold", new int[1] {3} },
             { "*knife-generic-silver", new int[1] {3} },
@@ -723,7 +796,6 @@ namespace canjewelry.src
 
             #endregion
             #region firearms + exoskeletons
-            {  "canjewelry:cannadiyannecklace-*", new int[1] {1} },
             {  "maltiezfirearms:firearm-arquebus-iron", new int[1] {1} },
             {  "maltiezfirearms:firearm-arquebus-metoriciron", new int[1] {2} },
             {  "maltiezfirearms:firearm-arquebus-rusted", new int[1] {2} },
@@ -946,6 +1018,15 @@ namespace canjewelry.src
             {  "game:shears-steel", new int[2] {3, 3} },*/
 
         };
+
+            // Content mods contribute their own jewelry here. Registered entries win over the
+            // core's, so a content mod can also correct a default the core got wrong.
+            foreach (var entry in CANJewelryRegistry.ExtraSocketCounts)
+            {
+                defaults[entry.Key] = entry.Value;
+            }
+
+            return defaults;
         }
 
         // =====================================================================
@@ -1234,93 +1315,16 @@ namespace canjewelry.src
         private static HashSet<CustomVariantSocketsTiers> BuildDefaultCustomVariantSockets()
         {
             var custom_variants_sockets_tiers = new HashSet<CustomVariantSocketsTiers>();
+
+            // Content mods contribute their own variant tables. Matched by ItemCode so a
+            // registered entry replaces the core's for that item rather than sitting beside it —
+            // the set is keyed by object identity and would otherwise hold both.
+            foreach (var registered in CANJewelryRegistry.ExtraVariantSockets)
             {
-                custom_variants_sockets_tiers.Add(
-                    new CustomVariantSocketsTiers("canjewelry:cantiara-normal-tiara", "carcassus", new Dictionary<string, int[]> {
-                        { "tinbronze",      new int[] { 1 } },
-                        { "bismuthbronze",  new int[] { 1 } },
-                        { "blackbronze",    new int[] { 1 } },
-                        { "gold",           new int[] { 1, 1 } },
-                        { "silver",         new int[] { 1, 1 } },
-                        { "iron",           new int[] { 1, 1, 1 } },
-                        { "meteoriciron",   new int[] { 1, 2, 1 } },
-                        { "steel",          new int[] { 1, 2, 1 } },
-                        { "rosegold",       new int[] { 1, 1 } },
-                        { "sterlingsilver", new int[] { 1, 1 } },
-                        { "blacksteel",     new int[] { 2, 2, 2 } },
-                        { "redsteel",       new int[] { 2, 3, 2 } },
-                        { "bluesteel",      new int[] { 2, 3, 2 } },
-                    })
-                 );
-                custom_variants_sockets_tiers.Add(
-                    new CustomVariantSocketsTiers("canjewelry:canrottenkingmask-normal", "metal", new Dictionary<string, int[]> {
-                        { "tinbronze",      new int[] { 1 } },
-                        { "bismuthbronze",  new int[] { 1 } },
-                        { "blackbronze",    new int[] { 1 } },
-                        { "gold",           new int[] { 1 } },
-                        { "silver",         new int[] { 1 } },
-                        { "iron",           new int[] { 1 } },
-                        { "meteoriciron",   new int[] { 2 } },
-                        { "steel",          new int[] { 2 } },
-                        { "rosegold",       new int[] { 1 } },
-                        { "sterlingsilver", new int[] { 1 } },
-                        { "blacksteel",     new int[] { 2 } },
-                        { "redsteel",       new int[] { 3 } },
-                        { "bluesteel",      new int[] { 3 } },
-                    })
-                 );
-                custom_variants_sockets_tiers.Add(
-                    new CustomVariantSocketsTiers("canjewelry:cansimplenecklace-normal-neck", "loop", new Dictionary<string, int[]> {
-                        { "tinbronze",      new int[] { 1 } },
-                        { "bismuthbronze",  new int[] { 1 } },
-                        { "blackbronze",    new int[] { 1 } },
-                        { "gold",           new int[] { 1 } },
-                        { "silver",         new int[] { 1 } },
-                        { "iron",           new int[] { 1 } },
-                        { "meteoriciron",   new int[] { 2 } },
-                        { "steel",          new int[] { 2 } },
-                        { "rosegold",       new int[] { 1 } },
-                        { "sterlingsilver", new int[] { 1 } },
-                        { "blacksteel",     new int[] { 2 } },
-                        { "redsteel",       new int[] { 3 } },
-                        { "bluesteel",      new int[] { 3 } },
-                    })
-                 );
-                custom_variants_sockets_tiers.Add(
-                    new CustomVariantSocketsTiers("canjewelry:canmonocle-normal", "loop", new Dictionary<string, int[]> {
-                        { "tinbronze",      new int[] { 1 } },
-                        { "bismuthbronze",  new int[] { 1 } },
-                        { "blackbronze",    new int[] { 1 } },
-                        { "gold",           new int[] { 1 } },
-                        { "silver",         new int[] { 1 } },
-                        { "iron",           new int[] { 1 } },
-                        { "meteoriciron",   new int[] { 2 } },
-                        { "steel",          new int[] { 2 } },
-                        { "rosegold",       new int[] { 1 } },
-                        { "sterlingsilver", new int[] { 1 } },
-                        { "blacksteel",     new int[] { 2 } },
-                        { "redsteel",       new int[] { 3 } },
-                        { "bluesteel",      new int[] { 3 } },
-                    })
-                 );
-                custom_variants_sockets_tiers.Add(
-                    new CustomVariantSocketsTiers("canjewelry:canhoruseye-normal", "metal", new Dictionary<string, int[]> {
-                        { "tinbronze",      new int[] { 1 } },
-                        { "bismuthbronze",  new int[] { 1 } },
-                        { "blackbronze",    new int[] { 1 } },
-                        { "gold",           new int[] { 1 } },
-                        { "silver",         new int[] { 1 } },
-                        { "iron",           new int[] { 1 } },
-                        { "meteoriciron",   new int[] { 1 } },
-                        { "steel",          new int[] { 1 } },
-                        { "rosegold",       new int[] { 1 } },
-                        { "sterlingsilver", new int[] { 1 } },
-                        { "blacksteel",     new int[] { 2 } },
-                        { "redsteel",       new int[] { 2 } },
-                        { "bluesteel",      new int[] { 2 } },
-                    })
-                 );
+                custom_variants_sockets_tiers.RemoveWhere(existing => existing.ItemCode == registered.ItemCode);
+                custom_variants_sockets_tiers.Add(registered);
             }
+
             return custom_variants_sockets_tiers;
         }
 
@@ -1754,7 +1758,7 @@ namespace canjewelry.src
                 };
                 panningDrops = new Dictionary<string, utils.CANPanningDrop[]>
                 {
-                    { "game:rock-suevite",                                    OreDrops("diamond",    0.2f, 0.3f, 0.5f) },
+                    { "game:stone-suevite",                                    OreDrops("diamond",    0.2f, 0.3f, 0.5f) },
 
                     { "@(ore|crystalizedore)-bountiful-hematite-.*",         OreDrops("corundum",   0.4f, 0.7f, 0.8f) },
                     { "@(ore|crystalizedore)-rich-hematite-.*",              OreDrops("corundum",   0.2f, 0.5f, 0.6f) },

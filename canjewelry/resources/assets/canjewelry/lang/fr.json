@@ -1,19 +1,6 @@
 {
    "jewelset_gui_name": "Ensemble de bijoux (CANJewelry)",
 
-   "itemname-cantiara": "Tiare",
-   "itemname-canring": "Bague",
-   "itemname-canarmband": "Brassard",
-   "itemname-cancoronet": "Couronne",
-   "itemname-cansimplenecklace": "Collier",
-   "itemname-canmonocle": "Monocle",
-   "itemname-canglasses": "Lunettes",
-   "itemname-cannosering": "Anneau de nez",
-   "itemname-canrottenkingmask": "Masque du roi lépreux",
-   "itemname-canhoruseye": "Collier de l'œil d'Horus",
-   "itemname-cannadiyannecklace": "Collier nadien",
-   "itemname-canearrings-keys": "Boucles d'oreilles à clés",
-   "itemname-canearrings-gemstuddedearrings": "Boucles d'oreilles serties",
 
    "gemsize-chipped": "Petit (ébréché)",
    "gemsize-flawed": "Moyen (défectueux)",
@@ -394,8 +381,6 @@
   "game:tabname-canjewelry": "Boîte à Bijoux",
 
   //simplenecklace
-  "necklace-parts-with-gem-held-info": "Lanière : {0}, pendentif : {1}, gemme : {2}",
-  "necklace-parts-without-gem-held-info": "Lanière : {0}, pendentif : {1}",
 
   //strap
   "item-canstrap-tinbronze": "Lanière en bronze-étain",
@@ -415,11 +400,7 @@
   "item-grindlayeritem-fine": "Couche abrasive fine",
   "need_to_be_processed": "<font color=\"#9966ff\">Doit être traité(e)</font>",
 
-  "item-coronet": " couronne",
-  "item-monocle": " monocle",
-  "item-armband": " brassard",
   "item-wire-hank": " fils",
-  "item-canrottenkingmask": " masque de roi lépreux",
 
   "blockhelp-jewelgrinder-addremovelayer": "Ajouter/retirer une couche abrasive",
   "stats-tab-name": "Statistiques",
@@ -442,10 +423,8 @@
   "game:craftinginfo-panning_gems-title": "CANJewelry : Lavage à la batée",
   "game:craftinginfo-panning_gems-text": "   Les batées en fer/acier peuvent être utilisées pour obtenir des gemmes à partir de morceaux de minerai de différents types. Comme pour les batées en bois, il faut se mettre dans l'eau, mais pour commencer à chercher des gemmes, il faut placer un morceau de minerai dans l'inventaire, dans l'emplacement le plus proche à droite. Par défaut, il faut 8 morceaux de minerai par cycle.<br><br> <strong>Suévite :</strong> toutes les tailles de diamants (50 % petits, 30 % moyens, 20 % grands)<br><br>Tous les autres minerais tombent en fonction de leur qualité - les minerais abondants/riches auront plus de chances que les minerais moyens ou pauvres, mais ils auront aussi une chance de faire tomber de grandes pierres précieuses, les minerais pauvres seulement de petites pierres.<br>généreux : 80%, 70%, 40%<br>riche : 60%, 50%, 20% <br>moyen : 50%, 40%<br>pauvre : 40%<br><br>Types de gemmes et de minerais :<br>hématite - corindon<br>malachite - malachite<br>bismuthinite - lapis-lazuli<br>cassitérite - olivine<br>sphalérite - fluorite<br>argent natif - quartz<br>or natif - quartz<br>limonite - uranium<br>ilménite - diamant/émeraude<br>cuivre natif - rubis<br>magnétite - citrine<br>uranium - uranium<br>galène - améthyste<br>",
 
-  "horuseyenecklace-parts-without-gem-held-info": "Lanière : {0}, tissu : {1}",
-  "item-canhoruseye-normal": "Collier avec œil d'Horus",
   "cut-gem-cutting-type-round": "ronde",
   "cut-gem-cutting-type-pear": "poire",
-  "cut-gem-cutting-type-baguette": "baguette",
+  "cut-gem-cutting-type-baguette": "baguette"
 
 }

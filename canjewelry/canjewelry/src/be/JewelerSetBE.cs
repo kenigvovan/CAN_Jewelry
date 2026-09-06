@@ -201,9 +201,7 @@ namespace canjewelry.src.jewelry
                 // The packet acts as a toggle: arriving while a dialog is up closes it.
                 if (renameGui != null)
                 {
-                    renameGui.TryClose();
-                    renameGui.Dispose();
-                    renameGui = null;
+                    CloseDialog();
                     return;
                 }
 
@@ -229,10 +227,21 @@ namespace canjewelry.src.jewelry
             if (packetid == 1001)
             {
                 clientWorldAccessor.Player.InventoryManager.CloseInventory(Inventory);
-                renameGui?.TryClose();
-                renameGui?.Dispose();
-                renameGui = null;
+                CloseDialog();
             }
+        }
+
+        // Clears the field before closing: TryClose() re-enters through
+        // OnInventoryClosed(), which would otherwise dispose the dialog twice.
+        private void CloseDialog()
+        {
+            GuiDialogJewelerSet dialog = renameGui;
+            renameGui = null;
+
+            if (dialog == null) return;
+
+            dialog.TryClose();
+            dialog.Dispose();
         }
         public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
         {
@@ -457,182 +466,6 @@ namespace canjewelry.src.jewelry
             this.MeshCache.TryGetValue(key + this.facing, out meshdata);
             return meshdata;
         }
-        // ============================================================================
-        // OLD HARDCODED IMPLEMENTATION — kept as reference for the magic numbers below.
-        // Replaced by the data-driven version that reads vanilla `toolrackTransform`
-        // attribute for weapons/tools instead of hardcoding 9 weapon paths here.
-        // Jewelry items (CANItemSimpleNecklace/Tiara/RottenKingMask/Coronet) keep
-        // their hardcoded poses since they are mod-owned and small in number.
-        // ============================================================================
-        /*
-        protected virtual MeshData getOrCreateMesh_OLD(ItemSlot slot, int index)
-        {
-            //this.MeshCache.Clear();
-            //here
-            MeshData mesh = this.getMesh(slot);
-            //this.MeshCache.Clear();
-            if (mesh != null)
-            {               
-                return mesh;
-            }
-            IContainedMeshSource meshSource = slot.Itemstack.Collectible as IContainedMeshSource;
-            if (meshSource != null)
-            {
-                mesh = meshSource.GenMesh(slot, this.capi.BlockTextureAtlas, this.Pos);
-            }
-            if (mesh == null)
-            {
-                ICoreClientAPI capi = this.Api as ICoreClientAPI;
-                if (slot.Itemstack.Class == EnumItemClass.Block)
-                {
-                    mesh = capi.TesselatorManager.GetDefaultBlockMesh(slot.Itemstack.Block).Clone();
-                }
-                else
-                {
-                    this.nowTesselatingObj = slot.Itemstack.Collectible;
-                    this.nowTesselatingShape = null;
-                    CompositeShape shape = slot.Itemstack.Item.Shape;
-                    if (((shape != null) ? shape.Base : null) != null)
-                    {
-                        this.nowTesselatingShape = capi.TesselatorManager.GetCachedShape(slot.Itemstack.Item.Shape.Base);
-                    }
-                    capi.Tesselator.TesselateItem(slot.Itemstack.Item, out mesh, this);
-                    mesh.RenderPassesAndExtraBits.Fill((short)EnumChunkRenderPass.BlendNoCull);
-                }
-            }
-            mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
-            
-            if(slot.Itemstack.Item is CANItemSimpleNecklace)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.25f, 1.25f, 1.25f);
-                mesh.Translate(1f/16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 2), -((float)Math.PI / 6));
-                mesh.Translate(-3f/16, -1f/16,3f/16);
-            }
-            else if(slot.Itemstack.Item is CANItemTiara)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
-                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
-                mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-            }
-            else if (slot.Itemstack.Item is CANItemRottenKingMask)
-            {
-                mesh.Translate(0, 13f / 16, 0);
-                //mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
-                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
-                //mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-            }
-            else if (slot.Itemstack.Item is CANItemCoronet)
-            {
-                mesh.Translate(0, 10f / 16, 0);
-                //mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
-                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
-                //mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-            }
-            else if(slot.Itemstack.Item != null && slot.Itemstack.Item.StorageFlags == EnumItemStorageFlags.Outfit)
-            {
-               
-                if(slot.Itemstack.Collectible.Code.Path.Contains("-head-"))
-                {
-                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 2), 0f);
-                    mesh.Translate(-3f/16, 0, 0f/16);
-                    
-                }
-                else
-                {
-                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
-                    mesh.Translate(0, 12f / 16, 0);
-                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), ((float)Math.PI / 2), 0.0f, 0.0f);
-                    mesh.Translate(0, 9f / 16, -1);
-                }
-            }
-            else if(slot.Itemstack.Item.Code?.Path.Contains("quarterstaff-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI * 0.6f), 0f);
-                mesh.Translate(-0.2f, 10.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("axe-long-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.7f, 0.7f, 0.7f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI * 0.6f), 0f);
-                mesh.Translate(-0.2f, 12f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("sword-great-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("sword-long-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("sword-short-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("javelin-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.7f, 0.7f, 0.7f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.1f, 8.5f / 16, 0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("pike-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.1f, 8.5f / 16, 0.6f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("club-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("halberd-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.7f, 0.7f, 0.7f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, 0.5f);
-            }
-            else
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
-                mesh.Translate(0, 13f / 16, 0);
-            }
-            
-
-
-            if (this.facing == BlockFacing.SOUTH)
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, -2.35f, 0f);
-            }
-            else if (this.facing == BlockFacing.NORTH)
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, 1.0f, 0f);
-            }
-            else if (this.facing == BlockFacing.EAST)
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, -1.0f, 0f);
-            }
-            else
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, 2.35f, 0f);
-            }
-
-            string key = this.getMeshCacheKey(slot);
-            this.MeshCache[key + this.facing] = mesh;
-            return mesh;
-        }
-        */
 
         private static readonly Vec3f MeshOrigin = new Vec3f(0.5f, 0.5f, 0.5f);
 
@@ -717,8 +550,10 @@ namespace canjewelry.src.jewelry
 
         private void ApplyDisplayTransform(ItemStack stack, MeshData mesh)
         {
-            // 1. Mod-owned jewelry items (4 cases, mod-private types).
-            if (TryApplyJewelryTransform(stack, mesh)) return;
+            // Jewelry poses used to be case 1 here, switching on four mod-owned item classes.
+            // Dropped with the core/content split: the classes move to the content mod, and the
+            // whole mesh path is dead anyway — OnTesselation adds no mesh, the placed item is
+            // shown in the dialog's 3D preview instead.
 
             // 2. Known vanilla weapons via WeaponPoses table (poses preserved from OLD impl).
             if (TryApplyWeaponPose(stack, mesh)) return;
@@ -744,34 +579,6 @@ namespace canjewelry.src.jewelry
             // 4. Default fallback for unknown items.
             mesh.Rotate(MeshOrigin, 0f, (float)Math.PI / 2, 0f);
             mesh.Translate(0, 13f / 16, 0);
-        }
-
-        private bool TryApplyJewelryTransform(ItemStack stack, MeshData mesh)
-        {
-            switch (stack.Item)
-            {
-                case CANItemSimpleNecklace _:
-                    mesh.Scale(MeshOrigin, 1.25f, 1.25f, 1.25f);
-                    mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 2, -(float)Math.PI / 6);
-                    mesh.Translate(-3f / 16, -1f / 16, 3f / 16);
-                    return true;
-                case CANItemTiara _:
-                    mesh.Scale(MeshOrigin, 1.6f, 1.6f, 1.6f);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 4, -(float)Math.PI / 16);
-                    mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-                    return true;
-                case CANItemRottenKingMask _:
-                    mesh.Translate(0, 13f / 16, 0);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 4, -(float)Math.PI / 16);
-                    return true;
-                case CANItemCoronet _:
-                    mesh.Translate(0, 10f / 16, 0);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 4, -(float)Math.PI / 16);
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         private bool TryApplyWeaponPose(ItemStack stack, MeshData mesh)
