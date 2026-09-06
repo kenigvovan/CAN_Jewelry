@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using canjewelry.src.api;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -31,12 +32,34 @@ namespace canjewelry.src.items
 
         protected abstract string MeshrefsCacheName { get; }
 
-        private static readonly string[] _materialAttrKeys = { "metal", "loop", "carcassus", "construction" };
+        /// <summary>
+        /// Base set the core knows about. Content mods append their own through
+        /// CANJewelryRegistry.RegisterMaterialAttributeKeys, and a single itemtype can override
+        /// the whole list with the canMaterialAttrKeys attribute.
+        /// </summary>
+        public static readonly string[] BaseMaterialAttrKeys = { "metal", "loop", "carcassus", "construction" };
+
+        /// <summary>
+        /// Material keys for this item, in priority order: itemtype attribute, else the registry
+        /// (which already starts with the base set).
+        /// </summary>
+        protected IReadOnlyList<string> MaterialAttrKeys
+        {
+            get
+            {
+                string[] fromJson = Attributes?[CANJewelryAttributes.MaterialAttrKeys]?.AsArray<string>(null);
+                if (fromJson != null && fromJson.Length > 0) return fromJson;
+
+                var fromRegistry = CANJewelryRegistry.MaterialAttributeKeys;
+                return fromRegistry.Count > 0 ? fromRegistry : BaseMaterialAttrKeys;
+            }
+        }
 
         public override string GetHeldItemName(ItemStack itemStack)
         {
+            var materialAttrKeys = MaterialAttrKeys;
             string mat = null;
-            foreach (string k in _materialAttrKeys)
+            foreach (string k in materialAttrKeys)
             {
                 mat = itemStack.Attributes.GetString(k, null);
                 if (mat != null) break;
@@ -46,7 +69,7 @@ namespace canjewelry.src.items
                 var variant = itemStack.Item?.Variant;
                 if (variant != null)
                 {
-                    foreach (string k in _materialAttrKeys)
+                    foreach (string k in materialAttrKeys)
                     {
                         mat = variant[k];
                         if (mat != null) break;

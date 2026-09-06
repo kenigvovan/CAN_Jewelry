@@ -366,3 +366,4 @@ FodyWeavers.xsd
 *.md
 /canjewelry/canjewelry/.claude/settings.local.json
 /canjewelry/modpage.html
+*.html

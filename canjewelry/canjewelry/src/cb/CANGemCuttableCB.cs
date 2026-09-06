@@ -34,85 +34,58 @@ namespace canjewelry.src.cb
 
         public List<GemCuttingRecipe> GetMatchingRecipes(ItemStack stack)
         {
-            /* foreach(var it in canjewelry.gemCuttingRecipes)
-             {
-                 var c = it.Ingredient.SatisfiesAsIngredient(stack, true);
-                 if(c)
-                 {
-                     if (it.Ingredient.RecipeAttributes != null)
-                     {
-                         var T = it.Ingredient.RecipeAttributes.ToAttribute();
-                         var f = stack.Attributes == T;
-                         //Console.WriteLine(T..);
-                         Console.WriteLine(stack.Attributes.ToString());
-                         if (f)
-                         {
-                             var p = 3;
-                         }
-                     }
-                 }
-             }*/
+            return FindMatchingRecipes(stack, checkRecipeAttributes: true);
+        }
 
+        // How many broken recipe/stack combinations have been logged so far. Capped so a
+        // companion mod probing this method every tick cannot flood the log.
+        private static int matchErrorsLogged;
 
-            foreach(var it in canjewelry.gemCuttingRecipes)
+        /// <summary>
+        /// Shared, defensive recipe matcher. This method is public API surface for companion mods
+        /// (AdvancedGeology invokes it through reflection on a game tick), so a single recipe or
+        /// stack it cannot digest must be skipped, never thrown: an exception escaping here once
+        /// took whole servers down via the tick-error threshold.
+        /// </summary>
+        internal static List<GemCuttingRecipe> FindMatchingRecipes(ItemStack stack, bool checkRecipeAttributes)
+        {
+            var result = new List<GemCuttingRecipe>();
+            var recipes = canjewelry.gemCuttingRecipes;
+            if (recipes == null || stack?.Collectible == null || stack.Attributes == null)
             {
-                if (stack == null || stack.Collectible == null)
+                return result;
+            }
+
+            foreach (var recipe in recipes)
+            {
+                try
                 {
-                    //return false;
-                }
-                if (it.Ingredient.MatchingType != EnumRecipeMatchType.Exact)
-                {
-                    if (it.Ingredient.Type != stack.Class)
-                    {
-                        //return false;
-                    }
-                    if (it.Ingredient.Code != null && !WildcardUtil.Match(it.Ingredient.Code, stack.Collectible.Code, it.Ingredient.AllowedVariants))
-                    {
-                        //return false;
-                    }
-                    if (stack.StackSize < it.Ingredient.Quantity)
-                    {
-                        //return false;
-                    }
-                    if (it.Ingredient.SkipVariants != null && WildcardUtil.Match(it.Ingredient.Code, stack.Collectible.Code, it.Ingredient.SkipVariants))
-                    {
-                        //return false;
-                    }
-                    if (!it.Ingredient.CheckTags(stack, stack.Collectible))
-                    {
-                        //return false;
-                    }
-                }
-                else
-                {
-                    ItemStack resolvedItemStack = it.Ingredient.ResolvedItemStack;
-                    if (resolvedItemStack == null)
+                    // Recipes whose output never resolved cannot be selected or sorted anyway.
+                    if (recipe?.Ingredient == null || recipe.Output?.ResolvedItemstack?.Collectible == null) continue;
+
+                    if (!recipe.Ingredient.SatisfiesAsIngredient(stack, true)) continue;
+
+                    if (checkRecipeAttributes
+                        && recipe.Ingredient.RecipeAttributes != null
+                        && !stack.Attributes.ToJsonToken().Equals(recipe.Ingredient.RecipeAttributes.ToAttribute().ToJsonToken()))
                     {
                         continue;
-                        //return false;
                     }
-                    if (!resolvedItemStack.Satisfies(stack))
-                    {
-                        //return false;
-                    }
-                    if (stack.StackSize < it.Ingredient.Quantity)
-                    {
-                        //return false;
-                    }
+
+                    result.Add(recipe);
                 }
-                //return true;
-
-
-                if (it.Ingredient.SatisfiesAsIngredient(stack, true))
+                catch (Exception e)
                 {
-                    var c = 3;
+                    if (matchErrorsLogged++ < 10)
+                    {
+                        aapi?.Logger.Warning(
+                            "[canjewelry] Skipping gem cutting recipe {0} while matching stack {1}: {2}",
+                            recipe?.Name, stack.Collectible.Code, e);
+                    }
                 }
             }
 
-            return (from r in canjewelry.gemCuttingRecipes
-                    where r.Ingredient.SatisfiesAsIngredient(stack, true) && (r.Ingredient.RecipeAttributes == null || stack.Attributes.ToJsonToken().Equals(r.Ingredient.RecipeAttributes.ToAttribute().ToJsonToken()))
-                    orderby r.Output.ResolvedItemstack.Collectible.Code
-                    select r).ToList<GemCuttingRecipe>();
+            return result.OrderBy(r => r.Output.ResolvedItemstack.Collectible.Code).ToList();
         }
 
         public bool CanWork(ItemStack stack)

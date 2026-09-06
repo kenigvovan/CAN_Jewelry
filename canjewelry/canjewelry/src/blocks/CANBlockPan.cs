@@ -195,13 +195,49 @@ namespace canjewelry.src.blocks
                 Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, shapeloc);
                 Block block = capi.World.GetBlock(new AssetLocation(blockMaterialCode));
                 this.AtlasSize = capi.BlockTextureAtlas.Size;
-                this.matTexPosition = capi.BlockTextureAtlas.GetPosition(block, "up", false);
+                this.matTexPosition = GetMaterialTexPos(capi, block);
                 this.ownTextureSource = capi.Tesselator.GetTextureSource(this, 0, false);
                 MeshData meshdata;
                 capi.Tesselator.TesselateShape("filledpan", shape, out meshdata, this, null, 0, 0, 0, null, null);
                 return capi.Render.UploadMultiTextureMesh(meshdata);
             });
         }
+        // Texture codes we try, in order, when picking the texture that fills the pan.
+        private static readonly string[] materialTextureCodes = { "up", "all", "cube", "sides", "north", "ore1" };
+
+        // The material block is not guaranteed to expose an "up" texture. The game expands an
+        // "all" entry only into the texture codes the block's shape actually uses (see
+        // TextureAtlasManager.ResolveTextureDict), so for a cube-drawtype block that means
+        // up/down/north/..., but for a json-drawtype one it means whatever the shape declares.
+        // Mods that turn the vanilla ores into json-drawtype blocks with 3D ore bits
+        // (Visible Ores and Minerals) therefore leave neither "up" nor "all" behind, and asking
+        // for "up" used to hand back the unknown-texture placeholder. Fall back through the
+        // common codes and then through whatever the block does define.
+        private static TextureAtlasPosition GetMaterialTexPos(ICoreClientAPI capi, Block block)
+        {
+            if (block == null)
+            {
+                return capi.BlockTextureAtlas.UnknownTexturePosition;
+            }
+            foreach (string code in materialTextureCodes)
+            {
+                TextureAtlasPosition texPos = capi.BlockTextureAtlas.GetPosition(block, code, true);
+                if (texPos != null)
+                {
+                    return texPos;
+                }
+            }
+            foreach (string code in block.Textures.Keys)
+            {
+                TextureAtlasPosition texPos = capi.BlockTextureAtlas.GetPosition(block, code, true);
+                if (texPos != null)
+                {
+                    return texPos;
+                }
+            }
+            return capi.BlockTextureAtlas.UnknownTexturePosition;
+        }
+
         public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
         {
             if (byEntity.Controls.ShiftKey)

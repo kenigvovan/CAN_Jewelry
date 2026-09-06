@@ -1,4 +1,0 @@
-{
-  "game:gear-temporal": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": -0.155, "y": 0.015, "z": -0.065 }, "scaleXYZ": { "x": 1, "y": 0.9, "z": 1 } },
-  "primitivesurvival:psgear-*": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": -0.15, "y": 0.015, "z": -0.065 } }
-}

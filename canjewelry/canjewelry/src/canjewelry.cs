@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Cairo;
+using canjewelry.src.api;
 using canjewelry.src.bb;
 using canjewelry.src.be;
 using canjewelry.src.blocks;
@@ -116,6 +117,9 @@ namespace canjewelry.src
         /// </summary>
         public const string harmonyID = "canjewelry.Patches";
 
+        /// <summary>Companion mod holding the wearable adornments and the display stands.</summary>
+        public const string AdornmentsModId = "canjewelryadornments";
+
         /// <summary>
         /// Client-side API reference.
         /// </summary>
@@ -157,8 +161,11 @@ namespace canjewelry.src
         public static List<GemCuttingRecipe> gemCuttingRecipes = new();
 
         private GuiDialogJewelryGuide guideDialog;
+        private GuiDialogCuttingSettings cuttingSettingsDialog;
         /// <summary>
-        /// Loaded wearable restrictions by name.
+        /// Loaded wearable restrictions, keyed by "category/name". Filled from every mod that ships
+        /// config/restrictions/** in the canjewelry domain, so a content mod can add a display
+        /// category with nothing but a JSON file.
         /// </summary>
         private readonly Dictionary<string, RestrictionData> restrictions = [];
         /// <summary>
@@ -167,11 +174,30 @@ namespace canjewelry.src
         private readonly Dictionary<string, Dictionary<string, ModelTransform>> transformations = [];
 
         /// <summary>
+        /// A new mod-load run begins. The engine constructs every ModSystem before running any
+        /// StartPre (see ModLoader.instantiateMods), so this is the only spot where the core runs
+        /// ahead of content mods regardless of ExecuteOrder. Reopen the registry here: it is
+        /// static, while the Pre phase runs once per side in a local game and again on every world
+        /// rejoin — without the reset the second run replays its registrations against a registry
+        /// sealed by the first and warns on every one of them.
+        /// </summary>
+        public canjewelry()
+        {
+            CANJewelryRegistry.Sealed = false;
+        }
+
+        /// <summary>
         /// Executed before all mods are started.
         /// Adds an additional jewelry inventory to player defaults.
         /// </summary>
         public override void StartPre(ICoreAPI api)
         {
+            // Content mods register their config defaults from their own StartPre at a lower
+            // ExecuteOrder, so by now the registry holds everything they contributed. Seed the
+            // core's own material keys first, keeping them ahead of registered ones in priority.
+            CANJewelryRegistry.Logger = Mod?.Logger;
+            CANJewelryRegistry.SeedMaterialAttributeKeys(items.CANItemWearable.BaseMaterialAttrKeys);
+
             // Config has to exist before any asset is loaded: Block.OnLoaded (CANBlockPan) reads
             // config.panningDrops, and on the client that runs before StartClientSide, so loading
             // it there only would leave the block with a null config and crash world join.
@@ -179,6 +205,10 @@ namespace canjewelry.src
             {
                 loadConfig(api);
             }
+
+            // Anything registered from here on misses this run's defaults. It is still recorded and
+            // applies on the next start, so the registry only warns.
+            CANJewelryRegistry.Sealed = true;
 
             // Guard against appending twice within a single VS process (e.g. leave and rejoin a
             // world with the mod active), which would otherwise leave a duplicate entry behind.
@@ -225,31 +255,18 @@ namespace canjewelry.src
             api.RegisterItemClass("CANCutGemItem", typeof(CANCutGemItem));
             api.RegisterItemClass("CANRoughGemItem", typeof(CANRoughGemItem));
             
-            api.RegisterItemClass("CANItemSimpleNecklace", typeof(CANItemSimpleNecklace));
-            api.RegisterItemClass("CANItemTiara", typeof(CANItemTiara));
-            api.RegisterItemClass("CANItemRottenKingMask", typeof(CANItemRottenKingMask));
-            api.RegisterItemClass("CANItemCoronet", typeof(CANItemCoronet));
-            api.RegisterItemClass("CANItemMonocle", typeof(CANItemMonocle));
+            // The wearable adornments and the display stands register themselves from the
+            // canjewelryadornments mod. Only the crafting materials and gem-processing items
+            // belong to the core.
             api.RegisterItemClass("CANItemWireHank", typeof(CANItemWireHank));
-            api.RegisterItemClass("CANItemArmBand", typeof(CANItemArmBand));
             api.RegisterItemClass("CANItemStrap", typeof(CANItemStrap));
             api.RegisterItemClass("CANItemSocket", typeof(CANItemSocket));
             api.RegisterItemClass("CANItemGemCuttingWorkItem", typeof(CANItemGemCuttingWorkItem));
             api.RegisterItemClass("CANItemGemChisel", typeof(CANItemGemChisel));
-            api.RegisterItemClass("CANItemHorusEye", typeof(CANItemHorusEye));
-            api.RegisterItemClass("CANItemNoseRing", typeof(CANItemNoseRing));
-            api.RegisterItemClass("CANItemEarrings", typeof(CANItemEarrings));
-            api.RegisterItemClass("CANItemNadiyanNecklace", typeof(CANItemNadiyanNecklace));
-            api.RegisterItemClass("CANItemGlasses", typeof(CANItemGlasses));
-            api.RegisterItemClass("CANItemRing", typeof(CANItemRing));
 
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
             api.RegisterBlockClass("BlockGemCuttingTable", typeof(BlockGemCuttingTable));
             api.RegisterEntityBehaviorClass("playeradditionaljewelryinventory", typeof(EntityBehaviorAdditionalJewelryPlayerInventory));
-
-            api.RegisterBlockClass("CANBlockPSContainer", typeof(CANBasePSContainer));
-            api.RegisterBlockEntityClass("CANBENecklaceStand", typeof(CANBENecklaceStand));
-            api.RegisterBlockEntityClass("CANBEHeadStand", typeof(CANBEHeadStand));
         }
         /// <summary>
         /// Client-side initialization.
@@ -279,6 +296,15 @@ namespace canjewelry.src
 
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
+            clientChannel.RegisterMessageType(typeof(CuttingSettingsPacket));
+            clientChannel.SetMessageHandler<CuttingSettingsPacket>((packet) =>
+            {
+                // Only ever arrives in response to "/canjewelry cutting gui", which the server
+                // gates on the privilege, so there is nothing left to check here.
+                cuttingSettingsDialog?.TryClose();
+                cuttingSettingsDialog = new GuiDialogCuttingSettings(capi, packet);
+                cuttingSettingsDialog.TryOpen();
+            });
             clientChannel.SetMessageHandler<SyncCANJewelryPacket>((packet) =>
             {
                 // The network handler swallows exceptions, so a config the client cannot parse
@@ -438,11 +464,16 @@ namespace canjewelry.src
                     string restrictionPath = $"canjewelry:config/restrictions/{category}/{name}.json".Replace("//", "/");
                     string transformationPath = $"canjewelry:config/transformations/{category}/{name}.json".Replace("//", "/");
 
-                    restrictions[name] = api.LoadAsset<RestrictionData>(restrictionPath);
+                    // Keyed by category/name, not name alone: two categories may hold the same file
+                    // name (restrictions/rings/headware.json vs restrictions/clothes/headware.json)
+                    // and the later one used to silently overwrite the earlier.
+                    string key = $"{category}/{name}".Replace("//", "/").TrimStart('/');
+
+                    restrictions[key] = api.LoadAsset<RestrictionData>(restrictionPath);
 
                     if (api.Assets.Exists(transformationPath))
                     {
-                        transformations[name] = api.LoadAsset<Dictionary<string, ModelTransform>>(transformationPath);
+                        transformations[key] = api.LoadAsset<Dictionary<string, ModelTransform>>(transformationPath);
                     }
                 }
             }
@@ -468,6 +499,31 @@ namespace canjewelry.src
         /// registers commands and networking,
         /// and injects custom drops.
         /// </summary>
+        /// <summary>
+        /// The wearable adornments and the display stands ship as a separate mod since 0.7.0.
+        /// Without it the core still runs, and items already in the world survive as engine
+        /// placeholders — but the stands' block entities do not, so their contents are lost on the
+        /// first save of an affected chunk. That is worth one loud banner.
+        /// </summary>
+        private void WarnIfAdornmentsMissing(ICoreAPI api)
+        {
+            if (api.ModLoader.IsModEnabled(AdornmentsModId)) return;
+            if (config?.suppressAdornmentsWarning == true) return;
+
+            Mod.Logger.Warning(
+                "\n============================================================\n" +
+                "  C&N Jewelry: the mod '{0}' is not installed.\n" +
+                "  Wearable adornments and the display stands live there now.\n" +
+                "  Jewelry already in chests or worn by players is kept and\n" +
+                "  comes back intact once that mod is installed.\n" +
+                "  The CONTENTS OF DISPLAY STANDS, however, are lost as soon\n" +
+                "  as an affected chunk is saved. Take the stands apart before\n" +
+                "  playing on without it.\n" +
+                "  Set 'suppressAdornmentsWarning' in the config to hide this.\n" +
+                "============================================================",
+                AdornmentsModId);
+        }
+
         public override void StartServerSide(ICoreServerAPI api)
         {
             base.StartServerSide(api);
@@ -478,8 +534,8 @@ namespace canjewelry.src
                 loadConfig(sapi);
             }
             ServerPatcher.ApplyPatches(api, harmonyID, ref harmonyInstance);
-           
-            
+            WarnIfAdornmentsMissing(api);
+
             config.InitColors();
             api.RegisterEntityBehaviorClass("cangembuffaffected", typeof(CANGemBuffAffected));
             
@@ -492,6 +548,34 @@ namespace canjewelry.src
             serverChannel.SetMessageHandler<SyncCANJewelryPacket>((player, packet) =>
             {
                 sendNewValues(player);
+            });
+
+            serverChannel.RegisterMessageType(typeof(CuttingSettingsPacket));
+            serverChannel.SetMessageHandler<CuttingSettingsPacket>((player, packet) =>
+            {
+                // A packet is a packet whoever sends it, so the privilege is checked here and not
+                // only on the command that opens the dialogue.
+                if (!player.HasPrivilege(Privilege.controlserver)) return;
+                if (packet == null) return;
+
+                // Values arrive from a dialogue that clamps them, but a hand written packet does
+                // not have to, and cuttingVoxelsPerClick feeds an array walk.
+                config.cuttingVoxelsPerClick = GameMath.Clamp(packet.VoxelsPerClick, 1, 8);
+                config.cuttingHoldStrikeIntervalMs = GameMath.Clamp(packet.HoldStrikeIntervalMs, 0, 2000);
+                config.cuttingDurabilityPerVoxel = packet.DurabilityPerVoxel;
+                config.cuttingInstantComplete = packet.InstantComplete;
+                config.cuttingSpareRecipeVoxels = packet.SpareRecipeVoxels;
+
+                string mode = packet.AccessMode?.ToLowerInvariant();
+                if (mode == "disabled" || mode == "enabled" || mode == "whitelist" || mode == "blacklist")
+                {
+                    config.cuttingAccessMode = mode;
+                }
+
+                config.cuttingWhitelist = CuttingSettingsPacket.SanitiseNames(packet.Whitelist);
+                config.cuttingBlacklist = CuttingSettingsPacket.SanitiseNames(packet.Blacklist);
+
+                commands.RegisterCommands.applyAndBroadcastConfig();
             });
 
             foreach (var it in config.gems_drops_table)
@@ -589,6 +673,11 @@ namespace canjewelry.src
             api.Logger.Notification("[canjewelry] applying config on {0}: {1} socket rules, {2} custom variants, {3} pan drops",
                 api.Side, config.items_codes_with_socket_count_and_tiers.Count,
                 config.custom_variants_sockets_tiers.Count, config.panningDrops?.Count ?? 0);
+
+            // The rules below are about to be rewritten onto the items, so anything parsed from the
+            // previous ones is stale. Matters most on the client, where this runs again once the
+            // server's config arrives.
+            EncrustableCB.ClearVariantTiersCache();
 
             ApplySimpleJewelry(api);
             ApplyGemBehaviors(api);

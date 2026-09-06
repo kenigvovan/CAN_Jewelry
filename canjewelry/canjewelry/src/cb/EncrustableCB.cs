@@ -1,9 +1,11 @@
-﻿using canjewelry.src.cb;
+﻿using canjewelry.src.api;
+using canjewelry.src.cb;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -367,14 +369,8 @@ namespace canjewelry.src.CB
                         treeSocket["savedGrindLayerInfo"] = gem_slot.Itemstack.Attributes["cangrindlayerinfo"].Clone();
                     }
 
-                    if (encrustable.Itemstack.Item is CANItemSimpleNecklace || encrustable.Itemstack.Item is CANItemHorusEye)
-                    {
-                        encrustable.Itemstack.Attributes.SetString("gem", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
-                    }
-                    else if (encrustable.Itemstack.Item is CANItemTiara)
-                    {
-                        encrustable.Itemstack.Attributes.SetString("gem_" + (socket_number + 1), gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
-                    }
+                    string gemType = gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last();
+                    CANGemVisual.SetGemVisual(encrustable.Itemstack, socket_number, gemType);
                     // Anti-farming gate (spec §6): re-encrusting a previously-extracted gem
                     // grants no XP. Flag travels with the gem ItemStack via wasExtracted.
                     bool freshGem = !gem_slot.Itemstack.Attributes.GetBool("wasExtracted", false);
@@ -502,14 +498,7 @@ namespace canjewelry.src.CB
                 treeSocket.RemoveAttribute(CANJWConstants.CUTTING_TYPE);
                 treeSocket.SetString(CANJWConstants.GEM_TYPE_IN_SOCKET, "");
 
-                if (encrustable.Itemstack.Item is CANItemSimpleNecklace || encrustable.Itemstack.Item is CANItemHorusEye)
-                {
-                    encrustable.Itemstack.Attributes.RemoveAttribute("gem");
-                }
-                else if (encrustable.Itemstack.Item is CANItemTiara)
-                {
-                    encrustable.Itemstack.Attributes.RemoveAttribute("gem_" + (socket_number + 1));
-                }
+                CANGemVisual.ClearGemVisual(encrustable.Itemstack, socket_number);
 
                 // Resolve jewelry fate. Damage exhausting durability promotes Damaged→Destroyed
                 // — consistent with vanilla item death.
@@ -746,6 +735,72 @@ namespace canjewelry.src.CB
             }
             return false;
         }
+        // Parsed SocketTiers per item. GetMaxAmountSockets and GetSocketsTiers are called from mesh
+        // building and from tooltips, and used to deserialise the same JSON on every single call.
+        // Keyed by the collectible because the parsed table belongs to the item type, not the stack.
+        private static readonly ConcurrentDictionary<CollectibleObject, Dictionary<string, int[]>> variantTiersCache
+            = new ConcurrentDictionary<CollectibleObject, Dictionary<string, int[]>>();
+
+        /// <summary>
+        /// Drops the parsed tables. Has to run whenever the socket attributes are written anew -
+        /// the config can arrive from the server after items are already loaded, and a stale table
+        /// would keep handing out the previous socket layout.
+        /// </summary>
+        public static void ClearVariantTiersCache()
+        {
+            variantTiersCache.Clear();
+        }
+
+        private static Dictionary<string, int[]> GetVariantTiers(ItemStack itemstack)
+        {
+            CollectibleObject collectible = itemstack.Collectible;
+            if (collectible == null) return null;
+
+            if (variantTiersCache.TryGetValue(collectible, out var cached)) return cached;
+
+            var attribute = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
+            Dictionary<string, int[]> parsed = null;
+            if (attribute != null)
+            {
+                try
+                {
+                    parsed = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(attribute.ToString());
+                }
+                catch (Exception)
+                {
+                    // A malformed rule should cost the item its sockets, not crash the tooltip.
+                    parsed = null;
+                }
+            }
+
+            // Cached even when null, so a broken rule is not re-parsed on every draw.
+            variantTiersCache[collectible] = parsed;
+            return parsed;
+        }
+
+        /// <summary>
+        /// The value a custom variant rule is keyed on. Stack attributes first, then the item's own
+        /// code variant.
+        /// <para>
+        /// The fallback is there because adornments do not all carry their material the same way: a
+        /// tiara keeps "carcassus" on the stack, while a coronet bakes the metal into its code as a
+        /// variant group (cancoronet-gold). Without it such items cannot use a variant rule at all
+        /// and every single code has to be listed by hand instead.
+        /// </para>
+        /// </summary>
+        public static string ResolveVariantValue(ItemStack itemstack, string compareKey)
+        {
+            if (itemstack == null || string.IsNullOrEmpty(compareKey)) return null;
+
+            string fromAttributes = itemstack.Attributes?.GetString(compareKey, null);
+            if (fromAttributes != null) return fromAttributes;
+
+            var variants = itemstack.Collectible?.Variant;
+            if (variants != null && variants.ContainsKey(compareKey)) return variants[compareKey];
+
+            return null;
+        }
+
         public static int GetMaxAmountSockets(ItemStack itemstack)
         {
             if (itemstack != null)
@@ -756,17 +811,13 @@ namespace canjewelry.src.CB
                         ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
                         : null;
                     if (compareKey == null) return -1;
-                    string searchedValue = itemstack.Attributes.GetString(compareKey, null);
+                    string searchedValue = ResolveVariantValue(itemstack, compareKey);
                     if (searchedValue != null)
                     {
-                        var f = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
-                        if (f != null)
+                        var valueDict = GetVariantTiers(itemstack);
+                        if (valueDict != null && valueDict.TryGetValue(searchedValue, out var value))
                         {
-                            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(f.ToString());
-                            if (valueDict.TryGetValue(searchedValue, out var value))
-                            {
-                                return value.Length;
-                            }
+                            return value.Length;
                         }
                     }
                 }
@@ -787,17 +838,13 @@ namespace canjewelry.src.CB
                         ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
                         : null;
                     if (compareKey == null) return new int[0];
-                    string searchedValue = itemstack.Attributes.GetString(compareKey, null);
+                    string searchedValue = ResolveVariantValue(itemstack, compareKey);
                     if (searchedValue != null)
                     {
-                        var f = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
-                        if (f != null)
+                        var valueDict = GetVariantTiers(itemstack);
+                        if (valueDict != null && valueDict.TryGetValue(searchedValue, out var value))
                         {
-                            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(f.ToString());
-                            if (valueDict.TryGetValue(searchedValue, out var value))
-                            {
-                                return value;
-                            }
+                            return value;
                         }
                     }
                 }

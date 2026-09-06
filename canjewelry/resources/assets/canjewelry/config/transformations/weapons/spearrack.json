@@ -1,6 +1,0 @@
-{
-  "game:spear-generic-*": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "scaleXYZ": { "x": 0.785, "y": 0.85, "z": 0.85 } },
-
-  "armory:javelin-plain-*": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": -0.72, "y": 0, "z": -0.1 } },
-  "armory:pike-plain-*": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": 1.4, "y": 0, "z": 0.15 }, "scaleXYZ": { "x": 0.785, "y": 0.85, "z": 0.85 } }
-}
