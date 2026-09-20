@@ -4,8 +4,8 @@
   "name": "C&N Jewelry",
   "authors": [ "KenigVovan" ],
   "description": "Gems and jewelry with buffs.",
-  "contributors": [ "justOmi", "DarkPaapi", "Wailwolf", "FourLanguages", "sadCarb0ne", "ripls", "Jikoo", "aRTyficial" ],
-  "version": "0.7.8",
+  "contributors": [ "justOmi", "DarkPaapi", "Wailwolf", "FourLanguages", "sadCarb0ne", "ripls", "Jikoo", "aRTyficial", "ChimMAG" ],
+  "version": "0.7.9",
   "dependencies": {
     "game": ""
   }
