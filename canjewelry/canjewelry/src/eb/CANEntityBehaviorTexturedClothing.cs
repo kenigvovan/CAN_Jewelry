@@ -116,6 +116,9 @@ namespace canjewelry.src.eb
             capi.EntityTextureAtlas.RenderTextureIntoAtlas(skinTexPos.atlasTextureId, loadedTexture, (int)(textureAtlasPosition.x1 * (float)AtlasSize.Width), (int)(textureAtlasPosition.y1 * (float)AtlasSize.Height), (int)((textureAtlasPosition.x2 - textureAtlasPosition.x1) * (float)AtlasSize.Width), (int)((textureAtlasPosition.y2 - textureAtlasPosition.y1) * (float)AtlasSize.Height), skinTexPos.x1 * (float)capi.EntityTextureAtlas.Size.Width, skinTexPos.y1 * (float)capi.EntityTextureAtlas.Size.Height, -1f);
             capi.Render.GlToggleBlend(blend: true, EnumBlendMode.Overlay);
             this.OnReloadSkin?.Invoke(loadedTexture, skinTexPos, skinTextureSubId);
+            // Null when the extra jewelry slots are switched off; the bare skin above still stands.
+            InventoryBase inv = Inventory;
+            if (inv == null) return;
             int[] array = new int[12]
             {
             3, 4, 2, 11, 9, 1, 7, 6, 0, 5,
@@ -123,7 +126,7 @@ namespace canjewelry.src.eb
             };
             foreach (int slotId in array)
             {
-                ItemStack itemStack = Inventory[slotId]?.Itemstack;
+                ItemStack itemStack = inv[slotId]?.Itemstack;
                 if (itemStack != null && !hideClothing && itemStack.Item.FirstTexture != null)
                 {
                     int textureSubId = itemStack.Item.FirstTexture.Baked.TextureSubId;

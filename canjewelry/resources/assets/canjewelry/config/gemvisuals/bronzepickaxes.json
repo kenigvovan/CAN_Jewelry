@@ -1,0 +1,63 @@
+{
+  "Group": "bronzepickaxes",
+  "defineGroups": {
+    "bronzepickaxes": [
+      "pickaxe-tinbronze",
+      "pickaxe-bismuthbronze",
+      "pickaxe-blackbronze"
+    ]
+  },
+  "Priority": 100,
+  "default": false,
+  "hidden": false,
+  "Sockets": [
+    {
+      "Translation": {
+        "X": 0.473,
+        "Y": -0.224,
+        "Z": 0.005
+      },
+      "Rotation": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.35,
+        "Y": 0.35,
+        "Z": 0.35
+      }
+    }
+  ],
+  "socketsBack": [
+    {
+      "Translation": {
+        "X": 0.469,
+        "Y": -0.359,
+        "Z": 0.009
+      },
+      "Rotation": {
+        "X": 0.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.35,
+        "Y": 0.35,
+        "Z": 0.35
+      }
+    }
+  ]
+}

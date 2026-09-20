@@ -1,0 +1,104 @@
+{
+  "Match": [
+    "blade-blackguard-iron"
+  ],
+  "Priority": 100,
+  "default": false,
+  "hidden": false,
+  "Sockets": [
+    {
+      "Translation": {
+        "X": 0.0,
+        "Y": -0.28,
+        "Z": -0.01
+      },
+      "Rotation": {
+        "X": -0.0,
+        "Y": 180.0,
+        "Z": -0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.35,
+        "Y": 0.35,
+        "Z": 0.35
+      }
+    },
+    {
+      "Translation": {
+        "X": 0.1,
+        "Y": -0.28,
+        "Z": -0.01
+      },
+      "Rotation": {
+        "X": -0.0,
+        "Y": 180.0,
+        "Z": -0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.35,
+        "Y": 0.35,
+        "Z": 0.35
+      }
+    }
+  ],
+  "socketsBack": [
+    {
+      "Translation": {
+        "X": 0.0,
+        "Y": -0.26,
+        "Z": -0.01
+      },
+      "Rotation": {
+        "X": -0.0,
+        "Y": 180.0,
+        "Z": -0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.35,
+        "Y": 0.35,
+        "Z": 0.35
+      }
+    },
+    {
+      "Translation": {
+        "X": 0.1,
+        "Y": -0.26,
+        "Z": -0.01
+      },
+      "Rotation": {
+        "X": -0.0,
+        "Y": 180.0,
+        "Z": -0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.35,
+        "Y": 0.35,
+        "Z": 0.35
+      }
+    }
+  ]
+}

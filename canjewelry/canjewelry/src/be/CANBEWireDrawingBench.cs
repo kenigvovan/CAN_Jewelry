@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using canjewelry.src.blocks;
+using canjewelry.src.render;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
@@ -11,7 +12,7 @@ using Vintagestory.GameContent;
 
 namespace canjewelry.src.be
 {
-    public class CANBEWireDrawingBench: BlockEntityContainer, ITexPositionSource
+    public class CANBEWireDrawingBench: BlockEntityContainer
     {     
         public EnumMountAngleMode AngleMode
         {
@@ -35,9 +36,7 @@ namespace canjewelry.src.be
         private ICoreClientAPI capi;
         private ICoreServerAPI sapi;
         MeshData defaultMesh = null;
-        public Size2i AtlasSize => this.capi.BlockTextureAtlas.Size;
         public InventoryBase inventory;
-        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
         public override InventoryBase Inventory => this.inventory;
 
         public override string InventoryClassName => "canwiredrawingbench";
@@ -45,48 +44,40 @@ namespace canjewelry.src.be
         // Set in StartSqueeze, consumed in onSqueezing — needed so OnWireDrawn knows who to refund.
         private IPlayer pendingSqueezer;
 
-        public TextureAtlasPosition this[string textureCode]
+        /// <summary>
+        /// The texture source for one mesh build: the block's own textures, plus the wood this bench
+        /// was built from and the metal of the wire currently on it.
+        /// </summary>
+        private CANTexSource TexSource()
         {
-            get
-            {
-                if(tmpAssets.TryGetValue(textureCode, out var assetCode))
-                {
-                    return this.getOrCreateTexPos(assetCode);
-                }
-   
-                Dictionary<string, CompositeTexture> dictionary;
-                dictionary = new Dictionary<string, CompositeTexture>();
-                foreach(var it in this.Block.Textures)
-                {
-                    dictionary.Add(it.Key, it.Value);
-                }
-                AssetLocation texturePath = (AssetLocation)null;
-                CompositeTexture compositeTexture;
-                if (dictionary.TryGetValue(textureCode, out compositeTexture))
-                    texturePath = compositeTexture.Baked.BakedName;
-                if ((object)texturePath == null && dictionary.TryGetValue("all", out compositeTexture))
-                    texturePath = compositeTexture.Baked.BakedName;
+            var source = new CANTexSource(this.capi, this.capi.BlockTextureAtlas, this.Block?.Textures,
+                "wire drawing bench " + this.Block?.Code);
 
-                return this.getOrCreateTexPos(texturePath);
-            }
-        }
-        private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
-        {
-            TextureAtlasPosition texPos = this.capi.BlockTextureAtlas[texturePath];
-            if (texPos == null)
+            source.Overrides["plank"] = new AssetLocation("game:block/wood/planks/" + this.woodType + "1.png");
+            source.Overrides["debarked"] = new AssetLocation("game:block/wood/debarked/" + this.woodType + ".png");
+
+            // The wire is drawn in one of two places depending on whether it is done, and the other
+            // place gets the invisible texture rather than being left to the block's own.
+            AssetLocation invisible = new AssetLocation("canjewelry:item/gem/notvis.png");
+            AssetLocation metal = this.inventory[0].Empty
+                ? null
+                : this.inventory[0].Itemstack?.Item?.Textures?["metal"]?.Base;
+
+            if (metal != null && !this.resultReady)
             {
-                IAsset asset = this.capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
-                if (asset != null)
-                {
-                    BitmapRef bitmap = asset.ToBitmap(this.capi);
-                    this.capi.BlockTextureAtlas.GetOrInsertTexture(texturePath, out int _, out texPos, () => asset.ToBitmap(this.Api as ICoreClientAPI));
-                }
-                else
-                {
-                    this.capi.World.Logger.Warning("For render in block " + this.Block.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", "", (object)texturePath);
-                }
+                source.Overrides["wire"] = metal;
             }
-            return texPos;
+            else if (metal != null)
+            {
+                source.Overrides["wireready"] = metal;
+                source.Overrides["wire"] = invisible;
+            }
+            else
+            {
+                source.Overrides["wire"] = invisible;
+            }
+
+            return source;
         }
         private Vec3f animRot = new Vec3f();
         public long listenerId;
@@ -149,7 +140,7 @@ namespace canjewelry.src.be
                         this.defaultMesh = animUtil.InitializeAnimator("wiring2" + string.Concat(new string[]
                         {
                         "head", orient, wire, woodType
-                        }), Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), this, this.animRot);
+                        }), Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), TexSource(), this.animRot);
                     }
                 }
             }        
@@ -178,11 +169,9 @@ namespace canjewelry.src.be
 
                     this.inventory[0].Itemstack = ev.Output;
                 }
-                else
-                {
-                    this.tmpAssets.Remove("wire");
-
-                }
+                // The client used to drop its "wire" texture override here; the override is now
+                // worked out per mesh build from the inventory and resultReady, so there is nothing
+                // left to undo.
                 this.pendingSqueezer = null;
                 this.Api.World.UnregisterGameTickListener(this.listenerId);
                 
@@ -244,16 +233,7 @@ namespace canjewelry.src.be
             base.FromTreeAttributes(tree, worldForResolving);
             this.inventory.FromTreeAttributes(tree.GetTreeAttribute("inventory"));
             this.resultReady = tree.GetBool("resultReady");
-            if (!this.resultReady)
-            {
-                this.tmpAssets["wireready"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
             this.MeshAngle = tree.GetFloat("meshAngle", this.MeshAngle);
-            bool updateMesh = false;
-            if(this.woodType is null)
-            {
-                updateMesh = true;
-            }
             this.woodType = tree.GetString("woodType");
             if (this.Api != null && this.Api.Side == EnumAppSide.Client)
             {
@@ -317,7 +297,7 @@ namespace canjewelry.src.be
                         this.defaultMesh = animUtil.InitializeAnimator("wiring2" + string.Concat(new string[]
                         {
                         "head", orient, wire, woodType
-                        }), Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), this, this.animRot);
+                        }), Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), TexSource(), this.animRot);
                     }
                 }
             }
@@ -329,45 +309,24 @@ namespace canjewelry.src.be
         }
         private MeshData getMesh(ITesselatorAPI tesselator, string part, Vec3f rotationDeg = null)
         {
-            Dictionary<string, MeshData> lanternMeshes = ObjectCacheUtil.GetOrCreate<Dictionary<string, MeshData>>(this.Api, "blockLanternBlockMeshes", () => new Dictionary<string, MeshData>());
-            MeshData mesh = null;
-            CANWireDrawingBench block = this.Api.World.BlockAccessor.GetBlock(this.Pos) as CANWireDrawingBench;
-            if (block == null)
+            // Under our own key: this used to sit under "blockLanternBlockMeshes", the key the
+            // vanilla lantern uses, so the two shared one dictionary.
+            Dictionary<string, MeshData> meshes = ObjectCacheUtil.GetOrCreate(this.Api,
+                "canjewelry:wireDrawingBenchMeshes", () => new Dictionary<string, MeshData>());
+
+            if (this.Api.World.BlockAccessor.GetBlock(this.Pos) is not CANWireDrawingBench block)
             {
                 return null;
             }
-            //lanternMeshes.Clear();
-            string orient = block.LastCodePart(0);
-            string wire = GetWireType();
-            if (!this.inventory[0].Empty && !this.resultReady)
-            {
-                this.tmpAssets["wire"] = this.inventory[0].Itemstack.Item.Textures["metal"].Base;
-            }
-            if (!this.inventory[0].Empty && this.resultReady)
-            {
-                this.tmpAssets["wireready"] = this.inventory[0].Itemstack.Item.Textures["metal"].Base;
-                this.tmpAssets["wire"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
 
-            if (this.inventory[0].Empty)
-            {
-                this.tmpAssets["wire"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
+            // The wire state is part of the key as well as of the textures: an empty bench, one
+            // being worked and one with the wire ready are three different meshes.
+            string key = string.Concat(part, "-", block.LastCodePart(0), "-", GetWireType(), "-", woodType,
+                "-", this.resultReady ? "ready" : this.inventory[0].Empty ? "empty" : "working");
 
-            this.tmpAssets["plank"] = new AssetLocation("game:block/wood/planks/" + this.woodType +"1.png");
-            this.tmpAssets["debarked"] = new AssetLocation("game:block/wood/debarked/" + this.woodType + ".png");
-            if (lanternMeshes.TryGetValue(string.Concat(new string[]
-            {
-                part, orient, wire, woodType
-            }), out mesh))
-            {
-                return mesh;
-            }
-            
-            return lanternMeshes[string.Concat(new string[]
-            {
-                part, orient, wire, woodType
-            })] = GenMesh(this.Api as ICoreClientAPI, null,  tesselator, this, part, rotationDeg);
+            if (meshes.TryGetValue(key, out MeshData mesh)) return mesh;
+
+            return meshes[key] = GenMesh(this.Api as ICoreClientAPI, null, tesselator, TexSource(), part, rotationDeg);
         }
         public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null, string part = "", Vec3f rotationDeg = null)
         {         
@@ -388,50 +347,25 @@ namespace canjewelry.src.be
                 return null;
             }
 
-            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, this.animRot, 0, 0, 0);
+            tesselator.TesselateShape("canjewelry wiredrawingbench", shape, out var modeldata,
+                textureSource ?? TexSource(), this.animRot, 0, 0, 0);
             return modeldata;
         }
+        /// <summary>
+        /// Builds the head of the bench again after the wire on it changed. Goes through the same
+        /// cache as <see cref="getMesh"/> — it used to read that cache and then overwrite the entry
+        /// with a fresh build regardless, so the lookup never saved anything.
+        /// </summary>
         public void UpdateWirePart()
         {
-            Dictionary<string, MeshData> lanternMeshes = ObjectCacheUtil.GetOrCreate<Dictionary<string, MeshData>>(this.Api, "blockLanternBlockMeshes", () => new Dictionary<string, MeshData>());
-            MeshData mesh = null;
-            CANWireDrawingBench block = this.Api.World.BlockAccessor.GetBlock(this.Pos) as CANWireDrawingBench;
-            if (block == null)
-            {
-                return;
-            }
-            if (!this.inventory[0].Empty && !this.resultReady) 
-            {
-                this.tmpAssets["wire"] = this.inventory[0].Itemstack.Item.Textures["metal"].Base;
-            }
-            if (!this.inventory[0].Empty && this.resultReady)
-            {
-                this.tmpAssets["wireready"] = this.inventory[0].Itemstack.Item.Textures["metal"].Base;
-                this.tmpAssets["wire"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
+            if (this.Api.World.BlockAccessor.GetBlock(this.Pos) is not CANWireDrawingBench block) return;
 
-            if (this.inventory[0].Empty)
-            {
-                this.tmpAssets["wire"] = new AssetLocation("canjewelry:item/gem/notvis.png");
-            }
-            this.tmpAssets["plank"] = new AssetLocation("game:block/wood/planks/" + this.woodType + "1.png");
-            this.tmpAssets["debarked"] = new AssetLocation("game:block/wood/debarked/" + this.woodType + ".png");
-            string orient = block.LastCodePart(0);
-            string wire = GetWireType();
-            string part = block.LastCodePart(1);
-            string key = string.Concat(new string[]
-            {
-                "head", orient, wire, woodType
-            });
+            this.defaultMesh = getMesh(canjewelry.capi.Tesselator, "head", this.animRot);
 
-            if (lanternMeshes.TryGetValue(key, out mesh))
-            {
-                this.defaultMesh = mesh;
-            }
-            animUtil.InitializeAnimator("wiring2" + key, Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"), this, this.animRot);
-
-            this.defaultMesh = GenMesh(this.Api as ICoreClientAPI, null, canjewelry.capi.Tesselator, this, "head", this.animRot);
-            lanternMeshes[key] = this.defaultMesh;
+            string key = string.Concat("head-", block.LastCodePart(0), "-", GetWireType(), "-", woodType);
+            animUtil?.InitializeAnimator("wiring2" + key,
+                Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"),
+                TexSource(), this.animRot);
         }
         private BlockFacing facing;
 }

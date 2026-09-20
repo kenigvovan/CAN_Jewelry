@@ -37,7 +37,13 @@ namespace canjewelry.src
         public Dictionary<string, HashSet<string>> PossibleGemBuffs = new Dictionary<string, HashSet<string>>();
         public Dictionary<string, BuffAttributes> BuffAttributesDict = new Dictionary<string, BuffAttributes>();
         public Dictionary<string, CuttingAttributes> CuttingAttributesDict = new Dictionary<string, CuttingAttributes>();
-        public static Random rand = new Random();
+        /// <summary>
+        /// The source of randomness for buff rolls, cuts and drop chances. Random.Shared is
+        /// thread safe, while the shared instance this used to be was not: buff values are rolled
+        /// from server ticks and block breaks alike, and a Random used from two threads at once
+        /// stops returning anything but zero.
+        /// </summary>
+        public static Random rand => Random.Shared;
         public int wirehank_per_strap = 4;
         [JsonConverter(typeof(utils.CompactStringArrayConverter))]
         public string[] socketTiersColorsWords = new string[0];
@@ -122,6 +128,21 @@ namespace canjewelry.src
         // that deliberately run the core alone and have already dealt with the display stands.
         public bool suppressAdornmentsWarning = false;
 
+        // Whether encrusted gems are drawn on the item's model. Purely visual - buffs, sockets and
+        // tooltips are unaffected - but it costs a rebuilt mesh per item and gem combination, so it
+        // can be turned off. Read on the client; in a local game that is this file, on a server the
+        // value that arrives with the config sync, which is what lets an admin switch it off for
+        // everyone at once.
+        public bool enableGemVisuals = true;
+
+        // Whether players get the extra jewelry inventory - the character tab with the nose,
+        // earrings, eyes and palms slots. Encrusting tools, weapons and armour does not need it.
+        // The server decides; clients follow the value that arrives with the config sync. Turning
+        // it off hides whatever already sits in those slots and drops its buffs, but the contents
+        // stay in the save and come back when it is turned on again. Inventory creation reads it
+        // at startup, so a change needs a restart.
+        public bool enableAdditionalJewelrySlots = true;
+
         // Empty on purpose: the adornments live in canjewelryadornments and register themselves
         // through CANJewelryRegistry.RegisterItemGroupMembers("jewelry", ...). The key itself stays
         // declared below so "$jewelry" in existing configs still resolves — to an empty list when
@@ -166,7 +187,7 @@ namespace canjewelry.src
         private static readonly HashSet<string> MeleeWeaponSets = new HashSet<string>
         {
             "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
-            "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade",
+            "ihammer", "tshammer", "biа axe", "tssword", "shammer", "hamb", "atgeir", "blade",
             "axe-long", "sword-long", "sword-great", "sword-short",
             "javelin-plain", "pike-plain", "club-plain", "mace-plain", "poleaxe-plain",
             "halberd-plain", "quarterstaff-plain", "claymore", "warhammer", "dagger",
@@ -243,8 +264,18 @@ namespace canjewelry.src
 
             if (gems_drops_table.Count == 0) FillDropTable();
 
-            debugMode = false;
-            chance_gem_drop_on_item_broken = 0.2f;
+            // Behind the same guard as every other value here. Without it a version bump - which is
+            // when this runs with onlyEmptyStructs - turned the admin's debug flag back off and the
+            // drop chance back to the default, quietly, on every update.
+            if (!onlyEmptyStructs) debugMode = false;
+
+            // The chance keeps the "or it is still zero" half of the guard, the way pan_take_per_use
+            // above does: a config written before the field existed deserialises to zero and would
+            // otherwise silently mean "never drop a gem".
+            if (!onlyEmptyStructs || chance_gem_drop_on_item_broken == 0)
+            {
+                chance_gem_drop_on_item_broken = 0.2f;
+            }
 
             if (buffs_to_show_gui.Count == 0)
             {
@@ -257,6 +288,10 @@ namespace canjewelry.src
 
             if (!onlyEmptyStructs || PossibleGemBuffs.Count == 0) FillPossibleGemBuffs();
             if (!onlyEmptyStructs || BuffAttributesDict.Count == 0) FillBuffAttributes();
+
+            // Unconditional: everything in there guards itself, and it is what an existing config
+            // has to be able to pick up on an update.
+            FillMiscDefaults();
 
             AddVanillaArmoryCompat();
         }
@@ -1721,6 +1756,17 @@ namespace canjewelry.src
                 { "pear",     new CuttingAttributes(new float[] { 1.7f, 1.05f, 1.05f }) },
             };
 
+        }
+
+        /// <summary>
+        /// Defaults that have nothing to do with buff attributes, but used to sit at the tail of
+        /// <see cref="FillBuffAttributes"/> — which only runs when the buff table is empty. An
+        /// existing config therefore never received any of them: a world updated from an older
+        /// version had no panning drops and no socket tier colours until something else filled them
+        /// in. Every value here guards itself, so this is called unconditionally.
+        /// </summary>
+        private void FillMiscDefaults()
+        {
             if (socketTiersColorsWords.Length == 0) socketTiersColorsWords = new string[] { "green", "blue", "purple" };
             if (socketTiersColors.Length == 0)      socketTiersColors      = new string[] { "2FE147", "2B3FF7", "9214C9" };
 
@@ -1936,18 +1982,40 @@ namespace canjewelry.src
                 GrindingBuffIncreaseMultipliers = grindingBuffIncreaseMultipliers;
             }
         }
-        public void InitColors()
+        /// <summary>
+        /// Turns the colour words of the config into the hex strings the tooltip writes into a VTML
+        /// font tag. Only words that name a colour are taken: an unknown one used to become white
+        /// silently, because the "did you mean a colour" answer of tryFindColor was thrown away.
+        ///
+        /// <para>Hex, not the decimal that used to come out of ToString(): the tooltip puts these
+        /// straight after a '#', so a decimal number there is not a colour at all and the tier
+        /// marker rendered as nothing. The defaults a few hundred lines up are hex for that reason,
+        /// and this method overwrote them on every server start.</para>
+        /// </summary>
+        public void InitColors(ILogger logger = null)
         {
+            if (socketTiersColorsWords == null || socketTiersColorsWords.Length == 0) return;
+
             List<string> tmpList = new List<string>();
             foreach (var it in socketTiersColorsWords)
             {
-                utils.CommonFunctions.tryFindColor(it, out var colorInt);
-                if (colorInt != 0)
+                if (!utils.CommonFunctions.tryFindColor(it, out int colorInt))
                 {
-                    tmpList.Add(colorInt.ToString());
+                    logger?.Warning("[canjewelry] socketTiersColorsWords: '{0}' is not a colour name, ignored", it);
+                    continue;
                 }
+
+                // tryFindColor hands back the game's byte order (ABGR); the three colour bytes are
+                // written out in the order a hex colour is read in.
+                int r = colorInt & 0xFF;
+                int g = (colorInt >> 8) & 0xFF;
+                int b = (colorInt >> 16) & 0xFF;
+                tmpList.Add(string.Format("{0:X2}{1:X2}{2:X2}", r, g, b));
             }
-            socketTiersColors = tmpList.ToArray();
+
+            // Words that name nothing leave the defaults in place rather than a shorter list, which
+            // the tooltip indexes by socket tier.
+            if (tmpList.Count > 0) socketTiersColors = tmpList.ToArray();
         }
     }
 }

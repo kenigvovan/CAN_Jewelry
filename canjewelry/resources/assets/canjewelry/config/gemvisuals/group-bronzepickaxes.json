@@ -1,0 +1,10 @@
+{
+  "defineGroups": {
+    "bronzepickaxes": [
+      "pickaxe-tinbronze", "pickaxe-bismuthbronze", "pickaxe-blackbronze"
+    ]
+  },
+  "Priority": 101,
+  "default": false,
+  "hidden": false
+}

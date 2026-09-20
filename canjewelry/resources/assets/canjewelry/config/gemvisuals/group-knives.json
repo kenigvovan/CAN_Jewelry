@@ -1,0 +1,10 @@
+{
+  "defineGroups": {
+    "knives": [
+      "knife-generic-*"
+    ]
+  },
+  "Priority": 101,
+  "default": false,
+  "hidden": false
+}

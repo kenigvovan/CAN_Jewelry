@@ -15,6 +15,7 @@ using canjewelry.src.inventories;
 using canjewelry.src.items;
 using canjewelry.src.items.resource;
 using canjewelry.src.jewelry;
+using canjewelry.src.render;
 using canjewelry.src.utils;
 using HarmonyLib;
 using Newtonsoft.Json;
@@ -145,6 +146,69 @@ namespace canjewelry.src
         /// </summary>
         public static Config config;
 
+        internal const string AdditionalJewelryInventory = "additionaljewelrycharacter";
+
+        internal static bool AdditionalJewelrySlotsEnabled => config?.enableAdditionalJewelrySlots != false;
+
+        /// <summary>
+        /// The player's extra jewelry inventory, or null when the slots are switched off. Saves made
+        /// while they were on still carry the inventory, so the flag is checked here rather than
+        /// relying on the inventory being absent.
+        /// </summary>
+        internal static IInventory GetAdditionalJewelryInventory(IPlayer player)
+            => AdditionalJewelrySlotsEnabled ? player?.InventoryManager.GetOwnInventory(AdditionalJewelryInventory) : null;
+
+        /// <summary>
+        /// Gem poses the admin put into the server's pose folder, as JSON, or null when there are
+        /// none. Read once at startup and handed to every client that does not have them yet.
+        /// </summary>
+        private static string serverGemVisuals;
+
+        /// <summary>Ceiling on the pose payload the server hands out, in characters of JSON.</summary>
+        private const int MaxGemVisualsChars = 4 * 1024 * 1024;
+
+        /// <summary>Fingerprint of <see cref="serverGemVisuals"/>, empty when there are none.</summary>
+        private static string serverGemVisualsHash = "";
+
+        // What actually goes on the wire, compressed once instead of once per recipient. The config
+        // is thousands of entries and the poses up to four megabytes, and both are the same bytes
+        // for everyone - gzipping them per player made an admin command cost N compressions and
+        // turned a request any client can send into a way to keep the server busy.
+        private static byte[] configPayload;
+        private static byte[] gemVisualsPayload;
+
+        /// <summary>
+        /// Throws away the prepared config bytes, so the next player to ask gets the current config.
+        /// Called wherever the config changes - a command, or the file being loaded.
+        /// </summary>
+        internal static void InvalidateConfigPayload()
+        {
+            configPayload = null;
+        }
+
+        /// <summary>
+        /// Everything derived from the config that has to be worked out again once it is replaced at
+        /// runtime. One place for it, because the places that cache something from the config are
+        /// not the places that know it changed - the pan built its drop table on block load, long
+        /// before the server's config arrived, and kept panning by that table for the session.
+        /// </summary>
+        internal static void OnConfigReplaced()
+        {
+            InvalidateConfigPayload();
+            // Poses resolve through the item groups the config owns, so answers cached against the
+            // previous groups are no longer valid.
+            CANGemVisualRegistry.ClearResolveCache();
+            EncrustableCB.ClearVariantTiersCache();
+            blocks.CANBlockPan.OnConfigReplaced();
+        }
+
+        // When each player last had the config sent to them, by player uid. A client asks once on
+        // join, so anything more often than this is either a broken client or one trying to make the
+        // server work; either way the answer it already has is still current.
+        private static readonly Dictionary<string, long> lastConfigRequestMs = new Dictionary<string, long>();
+
+        private const long ConfigRequestIntervalMs = 5000;
+
         /// <summary>
         /// Map of gem type → texture path.
         /// </summary>
@@ -160,8 +224,29 @@ namespace canjewelry.src
         /// </summary>
         public static List<GemCuttingRecipe> gemCuttingRecipes = new();
 
+        // Event subscriptions this instance made, kept so Dispose can take them back off. A lambda
+        // written straight into the += cannot be unsubscribed, and the engine's event bus outlives
+        // a world: leaving them on means the next join runs the previous session's handlers too.
+        private Action dropGemMeshes;
+        private PlayerEventDelegate onClientPlayerJoin;
+        private PlayerDelegate onPlayerDisconnect;
+
+        /// <summary>
+        /// How many sides of the mod are running. In single player the client and the server are two
+        /// instances in one process sharing every static here, so whichever side is disposed first
+        /// must not pull the shared state out from under the other.
+        /// </summary>
+        private static int liveSides;
+
+        /// <summary>Which side this instance is, so Dispose only clears what it set up.</summary>
+        private EnumAppSide side;
+
+        /// <summary>Serialises the one-time config load between the two sides of a single player world.</summary>
+        private static readonly object configLoadLock = new object();
+
         private GuiDialogJewelryGuide guideDialog;
         private GuiDialogCuttingSettings cuttingSettingsDialog;
+        private GuiDialogGemVisualDebug gemVisualDebugDialog;
         /// <summary>
         /// Loaded wearable restrictions, keyed by "category/name". Filled from every mod that ships
         /// config/restrictions/** in the canjewelry domain, so a content mod can add a display
@@ -201,9 +286,16 @@ namespace canjewelry.src
             // Config has to exist before any asset is loaded: Block.OnLoaded (CANBlockPan) reads
             // config.panningDrops, and on the client that runs before StartClientSide, so loading
             // it there only would leave the block with a null config and crash world join.
+            //
+            // Under a lock and checked again inside it: in single player both sides run StartPre,
+            // and two of them finding config null at once meant loading the file twice and writing
+            // it back twice - the second write against a config the first had already migrated.
             if (config == null)
             {
-                loadConfig(api);
+                lock (configLoadLock)
+                {
+                    if (config == null) loadConfig(api);
+                }
             }
 
             // Anything registered from here on misses this run's defaults. It is still recorded and
@@ -212,9 +304,17 @@ namespace canjewelry.src
 
             // Guard against appending twice within a single VS process (e.g. leave and rejoin a
             // world with the mod active), which would otherwise leave a duplicate entry behind.
-            if (!PlayerInventoryManager.defaultInventories.Contains("additionaljewelrycharacter"))
+            // The class stays registered either way: a save that already holds the inventory
+            // would otherwise lose it on the server and break player data on the client.
+            bool listed = PlayerInventoryManager.defaultInventories.Contains(AdditionalJewelryInventory);
+            if (AdditionalJewelrySlotsEnabled && !listed)
             {
-                PlayerInventoryManager.defaultInventories = PlayerInventoryManager.defaultInventories.Append("additionaljewelrycharacter");
+                PlayerInventoryManager.defaultInventories = PlayerInventoryManager.defaultInventories.Append(AdditionalJewelryInventory);
+            }
+            else if (!AdditionalJewelrySlotsEnabled && listed)
+            {
+                // Left behind by an earlier world of this process that had the slots on.
+                PlayerInventoryManager.defaultInventories = PlayerInventoryManager.defaultInventories.Remove(AdditionalJewelryInventory);
             }
             base.StartPre(api);
         }
@@ -227,10 +327,16 @@ namespace canjewelry.src
         public override void Start(ICoreAPI api)
         {
             Instance = this;
+            side = api.Side;
+            liveSides++;
             base.Start(api);
             harmonyInstance = new Harmony(harmonyID);
-            var p = harmonyInstance.GetPatchedMethods();
-            if(p.All(it => it.Name != "GetMaxDurability"))
+
+            // Asking a freshly built Harmony instance what it has patched always answers "nothing",
+            // so the old guard here never fired. What it meant to prevent is patching the same
+            // method twice within one process - the two sides of a single player world both run
+            // this - and that is what Harmony's own registry answers.
+            if (!IsPatchedByUs(typeof(CollectibleObject).GetMethod("GetMaxDurability")))
             {
                 harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetMaxDurability"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CollectibleObject_GetMaxDurability")));
             }
@@ -294,9 +400,65 @@ namespace canjewelry.src
                 return true;
             });
 
+            // Tuning menu for the gem poses. Same gate as the other admin tooling: creative, or the
+            // privilege that the server commands ask for. It only edits client side visuals, but
+            // it is a development tool and has no business being on a hotkey for everyone.
+            api.Input.RegisterHotKey("canjewelrygemvisual", "CAN Jewelry gem visual debug",
+                Vintagestory.API.Client.GlKeys.G, Vintagestory.API.Client.HotkeyType.GUIOrOtherControls, false, false, true);
+            api.Input.SetHotKeyHandler("canjewelrygemvisual", comb =>
+            {
+                var player = api.World?.Player;
+                if (player == null) return false;
+                if (player.WorldData.CurrentGameMode != EnumGameMode.Creative
+                    && !player.HasPrivilege(Vintagestory.API.Server.Privilege.controlserver))
+                {
+                    return false;
+                }
+
+                // Built once and reused: the dialogue reads the held item in OnGuiOpened, so a
+                // fresh instance per press would buy nothing and leave the old ones registered.
+                gemVisualDebugDialog ??= new GuiDialogGemVisualDebug(api);
+                if (gemVisualDebugDialog.IsOpened()) gemVisualDebugDialog.TryClose();
+                else gemVisualDebugDialog.TryOpen();
+                return true;
+            });
+
+            commands.RegisterCommands.registerClientCommands(api);
+
+            // A built composite holds the atlas positions of its textures, which a reload moves.
+            // Without this the gems keep the old positions and come out wearing whatever texture
+            // now sits there, until the player leaves the world.
+            // Kept in a field rather than written inline: the same delegate object is needed again
+            // in Dispose to take the subscription back off, and a fresh lambda would not match.
+            dropGemMeshes = () =>
+            {
+                EncrustableCB.ClearMeshCache(api);
+                CANGemMeshBuilder.ClearBaseMeshCache();
+            };
+            api.Event.ReloadTextures += dropGemMeshes;
+            api.Event.ReloadShapes += dropGemMeshes;
+            api.Event.LeaveWorld += dropGemMeshes;
+
             clientChannel = api.Network.RegisterChannel("canjewelry");
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
+            clientChannel.RegisterMessageType(typeof(GemVisualsPacket));
             clientChannel.RegisterMessageType(typeof(CuttingSettingsPacket));
+            clientChannel.SetMessageHandler<GemVisualsPacket>((packet) =>
+            {
+                if (packet == null) return;
+
+                // Our own world: the server behind it is this process, and it read the very folder
+                // this client reads. Taking the poses back from it would only put a copy made when
+                // the world started above the files themselves - and above anything the debug menu
+                // writes while playing, since server poses outrank local ones. Ignored, so tuning
+                // shows up at once here and a dedicated server still speaks for everyone else.
+                if (capi.IsSinglePlayer) return;
+
+                // Poses the admin set win over everything local, so whatever was already built with
+                // the local ones has to be built again.
+                CANGemVisualRegistry.ApplyServerRules(capi, packet.Rules, packet.Hash);
+                EncrustableCB.ClearMeshCache(capi);
+            });
             clientChannel.SetMessageHandler<CuttingSettingsPacket>((packet) =>
             {
                 // Only ever arrives in response to "/canjewelry cutting gui", which the server
@@ -326,6 +488,9 @@ namespace canjewelry.src
                     received.ExpandItemGroups();
                     config = received;
                     AddBehaviorAndSocketNumber(capi);
+                    OnConfigReplaced();
+                    // The tab was set up from the local config before the server's arrived.
+                    harmony.harmPatch.ApplyAdditionalJewelryTabVisibility();
                 }
                 catch (Exception e)
                 {
@@ -345,35 +510,38 @@ namespace canjewelry.src
                 }
             }
             ClientMain.ClassRegistry.RegisterInventoryClass("additionaljewelrycharacter", typeof(InventoryCharacterAdditionalJewelry));
-            api.Event.PlayerJoin += (IClientPlayer byPlayer) =>
+            onClientPlayerJoin = byPlayer =>
             {
-                if (byPlayer != null && capi.World.Player != null && byPlayer == capi.World.Player)
+                if (byPlayer == null || capi?.World?.Player == null || byPlayer != capi.World.Player) return;
+
+                if (clientChannel.Connected)
                 {
-                    if (clientChannel.Connected)
-                    {
-                        clientChannel.SendPacket(new SyncCANJewelryPacket()
-                        {
-                            CompressedConfig = ""
-                        });
-                    }
-                    else
-                    {
-                        canjewelry.capi.Event.RegisterCallback((dt =>
-                        {
-                            if (clientChannel.Connected)
-                            {
-                                clientChannel.SendPacket(new SyncCANJewelryPacket()
-                                {
-                                    CompressedConfig = ""
-                                });
-                            }
-                        }
-                        ), 60 * 1000);
-                    }
+                    RequestConfig();
+                    return;
                 }
+
+                // The channel is not up yet, which happens on a slow join; ask again once it is.
+                capi.Event.RegisterCallback(dt =>
+                {
+                    if (clientChannel != null && clientChannel.Connected) RequestConfig();
+                }, 60 * 1000);
             };
-            
+            api.Event.PlayerJoin += onClientPlayerJoin;
+
         }
+        /// <summary>
+        /// Asks the server for the config and, with it, for the gem poses the client does not have.
+        /// The hash goes along so the server can skip poses this client already carries — the retry
+        /// path used to leave it out, which made the server resend the whole set.
+        /// </summary>
+        private static void RequestConfig()
+        {
+            clientChannel?.SendPacket(new SyncCANJewelryPacket()
+            {
+                GemVisualsHash = CANGemVisualRegistry.AppliedServerRulesHash
+            });
+        }
+
         public override void AssetsLoaded(ICoreAPI api)
         {
             base.AssetsLoaded(api);
@@ -382,6 +550,34 @@ namespace canjewelry.src
             {
                 var restrictionGroupsServer = DiscoverRestrictionGroups(api);
                 LoadData(api, restrictionGroupsServer);
+
+                // The server never renders a gem, so it does not load poses for itself - it only
+                // reads what the admin put in the pose folder, to hand it to the clients.
+                CANGemVisualRegistry.SeedUserRulesFromAssets(api);
+                serverGemVisuals = CANGemVisualRegistry.CollectUserRulesJson(api);
+
+                // Sent to every player who joins, so a folder that has grown out of hand is refused
+                // here rather than on the wire.
+                if (serverGemVisuals != null && serverGemVisuals.Length > MaxGemVisualsChars)
+                {
+                    api.Logger.Error(
+                        "[canjewelry] gem visuals: {0} holds {1} chars of poses, over the {2} limit - sending none",
+                        CANGemVisualRegistry.UserRuleDirectory, serverGemVisuals.Length, MaxGemVisualsChars);
+                    serverGemVisuals = null;
+                }
+
+                serverGemVisualsHash = CANGemVisualRegistry.Fingerprint(serverGemVisuals);
+                if (serverGemVisuals != null)
+                {
+                    api.Logger.Notification("[canjewelry] gem visuals: sending the poses of {0} to clients",
+                        CANGemVisualRegistry.UserRuleDirectory);
+                }
+            }
+            // Gem poses are needed where the meshes are built, so unlike the restrictions above
+            // this one is a client affair. The server never places a gem on a model.
+            if (api.Side == EnumAppSide.Client)
+            {
+                CANGemVisualRegistry.LoadFromAssets(api);
             }
             CANItemWearable.NotVisTexture = new AssetLocation("canjewelry:item/gem/notvis.png");
         }
@@ -536,19 +732,28 @@ namespace canjewelry.src
             ServerPatcher.ApplyPatches(api, harmonyID, ref harmonyInstance);
             WarnIfAdornmentsMissing(api);
 
-            config.InitColors();
+            config.InitColors(api.Logger);
             api.RegisterEntityBehaviorClass("cangembuffaffected", typeof(CANGemBuffAffected));
             
             serverChannel = sapi.Network.RegisterChannel("canjewelry");
             serverChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
+            serverChannel.RegisterMessageType(typeof(GemVisualsPacket));
             api.Event.ServerRunPhase(EnumServerRunPhase.RunGame, () => AddBehaviorAndSocketNumber(sapi));
             api.Event.PlayerNowPlaying += OnPlayerNowPlaying;
             commands.RegisterCommands.registerServerCommands(sapi);
 
             serverChannel.SetMessageHandler<SyncCANJewelryPacket>((player, packet) =>
             {
+                // Anyone connected can send this, and answering it is the most expensive thing the
+                // mod does per packet, so a client that asks again within seconds is simply told
+                // nothing - the answer it already has has not changed.
+                if (!AllowConfigRequest(player)) return;
+
                 sendNewValues(player);
+                sendGemVisualsIfChanged(player, packet?.GemVisualsHash);
             });
+            onPlayerDisconnect = player => lastConfigRequestMs.Remove(player.PlayerUID);
+            api.Event.PlayerDisconnect += onPlayerDisconnect;
 
             serverChannel.RegisterMessageType(typeof(CuttingSettingsPacket));
             serverChannel.SetMessageHandler<CuttingSettingsPacket>((player, packet) =>
@@ -618,6 +823,9 @@ namespace canjewelry.src
         }
         public void OnPlayerNowPlaying(IServerPlayer byPlayer)
         {
+            // Both sides share this static and either of them may have cleared it by now.
+            if (config == null || byPlayer?.Entity == null) return;
+
             if (!canjewelry.config.TurnOffBuffs)
             {
                 var plBeh = byPlayer.Entity.GetBehavior<CANGemBuffAffected>();
@@ -630,6 +838,29 @@ namespace canjewelry.src
                 }
             }
         }
+        /// <summary>
+        /// Whether one of our patch ids already sits on this method. Answered by Harmony's process
+        /// wide registry rather than by our own instance, which is what makes it true for the second
+        /// side of a single player world.
+        /// </summary>
+        private static bool IsPatchedByUs(System.Reflection.MethodBase method)
+        {
+            if (method == null) return false;
+
+            HarmonyLib.Patches patches = Harmony.GetPatchInfo(method);
+            if (patches == null) return false;
+
+            foreach (var patch in patches.Postfixes)
+            {
+                if (patch.owner != null && patch.owner.StartsWith(harmonyID)) return true;
+            }
+            foreach (var patch in patches.Prefixes)
+            {
+                if (patch.owner != null && patch.owner.StartsWith(harmonyID)) return true;
+            }
+            return false;
+        }
+
         public override void Dispose()
         {
             base.Dispose();
@@ -638,24 +869,80 @@ namespace canjewelry.src
             // "additionaljewelrycharacter" entry remains after the mod is unloaded and the next
             // world load crashes trying to instantiate an inventory class that is no longer registered.
             PlayerInventoryManager.defaultInventories = PlayerInventoryManager.defaultInventories.Remove("additionaljewelrycharacter");
-            if (harmonyInstance != null)
-            {
-                harmonyInstance.UnpatchAll(harmonyID);
-                harmonyInstance.UnpatchAll(harmonyID + "_client");
-                harmonyInstance.UnpatchAll(harmonyID + "_server");
-            }
+            // Unpatching goes by patch id, not by the instance that applied it, so a fresh Harmony
+            // undoes our patches whatever the field happens to hold - and it holds whichever of the
+            // three instances was created last, since the side patchers overwrite it through a ref
+            // parameter. Only this side's patches go here: in single player the other side is still
+            // playing, and this used to unpatch its half as well.
+            var unpatcher = new Harmony(harmonyID);
+            unpatcher.UnpatchAll(side == EnumAppSide.Client ? harmonyID + "_client" : harmonyID + "_server");
             guideDialog = null;
-            capi = null;
-            sapi = null;
-            serverChannel = null;
-            clientChannel = null;
-            config = null;
-            gems_textures?.Clear();
-            gems_textures = null;
-            gems_textures_pngs?.Clear();
-            gems_textures_pngs = null;
-            gemCuttingRecipes = null;
-            CANItemWearable.NotVisTexture = null;
+            // Owns a framebuffer, so it has to be handed back rather than just dropped.
+            gemVisualDebugDialog?.Dispose();
+            gemVisualDebugDialog = null;
+
+            // Every subscription this instance made, taken back off. Without this a second join in
+            // one process runs the previous session's handlers as well - against a client api that
+            // no longer has a world.
+            if (side == EnumAppSide.Client)
+            {
+                if (capi != null)
+                {
+                    if (dropGemMeshes != null)
+                    {
+                        capi.Event.ReloadTextures -= dropGemMeshes;
+                        capi.Event.ReloadShapes -= dropGemMeshes;
+                        capi.Event.LeaveWorld -= dropGemMeshes;
+                    }
+                    if (onClientPlayerJoin != null) capi.Event.PlayerJoin -= onClientPlayerJoin;
+                }
+                dropGemMeshes = null;
+                onClientPlayerJoin = null;
+
+                capi = null;
+                clientChannel = null;
+            }
+            else
+            {
+                if (sapi != null)
+                {
+                    sapi.Event.PlayerNowPlaying -= OnPlayerNowPlaying;
+                    if (onPlayerDisconnect != null) sapi.Event.PlayerDisconnect -= onPlayerDisconnect;
+                }
+                onPlayerDisconnect = null;
+
+                serverGemVisuals = null;
+                serverGemVisualsHash = "";
+                gemVisualsPayload = null;
+                lastConfigRequestMs.Clear();
+
+                sapi = null;
+                serverChannel = null;
+            }
+
+            // What both sides share goes only when the last of them is gone - in single player the
+            // other side is still running when the first Dispose arrives.
+            if (--liveSides <= 0)
+            {
+                liveSides = 0;
+                // The one patch applied from Start, which is per process rather than per side.
+                unpatcher.UnpatchAll(harmonyID);
+                harmonyInstance = null;
+
+                config = null;
+                configPayload = null;
+                Config.ActiveItemGroups = null;
+                gems_textures?.Clear();
+                gems_textures = null;
+                gems_textures_pngs?.Clear();
+                gems_textures_pngs = null;
+                BEJewelGrinder.gemTypeToColor?.Clear();
+                CANItemWearable.NotVisTexture = null;
+                // gemCuttingRecipes is filled and owned by GemCuttingRecipeSystem, and every reader
+                // of it dereferences it without a null check. It used to be nulled here, which left
+                // the other mod system holding a field this one had emptied.
+                Instance = null;
+            }
         }
         /// <summary>
         /// Adds socket behavior, gem attributes, and custom variants
@@ -802,14 +1089,67 @@ namespace canjewelry.src
         /// <param name="byPlayer">Target player</param>
         public void sendNewValues(IServerPlayer byPlayer)
         {
-            if (byPlayer.ConnectionState != EnumClientState.Offline)
+            if (byPlayer.ConnectionState == EnumClientState.Offline) return;
+
+            // Serialised and compressed once and kept: the bytes are the same for every player, and
+            // this used to be redone per recipient - an admin command on a full server meant one
+            // full serialise and gzip of the whole config per player online.
+            byte[] payload = configPayload;
+            if (payload == null)
             {
-                serverChannel.SendPacket(new SyncCANJewelryPacket()
-                {
-                    CompressedConfig = JsonConvert.SerializeObject(config)
-                },
-                byPlayer);
+                payload = configPayload = utils.CommonFunctions.Gzip(JsonConvert.SerializeObject(config));
             }
+
+            serverChannel.SendPacket(new SyncCANJewelryPacket() { ConfigGz = payload }, byPlayer);
+        }
+
+        /// <summary>
+        /// Whether this player's request for the config is answered. One on join is what the client
+        /// sends; anything beyond that inside a few seconds gets nothing back.
+        /// </summary>
+        private static bool AllowConfigRequest(IServerPlayer byPlayer)
+        {
+            if (byPlayer?.PlayerUID == null) return false;
+
+            long now = sapi?.World?.ElapsedMilliseconds ?? 0;
+            if (lastConfigRequestMs.TryGetValue(byPlayer.PlayerUID, out long last)
+                && now - last < ConfigRequestIntervalMs)
+            {
+                return false;
+            }
+
+            lastConfigRequestMs[byPlayer.PlayerUID] = now;
+            return true;
+        }
+
+        /// <summary>
+        /// Sends the gem poses the admin put into the server's pose folder, and only those: the
+        /// poses that ship in assets are already on the client, and a server that changed nothing
+        /// sends nothing at all.
+        /// </summary>
+        /// <param name="byPlayer">Target player</param>
+        /// <param name="clientHash">Fingerprint of the poses the client says it already has</param>
+        private void sendGemVisualsIfChanged(IServerPlayer byPlayer, string clientHash)
+        {
+            if (byPlayer.ConnectionState == EnumClientState.Offline) return;
+            // Nothing here and nothing there: the client has no server poses to take back off.
+            if (serverGemVisuals == null && string.IsNullOrEmpty(clientHash)) return;
+            if (serverGemVisualsHash == (clientHash ?? "")) return;
+
+            // Same story as the config, only bigger: up to four megabytes of poses, identical for
+            // everyone, and the hash the client sends decides whether they are sent at all - so a
+            // client that lies about its hash used to make the server gzip the lot again each time.
+            if (gemVisualsPayload == null && serverGemVisuals != null)
+            {
+                gemVisualsPayload = utils.CommonFunctions.Gzip(serverGemVisuals);
+            }
+
+            serverChannel.SendPacket(new GemVisualsPacket()
+            {
+                RulesGz = gemVisualsPayload,
+                Hash = serverGemVisualsHash
+            },
+            byPlayer);
         }
 
         // The config is always written back after loading, and its stored shape changes between
@@ -842,18 +1182,52 @@ namespace canjewelry.src
             }
         }
 
-        private void loadConfig(ICoreAPI api)
+        /// <summary>
+        /// Whether the config file already carries a <c>config_version</c>, which every file of the
+        /// current format has and no file of the old one does. Read as raw json rather than through
+        /// a model, so a file that binds to neither shape still answers the question.
+        /// </summary>
+        private static bool HasConfigVersion(ICoreAPI api, string fileName)
         {
-            //Try to read old config
-            OldConfig oldConfig = null;
             try
             {
-                oldConfig = api.LoadModConfig<OldConfig>(this.Mod.Info.ModID + ".json");
-            }
-            catch (Exception)
-            {
+                string path = System.IO.Path.Combine(Vintagestory.API.Config.GamePaths.ModConfig, fileName);
+                if (!System.IO.File.Exists(path)) return false;
 
+                JObject parsed = JObject.Parse(System.IO.File.ReadAllText(path));
+                return parsed[nameof(Config.config_version)] != null;
             }
+            catch (Exception e)
+            {
+                api.Logger.Warning("[canjewelry] could not look at {0} to tell its format apart: {1}",
+                    fileName, e.Message);
+                return false;
+            }
+        }
+
+        private void loadConfig(ICoreAPI api)
+        {
+            string fileName = this.Mod.Info.ModID + ".json";
+
+            // Which format the file is in is decided by config_version, not by whether the current
+            // format fails to parse. The old test was "deserialising the new format threw", and the
+            // only thing that actually threw was one value of the old shape - so a current config
+            // missing that value read as an all-default old config and was then overwritten with
+            // defaults, taking the admin's settings with it.
+            OldConfig oldConfig = null;
+            if (!HasConfigVersion(api, fileName))
+            {
+                try
+                {
+                    oldConfig = api.LoadModConfig<OldConfig>(fileName);
+                }
+                catch (Exception e)
+                {
+                    api.Logger.Warning("[canjewelry] {0} is neither the current nor the old config format: {1}",
+                        fileName, e.Message);
+                }
+            }
+
             //old config was found and we just copy values from it
             if (oldConfig != null)
             {
@@ -880,8 +1254,19 @@ namespace canjewelry.src
             //no old config, try to load new format
             else
             {
-                //config = new Config();
-                config = api.LoadModConfig<Config>(this.Mod.Info.ModID + ".json");
+                try
+                {
+                    config = api.LoadModConfig<Config>(fileName);
+                }
+                catch (Exception e)
+                {
+                    // A hand edited file with a typo used to throw out of StartPre and fail the
+                    // world load with nothing but a parser message. The broken file is kept, under
+                    // a name that says what happened, and the world starts on defaults.
+                    api.Logger.Error("[canjewelry] could not read {0}, starting from defaults. {1}", fileName, e);
+                    BackupConfigFile(api, "unreadable", "defaults");
+                    config = null;
+                }
                 if (config != null && config.items_codes_with_socket_count.Count != 1)
                 {
                     foreach (var itemIter in config.items_codes_with_socket_count)

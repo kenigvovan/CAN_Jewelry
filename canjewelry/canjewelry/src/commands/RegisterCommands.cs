@@ -1,4 +1,6 @@
-﻿using canjewelry.src.eb;
+﻿using canjewelry.src.api;
+using canjewelry.src.CB;
+using canjewelry.src.eb;
 using canjewelry.src.items;
 using System;
 using System.Collections.Generic;
@@ -6,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.CommandAbbr;
 using Vintagestory.API.Common.Entities;
@@ -100,6 +103,15 @@ namespace canjewelry.src.commands
         }
 
 
+        /// <summary>
+        /// Client-only commands. The gem pose registry lives on the client - the server never
+        /// places a gem on a model - so its diagnostics cannot sit with the server commands above.
+        /// </summary>
+        public static void registerClientCommands(ICoreClientAPI capi)
+        {
+            CANGemVisualCommands.Register(capi);
+        }
+
         /// <summary>Resolves an online player by name, null when nobody matches.</summary>
         private static IServerPlayer FindOnlinePlayer(IServerPlayer caller, string playerName)
         {
@@ -171,6 +183,11 @@ namespace canjewelry.src.commands
                 sapi.Logger.Error("[canjewelry] could not write the config back after a command changed it. {0}", e);
             }
 
+            // The config just changed: the bytes prepared for the previous one are no longer the
+            // answer (the first player below rebuilds them and the rest are sent the same array),
+            // and everything derived from it on this side has to be worked out again.
+            canjewelry.OnConfigReplaced();
+
             foreach (var pl in sapi.World.AllOnlinePlayers)
             {
                 if (pl is IServerPlayer serverPlayer)
@@ -235,47 +252,41 @@ namespace canjewelry.src.commands
             return TextCommandResult.Success(describeCuttingSettings());
         }
 
-        public static TextCommandResult SetCuttingVoxelsPerClick(TextCommandCallingArgs args)
+        /// <summary>
+        /// Every cutting setting is set the same way: take the parsed argument, write it into the
+        /// config, save and broadcast, answer with the settings as they now stand. Six copies of
+        /// those four lines differing only in the field assigned are one line each here.
+        /// </summary>
+        private static TextCommandResult SetCuttingValue<T>(TextCommandCallingArgs args, Action<T> assign)
         {
-            canjewelry.config.cuttingVoxelsPerClick = (int)args.Parsers[0].GetValue();
+            object value = args.Parsers[0].GetValue();
+            if (value is not T typed)
+            {
+                return TextCommandResult.Error("could not read the value for this setting");
+            }
+
+            assign(typed);
             applyAndBroadcastConfig();
             return TextCommandResult.Success(describeCuttingSettings());
         }
+
+        public static TextCommandResult SetCuttingVoxelsPerClick(TextCommandCallingArgs args)
+            => SetCuttingValue<int>(args, v => canjewelry.config.cuttingVoxelsPerClick = v);
 
         public static TextCommandResult SetCuttingDurabilityPerVoxel(TextCommandCallingArgs args)
-        {
-            canjewelry.config.cuttingDurabilityPerVoxel = (bool)args.Parsers[0].GetValue();
-            applyAndBroadcastConfig();
-            return TextCommandResult.Success(describeCuttingSettings());
-        }
+            => SetCuttingValue<bool>(args, v => canjewelry.config.cuttingDurabilityPerVoxel = v);
 
         public static TextCommandResult SetCuttingInstantComplete(TextCommandCallingArgs args)
-        {
-            canjewelry.config.cuttingInstantComplete = (bool)args.Parsers[0].GetValue();
-            applyAndBroadcastConfig();
-            return TextCommandResult.Success(describeCuttingSettings());
-        }
+            => SetCuttingValue<bool>(args, v => canjewelry.config.cuttingInstantComplete = v);
 
         public static TextCommandResult SetCuttingSpareRecipeVoxels(TextCommandCallingArgs args)
-        {
-            canjewelry.config.cuttingSpareRecipeVoxels = (bool)args.Parsers[0].GetValue();
-            applyAndBroadcastConfig();
-            return TextCommandResult.Success(describeCuttingSettings());
-        }
+            => SetCuttingValue<bool>(args, v => canjewelry.config.cuttingSpareRecipeVoxels = v);
 
         public static TextCommandResult SetCuttingHoldInterval(TextCommandCallingArgs args)
-        {
-            canjewelry.config.cuttingHoldStrikeIntervalMs = (int)args.Parsers[0].GetValue();
-            applyAndBroadcastConfig();
-            return TextCommandResult.Success(describeCuttingSettings());
-        }
+            => SetCuttingValue<int>(args, v => canjewelry.config.cuttingHoldStrikeIntervalMs = v);
 
         public static TextCommandResult SetCuttingAccessMode(TextCommandCallingArgs args)
-        {
-            canjewelry.config.cuttingAccessMode = args.Parsers[0].GetValue().ToString();
-            applyAndBroadcastConfig();
-            return TextCommandResult.Success(describeCuttingSettings());
-        }
+            => SetCuttingValue<string>(args, v => canjewelry.config.cuttingAccessMode = v);
 
         public static TextCommandResult OpenCuttingSettingsGui(TextCommandCallingArgs args)
         {

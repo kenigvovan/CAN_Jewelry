@@ -20,6 +20,19 @@ namespace canjewelry.src.api
         public const string GemVisualIndexed = "indexed";
 
         /// <summary>
+        /// Collectible attribute, a bool: the item's own shape already shows the gems of its
+        /// sockets — it carries a texture code per gem and swaps it for the gem's texture. Such an
+        /// item gets no gem mesh laid on top, in hand or on the wearer, or every gem would be
+        /// drawn twice.
+        ///
+        /// <para>Implied by <see cref="GemVisual"/>, which is how the same items used to say it,
+        /// but separate from it: that one names the stack attribute a gem is written to, and an
+        /// item can perfectly well read its gems straight off its sockets and still draw them
+        /// itself.</para>
+        /// </summary>
+        public const string GemsInOwnShape = "canGemsInOwnShape";
+
+        /// <summary>
         /// Collectible attribute holding a <see cref="CANDisplayPose"/> — the transform chain
         /// applied when the item sits on a jeweler set.
         /// </summary>

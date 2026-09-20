@@ -23,8 +23,7 @@ namespace canjewelry.src.eb
         {
             get
             {
-                IPlayer player = this.Player;
-                return ((player != null) ? player.InventoryManager.GetOwnInventory("additionaljewelrycharacter") : null) as InventoryBase;
+                return canjewelry.GetAdditionalJewelryInventory(this.Player) as InventoryBase;
             }
         }
         public override string InventoryClassName
@@ -165,9 +164,11 @@ namespace canjewelry.src.eb
                     ITreeAttribute attributes2 = server2.Attributes;
                     flag2 = ((attributes2 != null) ? new bool?(attributes2.GetBool("dropArmorOnDeath", false)) : null).GetValueOrDefault();
                 }
-                if (flag2)
+                // Null when the extra jewelry slots are switched off.
+                InventoryBase inventory = this.Inventory;
+                if (flag2 && inventory != null)
                 {
-                    foreach (ItemSlot slot in this.Inventory)
+                    foreach (ItemSlot slot in inventory)
                     {
                         if (!slot.Empty)
                         {

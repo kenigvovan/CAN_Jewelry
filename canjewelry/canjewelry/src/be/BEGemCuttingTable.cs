@@ -8,6 +8,7 @@ using canjewelry.src.cb;
 using canjewelry.src.CB;
 using canjewelry.src.items;
 using canjewelry.src.jewelry;
+using canjewelry.src.render;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -19,15 +20,12 @@ using Vintagestory.GameContent;
 
 namespace canjewelry.src.be
 {
-    public enum EnumVoxelMaterial
-    {
-        Empty = 0,
-        Metal = 1,
-        Slag = 2,
-        Placeholder1 = 3,
-    }
+    // EnumVoxelMaterial and EnumAnvilPacket used to be declared here with exactly the members and
+    // values vanilla gives them, shadowing Vintagestory.GameContent's own - which is why the rest of
+    // the mod had to write "be.EnumVoxelMaterial" to say which one it meant. The vanilla ones are
+    // used now; they are what the voxel bytes and the packet ids have always been.
 
-    public class BlockEntityGemCuttingTable : BlockEntity, IRotatable, ITexPositionSource
+    public class BlockEntityGemCuttingTable : BlockEntity, IRotatable
     {
         // Permanent data
         ItemStack workItemStack;
@@ -92,95 +90,42 @@ namespace canjewelry.src.be
             get { return workItemStack; }
         }
         private ICoreClientAPI capi;
-        public Size2i AtlasSize => this.capi.BlockTextureAtlas.Size;
         public string stoneType = "granite";
         public string metalType = "copper";
-        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
 
-        public TextureAtlasPosition this[string textureCode]
+        /// <summary>
+        /// The texture source for one mesh build: the block's own textures, with the stone and the
+        /// metal of this particular table pointed at the material it was built from.
+        /// </summary>
+        private CANTexSource TexSource()
         {
-            get
-            {
-                if (tmpAssets.TryGetValue(textureCode, out var assetCode))
-                {
-                    return this.getOrCreateTexPos(assetCode);
-                }
-
-                Dictionary<string, CompositeTexture> dictionary;
-                dictionary = new Dictionary<string, CompositeTexture>();
-                foreach (var it in this.Block.Textures)
-                {
-                    dictionary.Add(it.Key, it.Value);
-                }
-                AssetLocation texturePath = (AssetLocation)null;
-                CompositeTexture compositeTexture;
-                if (dictionary.TryGetValue(textureCode, out compositeTexture))
-                    texturePath = compositeTexture.Baked.BakedName;
-                if ((object)texturePath == null && dictionary.TryGetValue("all", out compositeTexture))
-                    texturePath = compositeTexture.Baked.BakedName;
-
-                return this.getOrCreateTexPos(texturePath);
-            }
+            var source = new CANTexSource(this.capi, this.capi.BlockTextureAtlas, this.Block?.Textures,
+                "gem cutting table " + this.Block?.Code);
+            source.Overrides["granite"] = new AssetLocation("game:block/stone/polishedrock/" + this.stoneType + ".png");
+            source.Overrides["iron"] = new AssetLocation("game:block/metal/sheet/" + this.metalType + "1.png");
+            return source;
         }
-        private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
-        {
-            TextureAtlasPosition texPos = this.capi.BlockTextureAtlas[texturePath];
-            if (texPos == null)
-            {
-                IAsset asset = this.capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
-                
-                if (asset != null)
-                {
-                    BitmapRef bitmap = asset.ToBitmap(this.capi);
-                    this.capi.BlockTextureAtlas.GetOrInsertTexture(texturePath, out int _, out texPos, () => asset.ToBitmap(this.Api as ICoreClientAPI));
-                }
-                else
-                {
-                    this.capi.World.Logger.Warning("For render in block " + this.Block.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", "", (object)texturePath);
-                }
-            }
-            return texPos;
-        }
+
         private MeshData getMesh(ITesselatorAPI tesselator)
         {
-            Dictionary<string, MeshData> lanternMeshes = ObjectCacheUtil.GetOrCreate<Dictionary<string, MeshData>>(this.Api, "gemCuttingTableBlockMeshes", () => new Dictionary<string, MeshData>());
-            MeshData mesh = null;
-            BlockGemCuttingTable block = this.Api.World.BlockAccessor.GetBlock(this.Pos) as BlockGemCuttingTable;
-            if (block == null)
+            // One entry per stone and metal combination, shared by every table in the world. It used
+            // to be cleared on every call and then read, so it never once answered from the cache -
+            // and clearing it threw away what every other table had just built.
+            Dictionary<string, MeshData> meshes = ObjectCacheUtil.GetOrCreate(this.Api,
+                "canjewelry:gemCuttingTableBlockMeshes", () => new Dictionary<string, MeshData>());
+
+            if (this.Api.World.BlockAccessor.GetBlock(this.Pos) is not BlockGemCuttingTable)
             {
                 return null;
             }
-            lanternMeshes.Clear();
-            this.tmpAssets["granite"] = new AssetLocation("game:block/stone/polishedrock/" + this.stoneType + ".png");
-            this.tmpAssets["iron"] = new AssetLocation("game:block/metal/sheet/" + this.metalType + "1.png");
-            if (lanternMeshes.TryGetValue(string.Concat(new string[]
-            {
-                this.stoneType, this.metalType
-            }), out mesh))
-            {
-                return mesh;
-            }
 
-            return lanternMeshes[string.Concat(new string[]
-            {
-                this.stoneType, this.metalType
-            })] = GenMesh(this.Api as ICoreClientAPI, null, tesselator, this);
+            string key = this.stoneType + "-" + this.metalType;
+            if (meshes.TryGetValue(key, out MeshData mesh)) return mesh;
+
+            return meshes[key] = GenMesh(this.Api as ICoreClientAPI, null, tesselator, TexSource());
         }
         public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null)
         {
-            /*if (tesselator == null)
-            {
-                tesselator = capi.Tesselator;
-            }*/
-            //curAtlas = capi.BlockTextureAtlas;
-            /*if (textureSource != null)
-            {
-                tmpTextureSource = textureSource;
-            }
-            else
-            {
-                tmpTextureSource = tesselator.GetTextureSource(this);
-            }*/
             if (shape == null)
             {
                 shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json").Clone();
@@ -191,9 +136,7 @@ namespace canjewelry.src.be
                 return null;
             }
 
-            //AtlasSize = capi.BlockTextureAtlas.Size;
-            //var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
-            tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, this);
+            tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, textureSource ?? TexSource());
             return modeldata;
         }
         public BlockEntityGemCuttingTable() : base() { }
@@ -444,6 +387,30 @@ namespace canjewelry.src.be
         }
 
 
+        /// <summary>How far from the table a strike is still accepted, in blocks.</summary>
+        private const double ChiselReach = 8;
+
+        /// <summary>
+        /// Whether this player may take a strike at the work item: a gem chisel in hand, a hammer in
+        /// the off hand (creative excepted, as on the client), and close enough to the table to be
+        /// touching it.
+        /// </summary>
+        private bool MayChisel(IPlayer byPlayer, ItemSlot slot)
+        {
+            if (slot?.Itemstack?.Item is not CANItemGemChisel) return false;
+
+            EntityPlayer entity = byPlayer?.Entity;
+            if (entity == null) return false;
+
+            bool creative = byPlayer.WorldData?.CurrentGameMode == EnumGameMode.Creative;
+            if (!creative && entity.LeftHandItemSlot?.Itemstack?.Collectible?.Tool != EnumTool.Hammer)
+            {
+                return false;
+            }
+
+            return entity.Pos.DistanceTo(Pos.ToVec3d().Add(0.5, 0.5, 0.5)) <= ChiselReach;
+        }
+
         internal void OnUseOver(IPlayer byPlayer, Vec3i voxelPos, BlockSelection blockSel)
         {
             if (voxelPos == null)
@@ -477,6 +444,16 @@ namespace canjewelry.src.be
             {
                 return;
             }
+
+            // What the chisel checks before it ever sends the packet (CANItemGemChisel.
+            // OnHeldAttackStart), checked again here because the packet does not have to come from
+            // the chisel: without it any held item cut gems, from any distance, as fast as a client
+            // cared to send.
+            if (!MayChisel(byPlayer, slot))
+            {
+                return;
+            }
+
             int toolMode = slot.Itemstack.Collectible.GetToolMode(slot, byPlayer, blockSel);
 
             float yaw = GameMath.Mod(byPlayer.Entity.Pos.Yaw, 2 * GameMath.PI);
@@ -1560,11 +1537,4 @@ namespace canjewelry.src.be
         }
     }
 
-    public enum EnumAnvilPacket
-    {
-        OpenDialog = 1000,
-        SelectRecipe = 1001,
-        OnUserOver = 1002,
-        CancelSelect = 1003
-    }
 }
