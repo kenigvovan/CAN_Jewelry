@@ -15,6 +15,62 @@ namespace canjewelry.src.blocks
     public class CANBlockPan : Block, ITexPositionSource
     {
         public Size2i AtlasSize { get; set; }
+
+        // One instance per pan block type, so this stays a handful of entries. Held to rebuild the
+        // drop tables when the config behind them is replaced.
+        private static readonly List<CANBlockPan> loadedPans = new List<CANBlockPan>();
+
+        /// <summary>
+        /// Builds the drop tables again from the config in force now. Called when the server hands
+        /// the client its config, which happens after every pan has already been loaded.
+        /// </summary>
+        internal static void OnConfigReplaced()
+        {
+            foreach (CANBlockPan pan in loadedPans)
+            {
+                if (pan?.api != null) pan.BuildDropTable(pan.api);
+            }
+        }
+
+        /// <summary>
+        /// The working table: the admin's persistent config plus the runtime extras companion mods
+        /// push through <c>canjewelry.RegisterPanDrops</c>. Companion contributions never flow back
+        /// into canjewelry.json, so removing a companion mod leaves nothing to clean up.
+        /// </summary>
+        private void BuildDropTable(ICoreAPI api)
+        {
+            if (canjewelry.config?.panningDrops == null) return;
+
+            this.dropsBySourceMat = new Dictionary<string, CANPanningDrop[]>(canjewelry.config.panningDrops);
+            if (canjewelry.Instance != null)
+            {
+                foreach (var kv in canjewelry.Instance.runtimeExtraPanDrops)
+                {
+                    if (this.dropsBySourceMat.TryGetValue(kv.Key, out var existing))
+                    {
+                        var combined = new CANPanningDrop[existing.Length + kv.Value.Length];
+                        System.Array.Copy(existing, 0, combined, 0, existing.Length);
+                        System.Array.Copy(kv.Value, 0, combined, existing.Length, kv.Value.Length);
+                        this.dropsBySourceMat[kv.Key] = combined;
+                    }
+                    else
+                    {
+                        this.dropsBySourceMat[kv.Key] = kv.Value;
+                    }
+                }
+            }
+
+            foreach (CANPanningDrop[] drops in this.dropsBySourceMat.Values)
+            {
+                for (int i = 0; i < drops.Length; i++)
+                {
+                    if (drops[i].Code != null && !drops[i].Code.Path.Contains("{rocktype}"))
+                    {
+                        drops[i].Resolve(api.World, "panningdrop", true);
+                    }
+                }
+            }
+        }
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
@@ -47,44 +103,22 @@ namespace canjewelry.src.blocks
                 }
             }
 
-            // Working table = admin's persistent config + runtime extras pushed by companion
-            // mods via canjewelry.RegisterPanDrops. Companion contributions never flow back to
-            // canjewelry.json so admins don't have to clean them up if a companion is removed.
-            this.dropsBySourceMat = new Dictionary<string, CANPanningDrop[]>(canjewelry.config.panningDrops);
-            if (canjewelry.Instance != null)
-            {
-                foreach (var kv in canjewelry.Instance.runtimeExtraPanDrops)
-                {
-                    if (this.dropsBySourceMat.TryGetValue(kv.Key, out var existing))
-                    {
-                        var combined = new CANPanningDrop[existing.Length + kv.Value.Length];
-                        System.Array.Copy(existing, 0, combined, 0, existing.Length);
-                        System.Array.Copy(kv.Value, 0, combined, existing.Length, kv.Value.Length);
-                        this.dropsBySourceMat[kv.Key] = combined;
-                    }
-                    else
-                    {
-                        this.dropsBySourceMat[kv.Key] = kv.Value;
-                    }
-                }
-            }
-            foreach (CANPanningDrop[] drops in this.dropsBySourceMat.Values)
-            {
-                for (int i = 0; i < drops.Length; i++)
-                {
-                    if (drops[i].Code != null && !drops[i].Code.Path.Contains("{rocktype}"))
-                    {
-                        drops[i].Resolve(api.World, "panningdrop", true);
-                    }
-                }
-            }
+            // Kept so the table can be built again when the config is replaced at runtime - a
+            // client is handed the server's config after this has already run, and the pan used to
+            // keep panning by whatever table it read on load.
+            if (!loadedPans.Contains(this)) loadedPans.Add(this);
+
+            BuildDropTable(api);
+
             if (api.Side != EnumAppSide.Client)
             {
                 return;
             }
             ICoreAPI api2 = api;
             //InteractionMatcherDelegate<>9__2;
-            this.interactions = ObjectCacheUtil.GetOrCreate<WorldInteraction[]>(api, "panInteractions", delegate
+            // Our own key: "panInteractions" is what vanilla's BlockPan uses, so whichever pan
+            // loaded first decided which list of pannable blocks both pans showed.
+            this.interactions = ObjectCacheUtil.GetOrCreate<WorldInteraction[]>(api, "canjewelry:panInteractions", delegate
             {
                 List<ItemStack> stacks = new List<ItemStack>();
                 foreach (Block block in api.World.Blocks)

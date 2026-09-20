@@ -17,6 +17,8 @@
 </ItemGroup>
 
 <ItemGroup>
+  <Content Remove="..\resources\assets\canjewelry\config\gemvisuals\shovel-steel-round.json" />
+  <Content Remove="..\resources\assets\canjewelry\config\gemvisuals\shovel-steel.json" />
   <Content Remove="..\resources\assets\canjewelry\patches\canhavesockets\can-rock-drop-gems.json" />
   <Content Remove="..\resources\assets\canjewelry\patches\canhavesockets\can-ungraded-drop-gems.json" />
   <Content Remove="..\resources\assets\canjewelry\recipes\grid\transm_gems.json" />

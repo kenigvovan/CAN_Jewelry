@@ -1,0 +1,14 @@
+// Last resort: the pose used for an encrustable item no other gemvisuals rule speaks for.
+// Placeholder values - tuned in game with the gem visual debug menu.
+{
+	"default": true,
+	"priority": 0,
+	"sockets": [
+		{
+			"translation": { "x": 0, "y": 0.02, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		}
+	]
+}

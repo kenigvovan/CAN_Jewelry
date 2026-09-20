@@ -11,82 +11,66 @@ using Vintagestory.GameContent;
 
 namespace canjewelry.src.items.resource
 {
-    public class CANCutGemItem: Item, IContainedMeshSource, ITexPositionSource
+    public class CANCutGemItem: Item, IContainedMeshSource
     {
-        private ITextureAtlasAPI targetAtlas;
-        private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
-        public TextureAtlasPosition this[string textureCode]
+        /// <summary>The cut this gem was given, round until the cutting table says otherwise.</summary>
+        private static string CuttingTypeOf(ItemStack stack)
         {
-            get
-            {
-                return getOrCreateTexPos(tmpTextures[textureCode]);
-            }
+            ITreeAttribute tree = stack?.Attributes?.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+            return tree?.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND)
+                   ?? CANJWConstants.CUTTING_ROUND;
         }
-        protected TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
-        {
-            TextureAtlasPosition texpos = targetAtlas[texturePath];
-            if (texpos == null)
-            {
-                IAsset texAsset = api.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"), true);
-                if (texAsset != null)
-                {
-                    int num;
-                    targetAtlas.GetOrInsertTexture(texturePath, out num, out texpos, () => texAsset.ToBitmap(api as ICoreClientAPI), 0f);
-                }
-                else
-                {
-                    api.World.Logger.Warning("For render in cut gem {0}, require texture {1}, but no such texture found.", new object[]
-                    {
-                        Code,
-                        texturePath
-                    });
-                }
-            }
-            return texpos;
-        }
-        public Size2i AtlasSize
-        {
-            get
-            {
-                return targetAtlas.Size;
-            }
-        }
-        private Dictionary<int, MultiTextureMeshRef> meshrefs
-        {
-            get
-            {
-                return ObjectCacheUtil.GetOrCreate(api, "canlongswordsrefs", () => new Dictionary<int, MultiTextureMeshRef>());
-            }
-        }
-        public MeshData GenMesh(ItemSlot slot, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
-        {
-            this.targetAtlas = targetAtlas;
-            tmpTextures.Clear();
-            var itemstack = slot.Itemstack;
-            string cuttingType = CANJWConstants.CUTTING_ROUND;
-            if (itemstack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
-            {
-                var cut_tree = itemstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
-                cuttingType = cut_tree.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND);
-            }
-            
-            Shape shapeCutGem = null;
 
-            shapeCutGem = (api as ICoreClientAPI).Assets.TryGet("canjewelry:shapes/item/gem/cut/" + Variant["quality"]+  "/gem_" + cuttingType  + ".json").ToObject<Shape>();
-            MeshData meshCutGem;
-
-
+        /// <summary>
+        /// The texture source for one mesh build: this gem's colour, in whichever atlas the mesh is
+        /// going into — the item atlas in hand, the block atlas inside a display case.
+        /// </summary>
+        private render.CANTexSource TexSource(ITextureAtlasAPI atlas)
+        {
             string gemBase = Variant["gemtype"];
             if (!canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
             {
                 canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
             }
-            AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
 
-            tmpTextures["gem"] = asset;
-            (api as ICoreClientAPI).Tesselator.TesselateShape("cut gem shape", shapeCutGem, out meshCutGem, this, null, 0, 0, 0, null, null);            
-            return meshCutGem;
+            var source = new render.CANTexSource(api as ICoreClientAPI, atlas, Textures, "cut gem " + Code);
+            AssetLocation texture = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
+            if (texture != null) source.Overrides["gem"] = texture;
+            return source;
         }
+
+        /// <summary>
+        /// The uploaded meshes of cut gems, one per gem and cut, shared by every stack of them.
+        /// Named for what it holds rather than for the class this was copied from.
+        /// </summary>
+        private Dictionary<string, MultiTextureMeshRef> meshrefs
+        {
+            get
+            {
+                return ObjectCacheUtil.GetOrCreate(api, "canjewelry:cutGemMeshRefs",
+                    () => new Dictionary<string, MultiTextureMeshRef>());
+            }
+        }
+
+        public override void OnUnloaded(ICoreAPI api)
+        {
+            // Gpu meshes, so they have to be handed back. Nothing did that before and the dictionary
+            // they sat in was never emptied either.
+            if (api is ICoreClientAPI)
+            {
+                var refs = ObjectCacheUtil.TryGet<Dictionary<string, MultiTextureMeshRef>>(api, "canjewelry:cutGemMeshRefs");
+                if (refs != null)
+                {
+                    foreach (MultiTextureMeshRef meshRef in refs.Values) meshRef?.Dispose();
+                    refs.Clear();
+                    ObjectCacheUtil.Delete(api, "canjewelry:cutGemMeshRefs");
+                }
+            }
+
+            base.OnUnloaded(api);
+        }
+        public MeshData GenMesh(ItemSlot slot, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
+            => GenMesh(slot?.Itemstack, targetAtlas, atBlockPos);
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             if (target == EnumItemRenderTarget.HandTp)
@@ -97,43 +81,49 @@ namespace canjewelry.src.items.resource
                  renderinfo.Transform.Translation.Y = this.curOffY * 1.2f;
                  renderinfo.Transform.Translation.Z = this.curOffY * 1.2f;*/
             }
-            int meshrefid = itemstack.TempAttributes.GetInt("meshRefId", 0);
-            if (meshrefid == 0 || !meshrefs.TryGetValue(meshrefid, out renderinfo.ModelRef))
+            // Keyed by what actually makes the mesh different - this gem and its cut - rather than
+            // by a counter. The id used to be "however many are in the dictionary, plus one", so
+            // every stack ever rendered added an entry that nothing disposed of and nothing reused.
+            string key = Code.ToShortString() + "-" + CuttingTypeOf(itemstack);
+            if (!meshrefs.TryGetValue(key, out MultiTextureMeshRef modelref) || modelref.Disposed)
             {
-                int id = meshrefs.Count + 1;
-                MultiTextureMeshRef modelref = capi.Render.UploadMultiTextureMesh(GenMesh(itemstack, capi.ItemTextureAtlas, null));
-                renderinfo.ModelRef = meshrefs[id] = modelref;
-                itemstack.TempAttributes.SetInt("meshRefId", id);
+                MeshData mesh = GenMesh(itemstack, capi.ItemTextureAtlas, null);
+                if (mesh == null)
+                {
+                    base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+                    return;
+                }
+
+                modelref = meshrefs[key] = capi.Render.UploadMultiTextureMesh(mesh);
             }
+
+            renderinfo.ModelRef = modelref;
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
         }
+        /// <summary>
+        /// The gem as its cut shapes it, textured with its own colour. This and the slot overload
+        /// above were two copies of the same body, differing only in how they reached the stack.
+        /// </summary>
         public MeshData GenMesh(ItemStack itemstack, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
         {
-            this.targetAtlas = targetAtlas;
-            tmpTextures.Clear();
+            if (itemstack == null) return null;
 
-            string cuttingType = CANJWConstants.CUTTING_ROUND;
-            if (itemstack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
+            var capi = api as ICoreClientAPI;
+            string shapePath = "canjewelry:shapes/item/gem/cut/" + Variant["quality"]
+                               + "/gem_" + CuttingTypeOf(itemstack) + ".json";
+
+            // A cut with no shape of its own is a mod or a config naming something that is not
+            // there; the gem is then left to be drawn by its own item shape rather than crashing
+            // inside the tesselator.
+            Shape shapeCutGem = capi.Assets.TryGet(shapePath)?.ToObject<Shape>();
+            if (shapeCutGem == null)
             {
-                var cut_tree = itemstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
-                cuttingType = cut_tree.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND);
+                capi.World.Logger.Warning("[canjewelry] cut gem {0}: no shape at {1}", Code, shapePath);
+                return null;
             }
 
-            Shape shapeCutGem = null;
-
-            shapeCutGem = (api as ICoreClientAPI).Assets.TryGet("canjewelry:shapes/item/gem/cut/" + Variant["quality"] + "/gem_" + cuttingType + ".json").ToObject<Shape>();
-            MeshData meshCutGem;
-
-
-            string gemBase = Variant["gemtype"];
-            if (!canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
-            {
-                canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
-            }
-            AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
-
-            tmpTextures["gem"] = asset;
-            (api as ICoreClientAPI).Tesselator.TesselateShape("cut gem shape", shapeCutGem, out meshCutGem, this, null, 0, 0, 0, null, null);
+            capi.Tesselator.TesselateShape("cut gem shape", shapeCutGem, out MeshData meshCutGem,
+                TexSource(targetAtlas), null, 0, 0, 0, null, null);
             return meshCutGem;
         }
         public override string GetHeldItemName(ItemStack itemStack)
@@ -226,16 +216,14 @@ namespace canjewelry.src.items.resource
                 }
             }
         }
+        /// <summary>
+        /// Names the mesh a holder caches for this gem. The cut is read from the gem's own subtree,
+        /// where it lives — it used to be read off the root of the stack, where it never is, so the
+        /// key was the same string for every cut and one cached mesh served them all.
+        /// </summary>
         public string GetMeshCacheKey(ItemSlot slot)
         {
-            string cuttingType = slot.Itemstack.Attributes.GetString(CANJWConstants.CUTTING_TYPE, "-");
-
-            return string.Concat(new string[]
-            {
-                Code.ToShortString(),
-                "-",
-                cuttingType
-            });
+            return Code.ToShortString() + "-" + CuttingTypeOf(slot?.Itemstack);
         }
     }
 }

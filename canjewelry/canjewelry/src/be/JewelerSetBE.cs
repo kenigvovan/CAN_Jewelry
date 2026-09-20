@@ -68,17 +68,31 @@ namespace canjewelry.src.jewelry
                     return;
                 }
 
-                if (slotId > 0 && slotId < 4)
+                // The gem input slots are 1 to 4, one per socket: the dialog sends "1 + socket number"
+                // and the inventory accepts cut gems in exactly that band. This used to stop at 3,
+                // so a gem put into the fourth slot never had a cut rolled for it at all.
+                if (slotId >= 1 && slotId <= 4)
                 {
                     if (workStack.Item is not CANCutGemItem)
                     {
                         return;
                     }
+
+                    // The cut and the buff values behind it are rolled, so only the server may do it:
+                    // rolling on both sides gave the player a cut and a buff that the next sync
+                    // replaced with the server's own. Used to be rolled here and again in a
+                    // server-only handler of Initialize, with a second Random of its own.
+                    if (this.Api?.Side != EnumAppSide.Server)
+                    {
+                        return;
+                    }
+
                     string newCuttingType = canjewelry.config.CuttingAttributesDict.Keys.ToArray().Shuffle(Config.rand).FirstOrDefault(CANJWConstants.CUTTING_ROUND);
                     ITreeAttribute tree = new TreeAttribute();
                     tree.SetString(CANJWConstants.CUTTING_TYPE, newCuttingType);
                     workStack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
                     EncrustableCB.ApplyCuttingBuff(workStack);
+                    this.inventory[slotId].MarkDirty();
                     return;
                 }
                 else if (slotId == 0)
@@ -136,30 +150,9 @@ namespace canjewelry.src.jewelry
                 Block block = (this.Api as ICoreClientAPI).World.BlockAccessor.GetBlock(this.Pos);
                 this.facing = BlockFacing.FromCode(block.LastCodePart());
             }
-            if(this.Api.Side == EnumAppSide.Server)
-            {
-                this.inventory.SlotModified += (int slotId) =>
-                {
-                    if (slotId == 1)
-                    {
-                        ItemStack gemStack = this.inventory[slotId].Itemstack;
-                        if (gemStack != null)
-                        {
-                            if(!gemStack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
-                            {
-                                Random r = new Random();
-                                string selectedCutting = canjewelry.config.CuttingAttributesDict.Keys.ToArray().Shuffle(r).FirstOrDefault(CANJWConstants.CUTTING_ROUND);
-                                ITreeAttribute tree = new TreeAttribute();
-                                //gemStack.Attributes.SetString(CANJWConstants.CUTTING_TYPE, selectedCutting);
-                                tree.SetString(CANJWConstants.CUTTING_TYPE, selectedCutting);
-                                gemStack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
-                                EncrustableCB.ApplyCuttingBuff(gemStack);
-                                this.inventory[slotId].MarkDirty();
-                            }
-                        }
-                    }
-                };
-            }
+            // The handler that used to sit here rolled the cut for slot 1 a second time, with a
+            // Random of its own; the one registered in the constructor covers slots 1 to 3 and is
+            // now server-only, which is what this one was for.
             foreach (var it in this.inventory)
             {
                 this.inventory[0].MaxSlotStackSize = 1;
@@ -243,6 +236,52 @@ namespace canjewelry.src.jewelry
             dialog.TryClose();
             dialog.Dispose();
         }
+        /// <summary>The gem input slot of one socket, and the socket item slot of one socket.</summary>
+        private const int FirstGemSlot = 1;
+        private const int FirstSocketSlot = 5;
+
+        /// <summary>How many sockets the set works with, and so how wide each band of slots is.</summary>
+        private const int SocketBandSize = 4;
+
+        /// <summary>
+        /// The socket a packet is about, or -1 when the number on the wire is not one of ours. The
+        /// dialog sends a socket index and the inventory slot it belongs to; the slot is derived
+        /// here instead of being taken on trust, since a hand written packet is free to name any
+        /// slot at all - including the piece of jewelry in slot 0, or one out of range, which the
+        /// inventory answers with null rather than an exception.
+        /// </summary>
+        private static int ReadSocketNumber(byte[] data, out int socketNumber)
+        {
+            socketNumber = -1;
+            if (data == null) return -1;
+
+            TreeAttribute tree = new TreeAttribute();
+            using (MemoryStream ms = new MemoryStream(data))
+            using (BinaryReader reader = new BinaryReader(ms))
+            {
+                tree.FromBytes(reader);
+            }
+
+            int socket = tree.GetInt("selectedSocketSlot");
+            if (socket < 0 || socket >= SocketBandSize) return -1;
+
+            socketNumber = socket;
+            return socket;
+        }
+
+        /// <summary>
+        /// Whether this player is allowed to act on the set at all: the inventory has to be open for
+        /// them, which only happens through <see cref="OnPlayerRightClick"/> on a block they reached.
+        /// Without this any client could socket, encrust or inscribe another player's set from
+        /// anywhere in the loaded world, since packet ids of 1000 and up bypass InvNetworkUtil.
+        /// </summary>
+        private bool MayOperate(IPlayer player)
+        {
+            if (player?.InventoryManager == null) return false;
+
+            return this.inventory.HasOpened(player);
+        }
+
         public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
         {
             if (packetid < 1000)
@@ -252,6 +291,9 @@ namespace canjewelry.src.jewelry
             }
             else
             {
+                // Closing an inventory is the one thing a player may do without having it open.
+                if (packetid != 1001 && !MayOperate(player)) return;
+
                 if (packetid == 1001 && player.InventoryManager != null)
                 {
 
@@ -259,48 +301,20 @@ namespace canjewelry.src.jewelry
                 }
                 if (packetid == 1004)
                 {
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            //in which slot in item we want socket to be added
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            //which slot of the inventory contains socket item to be added
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryAddSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
+                    // Add a socket: the socket item comes from the socket band, never from anywhere
+                    // the packet asks for.
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
 
-                    //EncrustableFunctions.TryToAddSocket(this.inventory);
+                    EncrustableCB.TryAddSocket(this.inventory, inventory[0],
+                        inventory[FirstSocketSlot + socketNumber], socketNumber, player);
                 }
                 else if (packetid == 1005)
                 {
-                    //check target item is here and has place
-                    //for 1-3 slots
-                    //check if null try to place if slotN exists at target
-                    //set null if taken
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            //in which slot in item we want socket to be added
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            //which slot of the inventory contains socket item to be added
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
+                    // Encrust: the gem comes from the gem band, one slot per socket.
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
 
-                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
-
-                    //EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
+                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0],
+                        inventory[FirstGemSlot + socketNumber], socketNumber, player);
                 }
                 else if (packetid == 1007)
                 {
@@ -333,37 +347,19 @@ namespace canjewelry.src.jewelry
                 {
                     // Extract: pulls a gem out of a specific socket. Output goes to the
                     // matching gem-input slot if empty, otherwise to the player.
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryExtractGem(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
+
+                    EncrustableCB.TryExtractGem(this.inventory, inventory[0],
+                        inventory[FirstGemSlot + socketNumber], socketNumber, player);
                 }
                 else if (packetid == 1008)
                 {
                     // Remove socket: pulls an (empty) socket back out and returns the socket item.
                     // Rejected server-side if a gem is still encrusted in that socket.
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryExtractSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
+
+                    EncrustableCB.TryExtractSocket(this.inventory, inventory[0],
+                        inventory[FirstSocketSlot + socketNumber], socketNumber, player);
                 }
 
             }

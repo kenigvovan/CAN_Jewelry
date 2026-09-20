@@ -174,8 +174,8 @@ namespace canjewelry.src.jewelry
                     for (int l = 0; l < 16; l++)
                     {
                         bool flag = k < length && recipeToOutlineVoxels[j, k, l];
-                        be.EnumVoxelMaterial enumVoxelMaterial = (be.EnumVoxelMaterial)voxels[j, k, l];
-                        if ((!flag || enumVoxelMaterial != be.EnumVoxelMaterial.Metal) && (flag || enumVoxelMaterial != 0))
+                        EnumVoxelMaterial enumVoxelMaterial = (EnumVoxelMaterial)voxels[j, k, l];
+                        if ((!flag || enumVoxelMaterial != EnumVoxelMaterial.Metal) && (flag || enumVoxelMaterial != 0))
                         {
                             float num = (float)j / 16f;
                             float num2 = 0.625f + (float)k / 16f;
@@ -187,7 +187,7 @@ namespace canjewelry.src.jewelry
                                 meshData2.xyz[m + 2] = num3 + cube.xyz[m + 2];
                             }
 
-                            meshData2.Rgba = ((flag && enumVoxelMaterial == be.EnumVoxelMaterial.Empty) ? cube.Rgba : cube2.Rgba);
+                            meshData2.Rgba = ((flag && enumVoxelMaterial == EnumVoxelMaterial.Empty) ? cube.Rgba : cube2.Rgba);
                             meshData.AddMeshData(meshData2);
                         }
                     }

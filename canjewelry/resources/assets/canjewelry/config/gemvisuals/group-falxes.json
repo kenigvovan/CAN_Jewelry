@@ -1,0 +1,10 @@
+{
+  "defineGroups": {
+    "falxes": [
+      "blade-falx-*"
+    ]
+  },
+  "Priority": 101,
+  "default": false,
+  "hidden": false
+}

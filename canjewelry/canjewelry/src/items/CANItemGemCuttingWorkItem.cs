@@ -23,7 +23,9 @@ namespace canjewelry.src.items
         {
             if (!itemstack.Attributes.HasAttribute("voxels"))
             {
-                MultiTextureMeshRef ccmr = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, "clearWorkItem" + this.Variant["metal"], delegate
+                // This item has no "metal" variant, so the key used to be the same string for every
+                // one of them - and a bare "clearWorkItem" at that, in a cache the whole game shares.
+                MultiTextureMeshRef ccmr = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, "canjewelry:clearWorkItem-" + this.Code?.Path, delegate
                 {
                     byte[,,] voxels = new byte[16, 14, 16];
                     ItemIngot.CreateVoxelsFromIngot(capi, ref voxels, false);
@@ -39,7 +41,9 @@ namespace canjewelry.src.items
             {
                 meshrefId = ++CANItemGemCuttingWorkItem.nextMeshRefId;
             }
-            renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, meshrefId.ToString() ?? "", delegate
+            // Keyed by a bare number before, in the cache every mod shares - two mods counting their
+            // own meshes from one would have handed each other's meshes out.
+            renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, "canjewelry:workItemMesh-" + meshrefId, delegate
             {
                 byte[,,] voxels = CANItemGemCuttingWorkItem.GetVoxels(itemstack);
                 MeshData mesh = CANItemGemCuttingWorkItem.GenMesh(capi, itemstack, voxels);
@@ -123,14 +127,14 @@ namespace canjewelry.src.items
                 {
                     for (int z = 0; z < 16; z++)
                     {
-                        be.EnumVoxelMaterial mat = (be.EnumVoxelMaterial)voxels[x, y, z];
-                        if (mat != be.EnumVoxelMaterial.Empty)
+                        EnumVoxelMaterial mat = (EnumVoxelMaterial)voxels[x, y, z];
+                        if (mat != EnumVoxelMaterial.Empty)
                         {
                             float px = (float)x / 16f;
                             float py = 0.625f + (float)y / 16f;
                             float pz = (float)z / 16f;
-                            MeshData mesh = (mat == be.EnumVoxelMaterial.Metal) ? metalVoxelMesh : slagVoxelMesh;
-                            MeshData meshVoxOffset = (mat == be.EnumVoxelMaterial.Metal) ? metVoxOffset : slagVoxOffset;
+                            MeshData mesh = (mat == EnumVoxelMaterial.Metal) ? metalVoxelMesh : slagVoxelMesh;
+                            MeshData meshVoxOffset = (mat == EnumVoxelMaterial.Metal) ? metVoxOffset : slagVoxOffset;
                             for (int k = 0; k < mesh.xyz.Length; k += 3)
                             {
                                 meshVoxOffset.xyz[k] = px + mesh.xyz[k];
@@ -149,7 +153,7 @@ namespace canjewelry.src.items
                             for (int m = 0; m < meshVoxOffset.CustomBytes.Values.Length; m++)
                             {
                                 byte glowSub = (byte)GameMath.Clamp(10 * (Math.Abs(x - 8) + Math.Abs(z - 8) + Math.Abs(y - 2)), 100, 250);
-                                meshVoxOffset.CustomBytes.Values[m] = ((byte)((mat == be.EnumVoxelMaterial.Metal) ? 0 : glowSub));
+                                meshVoxOffset.CustomBytes.Values[m] = ((byte)((mat == EnumVoxelMaterial.Metal) ? 0 : glowSub));
                             }
                             workItemMesh.AddMeshData(meshVoxOffset);
                         }

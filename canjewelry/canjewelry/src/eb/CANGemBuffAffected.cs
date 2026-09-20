@@ -76,7 +76,7 @@ namespace canjewelry.src.eb
             characterInv.SlotModified += OnSlotModifiedCharacterInv;
             playerHotbar.SlotModified += OnSlotModifiedHotbarInv;
 
-            var additionalInv = player.InventoryManager.GetOwnInventory(ADDITIONAL_INV);
+            var additionalInv = canjewelry.GetAdditionalJewelryInventory(player);
             if (additionalInv != null)
             {
                 additionalInv.SlotModified += OnSlotModifiedAdditionalInv;
@@ -153,7 +153,9 @@ namespace canjewelry.src.eb
             StringBuilder debug = canjewelry.config.debugMode ? new StringBuilder() : null;
 
             AccumulateInventory(player.InventoryManager.GetOwnInventory(CHARACTER_INV), CHARACTER_INV, totals, debug);
-            AccumulateInventory(player.InventoryManager.GetOwnInventory(ADDITIONAL_INV), ADDITIONAL_INV, totals, debug);
+            // Null when the extra jewelry slots are switched off, so whatever a save still keeps
+            // in them gives no buffs.
+            AccumulateInventory(canjewelry.GetAdditionalJewelryInventory(player), ADDITIONAL_INV, totals, debug);
 
             // Wearables in the active hotbar slot are skipped here: their buffs are already
             // accounted for via the character/additional inventories (otherwise double-counted).

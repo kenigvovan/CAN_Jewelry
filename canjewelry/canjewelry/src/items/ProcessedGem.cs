@@ -11,55 +11,96 @@ using Vintagestory.GameContent;
 
 namespace canjewelry.src.jewelry
 {
-    public class ProcessedGem : Item, ITexPositionSource, IContainedMeshSource
+    public class ProcessedGem : Item, IContainedMeshSource
     {
         private float offY;
         private float curOffY;
         private ICoreClientAPI capi;
-        private ITextureAtlasAPI targetAtlas;
-        private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
-        public TextureAtlasPosition this[string textureCode]
+
+        /// <summary>
+        /// The uploaded meshes of ground gems, one per look: the gem, how far it has been ground and
+        /// its size. Under our own key and keyed by that look rather than by a hash of it.
+        /// </summary>
+        private Dictionary<string, MultiTextureMeshRef> meshrefs
         {
             get
             {
-                return this.getOrCreateTexPos(this.tmpTextures[textureCode]);
+                return ObjectCacheUtil.GetOrCreate(this.api, "canjewelry:processedGemMeshRefs",
+                    () => new Dictionary<string, MultiTextureMeshRef>());
             }
         }
-        protected TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
+
+        public override void OnUnloaded(ICoreAPI api)
         {
-            TextureAtlasPosition texpos = this.targetAtlas[texturePath];
-            if (texpos == null)
+            if (api is ICoreClientAPI)
             {
-                IAsset texAsset = this.capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"), true);
-                if (texAsset != null)
+                var refs = ObjectCacheUtil.TryGet<Dictionary<string, MultiTextureMeshRef>>(api, "canjewelry:processedGemMeshRefs");
+                if (refs != null)
                 {
-                    int num;
-                    this.targetAtlas.GetOrInsertTexture(texturePath, out num, out texpos, () => texAsset.ToBitmap(this.capi), 0.005f);
-                }
-                else
-                {
-                    this.capi.World.Logger.Warning("For render in shield {0}, require texture {1}, but no such texture found.", new object[]
-                    {
-                        this.Code,
-                        texturePath
-                    });
+                    foreach (MultiTextureMeshRef meshRef in refs.Values) meshRef?.Dispose();
+                    refs.Clear();
+                    ObjectCacheUtil.Delete(api, "canjewelry:processedGemMeshRefs");
                 }
             }
-            return texpos;
+
+            base.OnUnloaded(api);
         }
-        public Size2i AtlasSize
+
+        /// <summary>What this stack looks like, and so what its mesh can be cached under.</summary>
+        private static string LookKey(ItemStack stack)
         {
-            get
-            {
-                return this.targetAtlas.Size;
-            }
+            ITreeAttribute tree = stack?.Attributes?.GetTreeAttribute("cangrindlayerinfo");
+            if (tree == null) return stack?.Attributes?.GetString("gembase", "") ?? "";
+
+            return tree.GetString("gembase") + "-" + tree.GetInt("grindtype") + "-" + tree.GetString("gemsize");
         }
-        private Dictionary<int, MultiTextureMeshRef> meshrefs
+
+        /// <summary>
+        /// The texture source for one mesh build: the shape's own textures, with the gem colour
+        /// written over them and the polishing defects shown or hidden by how far it was ground.
+        /// </summary>
+        private render.CANTexSource TexSource(ItemStack itemstack, ITextureAtlasAPI atlas)
         {
-            get
+            var shapeTextures = new Dictionary<string, CompositeTexture>();
+            Shape shape = this.capi.TesselatorManager.GetCachedShape(this.Shape.Base);
+            if (shape?.Textures != null)
             {
-                return ObjectCacheUtil.GetOrCreate<Dictionary<int, MultiTextureMeshRef>>(this.api, "processedmeshrefs", () => new Dictionary<int, MultiTextureMeshRef>());
+                foreach (KeyValuePair<string, AssetLocation> ctex in shape.Textures)
+                {
+                    shapeTextures[ctex.Key] = new CompositeTexture(ctex.Value);
+                }
             }
+
+            var source = new render.CANTexSource(this.capi, atlas, shapeTextures, "processed gem " + this.Code);
+
+            ITreeAttribute itree = itemstack?.Attributes?.GetTreeAttribute("cangrindlayerinfo");
+            string gemBase = itree != null
+                ? itree.GetString("gembase")
+                : itemstack?.Attributes?.GetString("gembase", null);
+
+            // One gem is listed under two names; the textures only know the first.
+            if ("olivine_peridot".Equals(gemBase)) gemBase = "olivine";
+
+            if (string.IsNullOrEmpty(gemBase) || !canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
+            {
+                canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
+            }
+            AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
+            if (asset == null) return source;
+
+            source.Overrides["gembase"] = asset;
+            if (itree == null) return source;
+
+            // A defect layer is gone once grinding has passed it: those still there wear the gem's
+            // own texture, the ones ground away wear the invisible one.
+            AssetLocation invisible = new AssetLocation("canjewelry:item/gem/notvis.png");
+            for (int i = 0; i < 2; i++)
+            {
+                source.Overrides["emeralddefect" + i] = itree.GetInt("grindtype") <= i ? asset : invisible;
+            }
+            source.Overrides["emeralddefect2"] = asset;
+
+            return source;
         }
         public string Construction
         {
@@ -127,156 +168,36 @@ namespace canjewelry.src.jewelry
                 renderinfo.Transform.Translation.Y = this.curOffY * 1.2f;
                 renderinfo.Transform.Translation.Z = this.curOffY * 1.2f;
             }
-            int meshrefid = itemstack.TempAttributes.GetInt("meshRefId", 0);
-            ITreeAttribute tree;
-            if (itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
+            // One uploaded mesh per look of the gem. A stack with no grinding info used to leave the
+            // id at zero, which made the condition below always true: every frame uploaded a fresh
+            // mesh and dropped the previous one on the floor, and the dictionary was never emptied.
+            string key = LookKey(itemstack);
+            if (!this.meshrefs.TryGetValue(key, out MultiTextureMeshRef modelref) || modelref.Disposed)
             {
-                tree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
-                meshrefid = (tree.GetString("gembase") + tree.GetInt("grindtype").ToString() + tree.GetString("gemsize").ToString()).GetHashCode();
+                MeshData mesh = this.GenMesh(itemstack, capi.ItemTextureAtlas, null);
+                if (mesh == null)
+                {
+                    base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+                    return;
+                }
+
+                modelref = this.meshrefs[key] = capi.Render.UploadMultiTextureMesh(mesh);
             }
-            
-            if (meshrefid == 0 || !this.meshrefs.TryGetValue(meshrefid, out renderinfo.ModelRef))
-            {
-                int id = meshrefid;
-                MultiTextureMeshRef modelref = capi.Render.UploadMultiTextureMesh(this.GenMesh(itemstack, capi.ItemTextureAtlas, null));
-               
-                renderinfo.ModelRef = (this.meshrefs[id] = modelref);
-                itemstack.TempAttributes.SetInt("meshRefId", id);
-            }
+
+            renderinfo.ModelRef = modelref;
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
         }
-        public MeshData outGenMesh(ItemStack itemstack)
-        {
-            return GenMesh(itemstack, targetAtlas, null);
-        }
         public MeshData GenMesh(ItemSlot slot, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
-        {
-            this.targetAtlas = targetAtlas;
-            this.tmpTextures.Clear();
-            var itemstack = slot.Itemstack;
-            string gemBase = itemstack.Attributes.GetString("gembase", null);
-            string gemSize = itemstack.Attributes.GetString("gemsize", null);
-
-            foreach (KeyValuePair<string, AssetLocation> ctex in this.capi.TesselatorManager.GetCachedShape(this.Shape.Base).Textures)
-            {
-                this.tmpTextures[ctex.Key] = ctex.Value;
-            }
-            string construction = this.Construction;
-            ITreeAttribute itree;
-            if (itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
-            {
-                itree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
-                
-                gemBase = itree.GetString("gembase");
-
-                if ("olivine_peridot".Equals(gemBase))
-                {
-                    gemBase = "olivine";
-                }
-
-                if (string.IsNullOrEmpty(gemBase) || !canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
-                {
-                    canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
-                }
-                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
-
-                this.tmpTextures["gembase"] = asset;
-
-                for(int i = 0; i < 2; i++)
-                {
-                    if (itree.GetInt("grindtype") <= i)
-                    {
-                        this.tmpTextures["emeralddefect" + i] = asset;
-                    }
-                    else
-                    {
-                        this.tmpTextures["emeralddefect" + i] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                    }
-                }
-                this.tmpTextures["emeralddefect2"] = asset;
-            }
-            else
-            {
-                if ("olivine_peridot".Equals(gemBase))
-                {
-                    gemBase = "olivine";
-                }
-
-                if (string.IsNullOrEmpty(gemBase) || !canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
-                {
-                    canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
-                }
-                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
-
-                this.tmpTextures["gembase"] = asset;
-            }        
-            MeshData mesh;
-            this.capi.Tesselator.TesselateItem(this, out mesh, this);
-            return mesh;
-        }
+            => GenMesh(slot?.Itemstack, targetAtlas, atBlockPos);
+        /// <summary>
+        /// The gem as grinding has left it. This and the slot overload above were two copies of the
+        /// same seventy lines, differing only in how they reached the stack.
+        /// </summary>
         public MeshData GenMesh(ItemStack itemstack, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
         {
-            this.targetAtlas = targetAtlas;
-            this.tmpTextures.Clear();
+            if (itemstack == null) return null;
 
-            string gemBase = itemstack.Attributes.GetString("gembase", null);
-            string gemSize = itemstack.Attributes.GetString("gemsize", null);
-
-            foreach (KeyValuePair<string, AssetLocation> ctex in this.capi.TesselatorManager.GetCachedShape(this.Shape.Base).Textures)
-            {
-                this.tmpTextures[ctex.Key] = ctex.Value;
-            }
-            string construction = this.Construction;
-            ITreeAttribute itree;
-            if (itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
-            {
-                itree = itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo");
-
-                gemBase = itree.GetString("gembase");
-
-                if ("olivine_peridot".Equals(gemBase))
-                {
-                    gemBase = "olivine";
-                }
-
-                if (string.IsNullOrEmpty(gemBase) || !canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
-                {
-                    canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
-                }
-                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
-
-                this.tmpTextures["gembase"] = asset;
-
-                for (int i = 0; i < 2; i++)
-                {
-                    if (itree.GetInt("grindtype") <= i)
-                    {
-                        this.tmpTextures["emeralddefect" + i] = asset;
-                    }
-                    else
-                    {
-                        this.tmpTextures["emeralddefect" + i] = new AssetLocation("canjewelry:item/gem/notvis.png");
-                    }
-                }
-                this.tmpTextures["emeralddefect2"] = asset;
-            }
-            else
-            {
-                if ("olivine_peridot".Equals(gemBase))
-                {
-                    gemBase = "olivine";
-                }
-
-                if (string.IsNullOrEmpty(gemBase) || !canjewelry.gems_textures.TryGetValue(gemBase, out string assetPath))
-                {
-                    canjewelry.gems_textures.TryGetValue(CANJWConstants.FALLBACK_GEM_TYPE, out assetPath);
-                }
-                AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
-
-                this.tmpTextures["gembase"] = asset;
-            }
-            MeshData mesh;
-            this.capi.Tesselator.TesselateItem(this, out mesh, this);
+            this.capi.Tesselator.TesselateItem(this, out MeshData mesh, TexSource(itemstack, targetAtlas));
             return mesh;
         }
         public override string GetHeldItemName(ItemStack itemStack)  
@@ -289,19 +210,14 @@ namespace canjewelry.src.jewelry
             }
             return "";          
         }
+        /// <summary>
+        /// Names the mesh a holder caches for this gem. Goes through the same look as the render
+        /// path, so a gem ground one step further is a different mesh in a display case too — the
+        /// key used to read only the root attributes, which a ground gem does not carry.
+        /// </summary>
         public string GetMeshCacheKey(ItemSlot slot)
         {
-            var itemstack = slot.Itemstack;
-            string gemBase = itemstack.Attributes.GetString("gembase", null);
-            string gemSize = itemstack.Attributes.GetString("gemsize", null);
-            return string.Concat(new string[]
-            {
-                this.Code.ToShortString(),
-                "-",
-                gemBase,
-                "-",
-                gemSize
-            }) ;
+            return this.Code.ToShortString() + "-" + LookKey(slot?.Itemstack);
         }
     }
 }

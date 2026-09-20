@@ -1,0 +1,153 @@
+{
+  "Group": "knives",
+  "defineGroups": {
+    "knives": [
+      "knife-generic-*"
+    ]
+  },
+  "Priority": 100,
+  "default": false,
+  "hidden": false,
+  "Sockets": [
+    {
+      "Translation": {
+        "X": 0.027,
+        "Y": -0.441,
+        "Z": -0.098
+      },
+      "Rotation": {
+        "X": -90.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.22,
+        "Y": 0.22,
+        "Z": 0.22
+      }
+    },
+    {
+      "Translation": {
+        "X": 0.077,
+        "Y": -0.44,
+        "Z": -0.098
+      },
+      "Rotation": {
+        "X": -90.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.22,
+        "Y": 0.22,
+        "Z": 0.22
+      }
+    },
+    {
+      "Translation": {
+        "X": 0.126,
+        "Y": -0.44,
+        "Z": -0.098
+      },
+      "Rotation": {
+        "X": -90.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.22,
+        "Y": 0.22,
+        "Z": 0.22
+      }
+    }
+  ],
+  "socketsBack": [
+    {
+      "Translation": {
+        "X": 0.027,
+        "Y": -0.441,
+        "Z": -0.109
+      },
+      "Rotation": {
+        "X": -90.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.22,
+        "Y": 0.22,
+        "Z": 0.22
+      }
+    },
+    {
+      "Translation": {
+        "X": 0.077,
+        "Y": -0.44,
+        "Z": -0.107
+      },
+      "Rotation": {
+        "X": -90.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.22,
+        "Y": 0.22,
+        "Z": 0.22
+      }
+    },
+    {
+      "Translation": {
+        "X": 0.126,
+        "Y": -0.441,
+        "Z": -0.107
+      },
+      "Rotation": {
+        "X": -90.0,
+        "Y": 0.0,
+        "Z": 0.0
+      },
+      "Origin": {
+        "X": 0.5,
+        "Y": 0.5,
+        "Z": 0.5
+      },
+      "Rotate": true,
+      "ScaleXYZ": {
+        "X": 0.22,
+        "Y": 0.22,
+        "Z": 0.22
+      }
+    }
+  ]
+}

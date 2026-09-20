@@ -1,0 +1,26 @@
+// Shields and bucklers - members of the "shield" item group of the config.
+// Placeholder values - tuned in game with the gem visual debug menu.
+{
+	"group": "shield",
+	"priority": 10,
+	"sockets": [
+		{
+			"translation": { "x": 0, "y": 0.02, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		},
+		{
+			"translation": { "x": 0, "y": 0.09, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		},
+		{
+			"translation": { "x": 0, "y": 0.16, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		}
+	]
+}
