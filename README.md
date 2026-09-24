@@ -1,32 +1,25 @@
-# CAN Jewelry
+# C&N Jewelry
 
-**CAN Jewelry** is a mod for the game *Vintage Story* that adds gemstone processing, jewelry items, and a system for socketing gems into tools, weapons, and armor to grant various bonuses and effects.
+A gameplay mod for [Vintage Story](https://www.vintagestory.at/) that adds a full gemstone crafting chain: find rough gems, cut and grind them, and socket them into tools, weapons and armor for stat bonuses.
+
+**[Mod page](https://mods.vintagestory.at/canjewelry)** · C# / .NET · Vintage Story API
 
 ## Features
 
-- Adds gemstones and jewelry-related items.
-- Allows socketing cut gems into weapons, armor, and tools.
-- Provides buffs and bonuses depending on the gem type and the item it is embedded into.
-- Supports integration with other mods that add new materials or items.
-- Configurable behavior via mod configuration files.
+- **Gem processing chain:** rough gems are cut on a gem cutting table and ground on a jewel grinder; a wire drawing bench produces wire for jewelry.
+- **Socket system:** tools, weapons and armor get gem sockets; each gem type grants its own buff depending on the item it's set into.
+- **Visible gems:** socketed gems are rendered on the item model itself (in hand, on armor, in display holders).
+- **Jewelry:** 18 adornment slots and a jeweler's table.
+- **Mod API:** other mods can add their own jewelry and socketable items through a documented contract ([docs/API.md](canjewelry/docs/API.md)).
+- **Configurable:** balance and per-gem effects are controlled by a server config and synced to clients.
 
-## Repository Structure
+## Technical highlights
 
-The project is written in **C#** and follows the standard Vintage Story mod structure.
+- **Client/server split:** game logic is server-authoritative. The client only renders and sends requests, and the config is synced over a custom network packet.
+- **Custom rendering:** gem meshes are generated and composited onto item models at runtime, with cached meshes to keep the frame cost low.
+- **Unit tests:** a separate `canjewelry.Tests` project.
+- **Build pipeline:** a Cake build script (`CakeBuild`) packages the release zip.
 
-## Configuration
+## Credits
 
-After the first launch, the mod creates a configuration file in the Vintage Story `ModConfig` directory.  
-Using this file, you can:
-
-- Enable or disable specific gem effects.
-- Adjust balance-related parameters.
-- Configure compatibility with other mods.
-
-A game restart is required after changing the configuration.
-
-## Feedback and Contributions
-
-Bug reports, suggestions, and contributions are welcome.
-
-- Use GitHub Issues to report bugs or request features.
+Author: **KenigVovan**. Contributors: justOmi, DarkPaapi, Wailwolf, FourLanguages, sadCarb0ne, ripls, Jikoo.
