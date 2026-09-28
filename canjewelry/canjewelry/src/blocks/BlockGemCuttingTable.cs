@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using canjewelry.src.be;
 using canjewelry.src.jewelry;
+using canjewelry.src.render;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -13,46 +14,23 @@ using Vintagestory.GameContent;
 
 namespace canjewelry.src.blocks
 {
-    public class BlockGemCuttingTable : Block, ITexPositionSource
+    public class BlockGemCuttingTable : Block
     {
         WorldInteraction[] interactions;
-        public ITexPositionSource tmpTextureSource;
-        private ITextureAtlasAPI curAtlas;
 
-        public Size2i AtlasSize { get; set; }
-        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
-        private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
+        /// <summary>
+        /// The texture source for one mesh build, with the stone and metal of the table in hand
+        /// pointed at their materials. Per call rather than per block: a Block is one object for the
+        /// whole world, while this is asked from the render thread and from chunk tesselation alike,
+        /// and the dictionary this replaces was a field on that shared object.
+        /// </summary>
+        private CANTexSource TexSource(ICoreClientAPI capi, string stoneType, string metalType)
         {
-            TextureAtlasPosition texPos = curAtlas[texturePath];
-            if (texPos == null)
-            {
-                IAsset asset = canjewelry.capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
-                if (asset != null)
-                {
-                    BitmapRef bitmap = asset.ToBitmap(canjewelry.capi);
-                    canjewelry.capi.BlockTextureAtlas.InsertTextureCached(texturePath, (IBitmap)bitmap, out int _, out texPos);
-                }
-                else
-                {
-                    canjewelry.capi.World.Logger.Warning("For render in block " + this.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", "", (object)texturePath);
-                }
-            }
-            return texPos;
-        }
-        public TextureAtlasPosition this[string textureCode]
-        {
-            get
-            {
-                if (tmpAssets.TryGetValue(textureCode, out var assetCode))
-                    return this.getOrCreateTexPos(assetCode);
-
-                if (this.Textures.TryGetValue(textureCode, out var ct))
-                    return this.getOrCreateTexPos(ct.Baked.BakedName);
-                if (this.Textures.TryGetValue("all", out ct))
-                    return this.getOrCreateTexPos(ct.Baked.BakedName);
-
-                return null;
-            }
+            var source = new CANTexSource(capi, capi.BlockTextureAtlas, this.Textures,
+                "gem cutting table " + this.Code);
+            source.Overrides["granite"] = new AssetLocation("game:block/stone/polishedrock/" + stoneType + ".png");
+            source.Overrides["iron"] = new AssetLocation("game:block/metal/sheet/" + metalType + "1.png");
+            return source;
         }
         public override void OnLoaded(ICoreAPI api)
         {
@@ -60,8 +38,6 @@ namespace canjewelry.src.blocks
             AddAllTypesToCreativeInventory();
             if (api.Side != EnumAppSide.Client) return;
             ICoreClientAPI capi = api as ICoreClientAPI;
-
-            this.AtlasSize = capi.BlockTextureAtlas.Size;
 
             Dictionary<string, MetalPropertyVariant> metalsByCode = new Dictionary<string, MetalPropertyVariant>();
 
@@ -76,7 +52,9 @@ namespace canjewelry.src.blocks
             int ownMetalTier = 0;
             if (metalsByCode.ContainsKey(metalType)) ownMetalTier = metalsByCode[metalType].Tier;
 
-            interactions = ObjectCacheUtil.GetOrCreate(api, "anvilBlockInteractions" + ownMetalTier, () =>
+            // Our own key: this used to be "anvilBlockInteractions" + tier, the very key vanilla's
+            // BlockAnvil uses, so whichever block loaded first decided what help text both showed.
+            interactions = ObjectCacheUtil.GetOrCreate(api, "canjewelry:gemCuttingTableInteractions" + ownMetalTier, () =>
             {
                 List<ItemStack> workableStacklist = new List<ItemStack>();
                 List<ItemStack> hammerStacklist = new List<ItemStack>();
@@ -282,60 +260,31 @@ namespace canjewelry.src.blocks
 
             return val;
         }
-        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null)
+        public MeshData GenMesh(ICoreClientAPI capi, Shape shape, ITesselatorAPI tesselator, ITexPositionSource textureSource)
         {
-            if (tesselator == null)
-            {
-                tesselator = capi.Tesselator;
-            }
-            curAtlas = capi.BlockTextureAtlas;
-            if (textureSource != null)
-            {
-                tmpTextureSource = textureSource;
-            }
-            else
-            {
-                tmpTextureSource = tesselator.GetTextureSource(this);
-            }
-            if (shape == null)
-            {
-                shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");               
-            }
+            tesselator ??= capi.Tesselator;
+            shape ??= Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
+            if (shape == null) return null;
 
-            if (shape == null)
-            {
-                return null;
-            }
-            
-            AtlasSize = capi.BlockTextureAtlas.Size;
-            //var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
-            tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, this);
+            tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, textureSource);
             return modeldata;
         }
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
-            if (((itemstack != null) ? itemstack.Attributes : null) != null)
-            {
-                string stoneType = itemstack.Attributes.GetString("stone", "granite");
-                string metalType = itemstack.Attributes.GetString("metal", "copper");
-                this.tmpAssets["granite"] = new AssetLocation("game:block/stone/polishedrock/" + stoneType + ".png");
-                this.tmpAssets["iron"] = new AssetLocation("game:block/metal/sheet/" + metalType + "1.png");
+            if (itemstack?.Attributes == null) return;
 
-                string key = stoneType + metalType;
-                renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, key, delegate
-                {
-                    var c = base.LastCodePart(1);
-                    Shape shape = null;
-                    shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
-                    this.AtlasSize = capi.BlockTextureAtlas.Size;
-                    //this.matTexPosition = capi.BlockTextureAtlas.GetPosition(block, "up", false);
-                    this.tmpTextureSource = capi.Tesselator.GetTextureSource(this);
-                    MeshData meshdata;
-                    meshdata = GenMesh(capi, shape, null, this);
-                   // capi.Tesselator.TesselateShape("gemcuttingtable", shape, out meshdata, this);
-                    return capi.Render.UploadMultiTextureMesh(meshdata);
-                });
-            }
+            string stoneType = itemstack.Attributes.GetString("stone", "granite");
+            string metalType = itemstack.Attributes.GetString("metal", "copper");
+
+            // Under our own key: a bare "granitecopper" is a name any other mod could use for its
+            // own mesh in the same shared cache.
+            string key = "canjewelry:gemcuttingtable-" + stoneType + "-" + metalType;
+            renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate(capi, key, delegate
+            {
+                Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
+                MeshData meshdata = GenMesh(capi, shape, null, TexSource(capi, stoneType, metalType));
+                return capi.Render.UploadMultiTextureMesh(meshdata);
+            });
         }
     }
 }

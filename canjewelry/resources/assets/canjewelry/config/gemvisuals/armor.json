@@ -1,0 +1,60 @@
+// Armour - members of the "armor" item group of the config.
+// Worn armour is a different shape than the item shape, so "body" gets its own poses.
+// Placeholder values - tuned in game with the gem visual debug menu.
+//
+// Switched off until those placeholders are tuned: a gem floating in front of the chest is worse
+// than no gem at all, and armour is the one case where everyone else sees it. The poses stay here
+// as the starting point - set "hidden" to false to work on them, and leave it false once they sit
+// where they should.
+{
+	"group": "armor",
+	"hidden": true,
+	"priority": 10,
+	"sockets": [
+		{
+			"translation": { "x": 0, "y": 0.02, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		},
+		{
+			"translation": { "x": 0, "y": 0.09, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		},
+		{
+			"translation": { "x": 0, "y": 0.16, "z": 0 },
+			"rotation": { "x": 0, "y": 0, "z": 0 },
+			"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+			"scale": 0.35
+		}
+	],
+	"targets": {
+		"body": {
+			// Worn armour is seen from every angle already, so a second gem here would only turn
+			// up on the wearer's back.
+			"flip": false,
+			"sockets": [
+				{
+					"translation": { "x": 0, "y": 0.9, "z": 0.16 },
+					"rotation": { "x": 0, "y": 0, "z": 0 },
+					"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+					"scale": 0.3
+				},
+				{
+					"translation": { "x": 0.08, "y": 0.9, "z": 0.16 },
+					"rotation": { "x": 0, "y": 0, "z": 0 },
+					"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+					"scale": 0.3
+				},
+				{
+					"translation": { "x": -0.08, "y": 0.9, "z": 0.16 },
+					"rotation": { "x": 0, "y": 0, "z": 0 },
+					"origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+					"scale": 0.3
+				}
+			]
+		}
+	}
+}

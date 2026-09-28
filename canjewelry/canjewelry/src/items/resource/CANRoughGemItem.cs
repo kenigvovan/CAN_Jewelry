@@ -105,10 +105,7 @@ namespace canjewelry.src.items.resource
 
         public List<GemCuttingRecipe> GetMatchingRecipes(ItemStack stack)
         {
-            return (from r in canjewelry.gemCuttingRecipes
-                    where r.Ingredient.SatisfiesAsIngredient(stack, true)
-                    orderby r.Output.ResolvedItemstack.Collectible.Code
-                    select r).ToList();
+            return cb.CANGemCuttableCB.FindMatchingRecipes(stack, checkRecipeAttributes: false);
         }
 
         public int GetRequiredGemCuttingTableTier(ItemStack stack)

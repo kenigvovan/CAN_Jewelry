@@ -68,17 +68,31 @@ namespace canjewelry.src.jewelry
                     return;
                 }
 
-                if (slotId > 0 && slotId < 4)
+                // The gem input slots are 1 to 4, one per socket: the dialog sends "1 + socket number"
+                // and the inventory accepts cut gems in exactly that band. This used to stop at 3,
+                // so a gem put into the fourth slot never had a cut rolled for it at all.
+                if (slotId >= 1 && slotId <= 4)
                 {
                     if (workStack.Item is not CANCutGemItem)
                     {
                         return;
                     }
+
+                    // The cut and the buff values behind it are rolled, so only the server may do it:
+                    // rolling on both sides gave the player a cut and a buff that the next sync
+                    // replaced with the server's own. Used to be rolled here and again in a
+                    // server-only handler of Initialize, with a second Random of its own.
+                    if (this.Api?.Side != EnumAppSide.Server)
+                    {
+                        return;
+                    }
+
                     string newCuttingType = canjewelry.config.CuttingAttributesDict.Keys.ToArray().Shuffle(Config.rand).FirstOrDefault(CANJWConstants.CUTTING_ROUND);
                     ITreeAttribute tree = new TreeAttribute();
                     tree.SetString(CANJWConstants.CUTTING_TYPE, newCuttingType);
                     workStack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
                     EncrustableCB.ApplyCuttingBuff(workStack);
+                    this.inventory[slotId].MarkDirty();
                     return;
                 }
                 else if (slotId == 0)
@@ -136,30 +150,9 @@ namespace canjewelry.src.jewelry
                 Block block = (this.Api as ICoreClientAPI).World.BlockAccessor.GetBlock(this.Pos);
                 this.facing = BlockFacing.FromCode(block.LastCodePart());
             }
-            if(this.Api.Side == EnumAppSide.Server)
-            {
-                this.inventory.SlotModified += (int slotId) =>
-                {
-                    if (slotId == 1)
-                    {
-                        ItemStack gemStack = this.inventory[slotId].Itemstack;
-                        if (gemStack != null)
-                        {
-                            if(!gemStack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
-                            {
-                                Random r = new Random();
-                                string selectedCutting = canjewelry.config.CuttingAttributesDict.Keys.ToArray().Shuffle(r).FirstOrDefault(CANJWConstants.CUTTING_ROUND);
-                                ITreeAttribute tree = new TreeAttribute();
-                                //gemStack.Attributes.SetString(CANJWConstants.CUTTING_TYPE, selectedCutting);
-                                tree.SetString(CANJWConstants.CUTTING_TYPE, selectedCutting);
-                                gemStack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
-                                EncrustableCB.ApplyCuttingBuff(gemStack);
-                                this.inventory[slotId].MarkDirty();
-                            }
-                        }
-                    }
-                };
-            }
+            // The handler that used to sit here rolled the cut for slot 1 a second time, with a
+            // Random of its own; the one registered in the constructor covers slots 1 to 3 and is
+            // now server-only, which is what this one was for.
             foreach (var it in this.inventory)
             {
                 this.inventory[0].MaxSlotStackSize = 1;
@@ -201,9 +194,7 @@ namespace canjewelry.src.jewelry
                 // The packet acts as a toggle: arriving while a dialog is up closes it.
                 if (renameGui != null)
                 {
-                    renameGui.TryClose();
-                    renameGui.Dispose();
-                    renameGui = null;
+                    CloseDialog();
                     return;
                 }
 
@@ -229,11 +220,68 @@ namespace canjewelry.src.jewelry
             if (packetid == 1001)
             {
                 clientWorldAccessor.Player.InventoryManager.CloseInventory(Inventory);
-                renameGui?.TryClose();
-                renameGui?.Dispose();
-                renameGui = null;
+                CloseDialog();
             }
         }
+
+        // Clears the field before closing: TryClose() re-enters through
+        // OnInventoryClosed(), which would otherwise dispose the dialog twice.
+        private void CloseDialog()
+        {
+            GuiDialogJewelerSet dialog = renameGui;
+            renameGui = null;
+
+            if (dialog == null) return;
+
+            dialog.TryClose();
+            dialog.Dispose();
+        }
+        /// <summary>The gem input slot of one socket, and the socket item slot of one socket.</summary>
+        private const int FirstGemSlot = 1;
+        private const int FirstSocketSlot = 5;
+
+        /// <summary>How many sockets the set works with, and so how wide each band of slots is.</summary>
+        private const int SocketBandSize = 4;
+
+        /// <summary>
+        /// The socket a packet is about, or -1 when the number on the wire is not one of ours. The
+        /// dialog sends a socket index and the inventory slot it belongs to; the slot is derived
+        /// here instead of being taken on trust, since a hand written packet is free to name any
+        /// slot at all - including the piece of jewelry in slot 0, or one out of range, which the
+        /// inventory answers with null rather than an exception.
+        /// </summary>
+        private static int ReadSocketNumber(byte[] data, out int socketNumber)
+        {
+            socketNumber = -1;
+            if (data == null) return -1;
+
+            TreeAttribute tree = new TreeAttribute();
+            using (MemoryStream ms = new MemoryStream(data))
+            using (BinaryReader reader = new BinaryReader(ms))
+            {
+                tree.FromBytes(reader);
+            }
+
+            int socket = tree.GetInt("selectedSocketSlot");
+            if (socket < 0 || socket >= SocketBandSize) return -1;
+
+            socketNumber = socket;
+            return socket;
+        }
+
+        /// <summary>
+        /// Whether this player is allowed to act on the set at all: the inventory has to be open for
+        /// them, which only happens through <see cref="OnPlayerRightClick"/> on a block they reached.
+        /// Without this any client could socket, encrust or inscribe another player's set from
+        /// anywhere in the loaded world, since packet ids of 1000 and up bypass InvNetworkUtil.
+        /// </summary>
+        private bool MayOperate(IPlayer player)
+        {
+            if (player?.InventoryManager == null) return false;
+
+            return this.inventory.HasOpened(player);
+        }
+
         public override void OnReceivedClientPacket(IPlayer player, int packetid, byte[] data)
         {
             if (packetid < 1000)
@@ -243,6 +291,9 @@ namespace canjewelry.src.jewelry
             }
             else
             {
+                // Closing an inventory is the one thing a player may do without having it open.
+                if (packetid != 1001 && !MayOperate(player)) return;
+
                 if (packetid == 1001 && player.InventoryManager != null)
                 {
 
@@ -250,48 +301,20 @@ namespace canjewelry.src.jewelry
                 }
                 if (packetid == 1004)
                 {
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            //in which slot in item we want socket to be added
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            //which slot of the inventory contains socket item to be added
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryAddSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
+                    // Add a socket: the socket item comes from the socket band, never from anywhere
+                    // the packet asks for.
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
 
-                    //EncrustableFunctions.TryToAddSocket(this.inventory);
+                    EncrustableCB.TryAddSocket(this.inventory, inventory[0],
+                        inventory[FirstSocketSlot + socketNumber], socketNumber, player);
                 }
                 else if (packetid == 1005)
                 {
-                    //check target item is here and has place
-                    //for 1-3 slots
-                    //check if null try to place if slotN exists at target
-                    //set null if taken
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            //in which slot in item we want socket to be added
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            //which slot of the inventory contains socket item to be added
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
+                    // Encrust: the gem comes from the gem band, one slot per socket.
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
 
-                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
-
-                    //EncrustableFunctions.TryToEncrustGemsIntoSockets(this.inventory);
+                    EncrustableCB.TryToEncrustGemsIntoSockets(this.inventory, inventory[0],
+                        inventory[FirstGemSlot + socketNumber], socketNumber, player);
                 }
                 else if (packetid == 1007)
                 {
@@ -324,37 +347,19 @@ namespace canjewelry.src.jewelry
                 {
                     // Extract: pulls a gem out of a specific socket. Output goes to the
                     // matching gem-input slot if empty, otherwise to the player.
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryExtractGem(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
+
+                    EncrustableCB.TryExtractGem(this.inventory, inventory[0],
+                        inventory[FirstGemSlot + socketNumber], socketNumber, player);
                 }
                 else if (packetid == 1008)
                 {
                     // Remove socket: pulls an (empty) socket back out and returns the socket item.
                     // Rejected server-side if a gem is still encrusted in that socket.
-                    TreeAttribute tree = new TreeAttribute();
-                    int socketNumber;
-                    int selectedSlotNum;
-                    using (MemoryStream ms = new MemoryStream(data))
-                    {
-                        using (BinaryReader reader = new BinaryReader(ms))
-                        {
-                            tree.FromBytes(reader);
-                            socketNumber = tree.GetInt("selectedSocketSlot");
-                            selectedSlotNum = tree.GetInt("selectedSlotNum");
-                        }
-                    }
-                    EncrustableCB.TryExtractSocket(this.inventory, inventory[0], inventory[selectedSlotNum], socketNumber, player);
+                    if (ReadSocketNumber(data, out int socketNumber) < 0) return;
+
+                    EncrustableCB.TryExtractSocket(this.inventory, inventory[0],
+                        inventory[FirstSocketSlot + socketNumber], socketNumber, player);
                 }
 
             }
@@ -457,182 +462,6 @@ namespace canjewelry.src.jewelry
             this.MeshCache.TryGetValue(key + this.facing, out meshdata);
             return meshdata;
         }
-        // ============================================================================
-        // OLD HARDCODED IMPLEMENTATION — kept as reference for the magic numbers below.
-        // Replaced by the data-driven version that reads vanilla `toolrackTransform`
-        // attribute for weapons/tools instead of hardcoding 9 weapon paths here.
-        // Jewelry items (CANItemSimpleNecklace/Tiara/RottenKingMask/Coronet) keep
-        // their hardcoded poses since they are mod-owned and small in number.
-        // ============================================================================
-        /*
-        protected virtual MeshData getOrCreateMesh_OLD(ItemSlot slot, int index)
-        {
-            //this.MeshCache.Clear();
-            //here
-            MeshData mesh = this.getMesh(slot);
-            //this.MeshCache.Clear();
-            if (mesh != null)
-            {               
-                return mesh;
-            }
-            IContainedMeshSource meshSource = slot.Itemstack.Collectible as IContainedMeshSource;
-            if (meshSource != null)
-            {
-                mesh = meshSource.GenMesh(slot, this.capi.BlockTextureAtlas, this.Pos);
-            }
-            if (mesh == null)
-            {
-                ICoreClientAPI capi = this.Api as ICoreClientAPI;
-                if (slot.Itemstack.Class == EnumItemClass.Block)
-                {
-                    mesh = capi.TesselatorManager.GetDefaultBlockMesh(slot.Itemstack.Block).Clone();
-                }
-                else
-                {
-                    this.nowTesselatingObj = slot.Itemstack.Collectible;
-                    this.nowTesselatingShape = null;
-                    CompositeShape shape = slot.Itemstack.Item.Shape;
-                    if (((shape != null) ? shape.Base : null) != null)
-                    {
-                        this.nowTesselatingShape = capi.TesselatorManager.GetCachedShape(slot.Itemstack.Item.Shape.Base);
-                    }
-                    capi.Tesselator.TesselateItem(slot.Itemstack.Item, out mesh, this);
-                    mesh.RenderPassesAndExtraBits.Fill((short)EnumChunkRenderPass.BlendNoCull);
-                }
-            }
-            mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
-            
-            if(slot.Itemstack.Item is CANItemSimpleNecklace)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.25f, 1.25f, 1.25f);
-                mesh.Translate(1f/16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 2), -((float)Math.PI / 6));
-                mesh.Translate(-3f/16, -1f/16,3f/16);
-            }
-            else if(slot.Itemstack.Item is CANItemTiara)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
-                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
-                mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-            }
-            else if (slot.Itemstack.Item is CANItemRottenKingMask)
-            {
-                mesh.Translate(0, 13f / 16, 0);
-                //mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
-                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
-                //mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-            }
-            else if (slot.Itemstack.Item is CANItemCoronet)
-            {
-                mesh.Translate(0, 10f / 16, 0);
-                //mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 1.6f, 1.6f, 1.6f);
-                //mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 4), -((float)Math.PI / 16));
-                //mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-            }
-            else if(slot.Itemstack.Item != null && slot.Itemstack.Item.StorageFlags == EnumItemStorageFlags.Outfit)
-            {
-               
-                if(slot.Itemstack.Collectible.Code.Path.Contains("-head-"))
-                {
-                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0, ((float)Math.PI / 2), 0f);
-                    mesh.Translate(-3f/16, 0, 0f/16);
-                    
-                }
-                else
-                {
-                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
-                    mesh.Translate(0, 12f / 16, 0);
-                    mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), ((float)Math.PI / 2), 0.0f, 0.0f);
-                    mesh.Translate(0, 9f / 16, -1);
-                }
-            }
-            else if(slot.Itemstack.Item.Code?.Path.Contains("quarterstaff-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI * 0.6f), 0f);
-                mesh.Translate(-0.2f, 10.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("axe-long-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.7f, 0.7f, 0.7f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI * 0.6f), 0f);
-                mesh.Translate(-0.2f, 12f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("sword-great-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("sword-long-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("sword-short-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("javelin-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.7f, 0.7f, 0.7f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.1f, 8.5f / 16, 0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("pike-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.5f, 0.5f, 0.5f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.1f, 8.5f / 16, 0.6f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("club-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.6f, 0.6f, 0.6f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, -0.2f);
-            }
-            else if (slot.Itemstack.Item.Code?.Path.Contains("halberd-plain-") ?? false)
-            {
-                mesh.Scale(new Vec3f(0.5f, 0.5f, 0.5f), 0.7f, 0.7f, 0.7f);
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), (float)Math.PI * 0.5f, 0f, (float)Math.PI * 0.45f);
-                mesh.Translate(-0.2f, 8.5f / 16, 0.5f);
-            }
-            else
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0.0f, ((float)Math.PI / 2), 0f);
-                mesh.Translate(0, 13f / 16, 0);
-            }
-            
-
-
-            if (this.facing == BlockFacing.SOUTH)
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, -2.35f, 0f);
-            }
-            else if (this.facing == BlockFacing.NORTH)
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, 1.0f, 0f);
-            }
-            else if (this.facing == BlockFacing.EAST)
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, -1.0f, 0f);
-            }
-            else
-            {
-                mesh.Rotate(new Vec3f(0.5f, 0.5f, 0.5f), 0f, 2.35f, 0f);
-            }
-
-            string key = this.getMeshCacheKey(slot);
-            this.MeshCache[key + this.facing] = mesh;
-            return mesh;
-        }
-        */
 
         private static readonly Vec3f MeshOrigin = new Vec3f(0.5f, 0.5f, 0.5f);
 
@@ -717,8 +546,10 @@ namespace canjewelry.src.jewelry
 
         private void ApplyDisplayTransform(ItemStack stack, MeshData mesh)
         {
-            // 1. Mod-owned jewelry items (4 cases, mod-private types).
-            if (TryApplyJewelryTransform(stack, mesh)) return;
+            // Jewelry poses used to be case 1 here, switching on four mod-owned item classes.
+            // Dropped with the core/content split: the classes move to the content mod, and the
+            // whole mesh path is dead anyway — OnTesselation adds no mesh, the placed item is
+            // shown in the dialog's 3D preview instead.
 
             // 2. Known vanilla weapons via WeaponPoses table (poses preserved from OLD impl).
             if (TryApplyWeaponPose(stack, mesh)) return;
@@ -744,34 +575,6 @@ namespace canjewelry.src.jewelry
             // 4. Default fallback for unknown items.
             mesh.Rotate(MeshOrigin, 0f, (float)Math.PI / 2, 0f);
             mesh.Translate(0, 13f / 16, 0);
-        }
-
-        private bool TryApplyJewelryTransform(ItemStack stack, MeshData mesh)
-        {
-            switch (stack.Item)
-            {
-                case CANItemSimpleNecklace _:
-                    mesh.Scale(MeshOrigin, 1.25f, 1.25f, 1.25f);
-                    mesh.Translate(1f / 16, 2f / 16, 1f / 16);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 2, -(float)Math.PI / 6);
-                    mesh.Translate(-3f / 16, -1f / 16, 3f / 16);
-                    return true;
-                case CANItemTiara _:
-                    mesh.Scale(MeshOrigin, 1.6f, 1.6f, 1.6f);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 4, -(float)Math.PI / 16);
-                    mesh.Translate(-1f / 16, -9f / 16, 3f / 16);
-                    return true;
-                case CANItemRottenKingMask _:
-                    mesh.Translate(0, 13f / 16, 0);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 4, -(float)Math.PI / 16);
-                    return true;
-                case CANItemCoronet _:
-                    mesh.Translate(0, 10f / 16, 0);
-                    mesh.Rotate(MeshOrigin, 0, (float)Math.PI / 4, -(float)Math.PI / 16);
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         private bool TryApplyWeaponPose(ItemStack stack, MeshData mesh)

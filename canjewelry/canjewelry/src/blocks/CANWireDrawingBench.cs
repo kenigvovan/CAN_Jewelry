@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using canjewelry.src.be;
 using canjewelry.src.items.resource;
+using canjewelry.src.render;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -13,54 +14,20 @@ using Vintagestory.Client.NoObf;
 
 namespace canjewelry.src.blocks
 {
-    public class CANWireDrawingBench: Block, ITexPositionSource
+    public class CANWireDrawingBench: Block
     {
-        public Size2i AtlasSize { get; set; }
-        private ITexPositionSource ownTextureSource;
-        public ITexPositionSource tmpTextureSource;
-        
-        private ITextureAtlasAPI curAtlas;
-        public Dictionary<string, AssetLocation> tmpAssets = new Dictionary<string, AssetLocation>();
-        public TextureAtlasPosition this[string textureCode]
+        /// <summary>
+        /// The texture source for one mesh build, with the wood of the bench in hand pointed at its
+        /// planks. Per call, not a field: a Block is one object for the whole world (see
+        /// <see cref="CANTexSource"/>).
+        /// </summary>
+        private CANTexSource TexSource(ICoreClientAPI capi, string woodType)
         {
-            get
-            {
-                if (tmpAssets.TryGetValue(textureCode, out var assetCode))
-                {
-                    return this.getOrCreateTexPos(assetCode);
-                }
-
-                Dictionary<string, CompositeTexture> dictionary;
-                dictionary = new Dictionary<string, CompositeTexture>();
-                foreach (var it in this.Textures)
-                {
-                    dictionary.Add(it.Key, it.Value);
-                }
-                AssetLocation texturePath = (AssetLocation)null;
-                CompositeTexture compositeTexture;
-                if (dictionary.TryGetValue(textureCode, out compositeTexture))
-                    texturePath = compositeTexture.Baked.BakedName;
-                if ((object)texturePath == null && dictionary.TryGetValue("all", out compositeTexture))
-                    texturePath = compositeTexture.Baked.BakedName;
-
-                return this.getOrCreateTexPos(texturePath);
-            }
-        }
-        private TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
-        {
-            TextureAtlasPosition texPos = (this.api as ClientCoreAPI).BlockTextureAtlas[texturePath];
-            if (texPos == null)
-            {
-                IAsset asset = this.api.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
-                if (asset != null)
-                {
-                    BitmapRef bitmap = asset.ToBitmap((this.api as ClientCoreAPI));
-                    (this.api as ClientCoreAPI).BlockTextureAtlas.InsertTextureCached(texturePath, (IBitmap)bitmap, out int _, out texPos);
-                }
-                else
-                    (this.api as ClientCoreAPI).World.Logger.Warning("For render in block " + this.Code?.ToString() + ", item {0} defined texture {1}, not no such texture found.", "", (object)texturePath);
-            }
-            return texPos;
+            var source = new CANTexSource(capi, capi.BlockTextureAtlas, this.Textures,
+                "wire drawing bench " + this.Code);
+            source.Overrides["plank"] = new AssetLocation("game:block/wood/planks/" + woodType + "1.png");
+            source.Overrides["debarked"] = new AssetLocation("game:block/wood/debarked/" + woodType + ".png");
+            return source;
         }
         public override void OnLoaded(ICoreAPI api)
         {
@@ -130,35 +97,13 @@ namespace canjewelry.src.blocks
                     shapeloc = new AssetLocation("canjewelry:shapes/block/wiretable-feet.json");
                 }
                 Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, shapeloc);
-                Block block = capi.World.GetBlock(new AssetLocation(blockMaterialCode));
-                this.AtlasSize = capi.BlockTextureAtlas.Size;
-                //this.matTexPosition = capi.BlockTextureAtlas.GetPosition(block, "up", false);
-                this.ownTextureSource = capi.Tesselator.GetTextureSource(this, 0, false);
-                
-                string metalType = itemstack.Attributes.GetString("metal", "copper");
-                this.tmpAssets["plank"] = new AssetLocation("game:block/wood/planks/" + woodType + "1.png");
-                this.tmpAssets["debarked"] = new AssetLocation("game:block/wood/debarked/" + woodType + ".png");
-                MeshData meshdata;
-                meshdata = GenMesh(capi, shape, null, this);
-                //capi.Tesselator.TesselateShape("filledpan", shape, out meshdata, this, new Vec3f(0, 0, 0), 0, 0, 0, null, null);
+                MeshData meshdata = GenMesh(capi, shape, null, TexSource(capi, woodType));
                 return capi.Render.UploadMultiTextureMesh(meshdata);
             });
         }
-        public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null, string part = "", Vec3f rotationDeg = null)
+        public MeshData GenMesh(ICoreClientAPI capi, Shape shape, ITesselatorAPI tesselator, ITexPositionSource textureSource, string part = "", Vec3f rotationDeg = null)
         {
-            if (tesselator == null)
-            {
-                tesselator = capi.Tesselator;
-            }
-            curAtlas = capi.BlockTextureAtlas;
-            if (textureSource != null)
-            {
-                tmpTextureSource = textureSource;
-            }
-            else
-            {
-                tmpTextureSource = tesselator.GetTextureSource(this);
-            }
+            tesselator ??= capi.Tesselator;
             if (shape == null)
             {
                 if (part == "head")
@@ -176,9 +121,8 @@ namespace canjewelry.src.blocks
                 return null;
             }
 
-            AtlasSize = capi.BlockTextureAtlas.Size;
-            //var f = (BlockFacing.FromCode(base.LastCodePart(0)).HorizontalAngleIndex - 1) * 90;
-            tesselator.TesselateShape("blocklantern", shape, out var modeldata, this, rotationDeg, 0, 0, 0);
+            tesselator.TesselateShape("canjewelry wiredrawingbench", shape, out var modeldata,
+                textureSource, rotationDeg, 0, 0, 0);
             return modeldata;
         }
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
@@ -238,28 +182,42 @@ namespace canjewelry.src.blocks
                     {
                         return false;
                     }
-                    //if (world is IServerWorldAccessor)
+
+                    ItemSlot heldSlot = byPlayer.InventoryManager.ActiveHotbarSlot;
+                    bool handHoldsStrap = heldSlot.Itemstack == null || heldSlot.Itemstack.Item is CANItemStrap;
+
+                    // Moving items is the server's call. The guard used to be commented out, so both
+                    // sides took from their own copy of the inventory and the client's guess lived
+                    // until the next sync - the same reason the gem cutting table documents for its
+                    // own voxel state. The client only says whether the interaction was handled, so
+                    // that the arm swing and the packet happen; the server does the moving.
+                    if (world.Side == EnumAppSide.Client)
                     {
-                        if (byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack == null || byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack.Item is CANItemStrap)
+                        if (!blockEntity.inventory[0].Empty) return true;
+                        if (handHoldsStrap && heldSlot.Itemstack != null) return true;
+                    }
+                    else
+                    {
+                        if (handHoldsStrap)
                         {
                             if (blockEntity.inventory[0].Empty)
                             {
-                                if (byPlayer.InventoryManager.ActiveHotbarSlot.TryPutInto(world, blockEntity.inventory[0], 1) > 0)
+                                if (heldSlot.TryPutInto(world, blockEntity.inventory[0], 1) > 0)
                                 {
                                     blockEntity.inventory.MarkSlotDirty(0);
-                                    blockEntity.MarkDirty(true);                                    
+                                    blockEntity.MarkDirty(true);
                                     return true;
                                 }
-                            }                         
+                            }
                         }
-                        if (blockEntity.inventory[0].TryPutInto(world, byPlayer.InventoryManager.ActiveHotbarSlot, blockEntity.inventory[0].StackSize) > 0)
+                        if (blockEntity.inventory[0].TryPutInto(world, heldSlot, blockEntity.inventory[0].StackSize) > 0)
                         {
                             blockEntity.resultReady = false;
                             blockEntity.MarkDirty(true);
                             blockEntity.inventory.MarkSlotDirty(0);
                             return true;
                         }
-                    }   
+                    }
                 }
             }
             BlockFacing facing = BlockFacing.FromCode(base.LastCodePart(0)).Opposite;

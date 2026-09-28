@@ -13,15 +13,24 @@ namespace canjewelry.src.gui
     // composing, and this element only shows the result of that.
     public class GuiElementItemPreview : GuiElement
     {
+        // Far enough out to see a whole breastplate, far enough in to place a single gem.
+        private const float MinZoom = 0.4f;
+        private const float MaxZoom = 4f;
+        private const float ZoomStep = 1.15f;
+
         private readonly JewelerItemPreview preview;
+        private readonly bool zoomable;
         private bool dragging;
+        private bool panning;
         private int lastMouseX;
         private int lastMouseY;
 
-        public GuiElementItemPreview(ICoreClientAPI capi, ElementBounds bounds, JewelerItemPreview preview)
+        public GuiElementItemPreview(ICoreClientAPI capi, ElementBounds bounds, JewelerItemPreview preview,
+            bool zoomable = false)
             : base(capi, bounds)
         {
             this.preview = preview;
+            this.zoomable = zoomable;
         }
 
         public override void RenderInteractiveElements(float deltaTime)
@@ -36,7 +45,18 @@ namespace canjewelry.src.gui
         public override void OnMouseDownOnElement(ICoreClientAPI api, MouseEvent args)
         {
             base.OnMouseDownOnElement(api, args);
+
+            // Middle click puts a piece that has been dragged or zoomed out of the frame back.
+            if (zoomable && args.Button == EnumMouseButton.Middle)
+            {
+                preview?.ResetView();
+                args.Handled = true;
+                return;
+            }
+
             dragging = true;
+            // Right drag slides the piece around inside the frame, left drag turns it.
+            panning = zoomable && args.Button == EnumMouseButton.Right;
             lastMouseX = args.X;
             lastMouseY = args.Y;
         }
@@ -46,9 +66,24 @@ namespace canjewelry.src.gui
             base.OnMouseMove(api, args);
             if (!dragging || preview == null) return;
 
-            // Horizontal drag spins the piece, vertical tilts it.
-            preview.RotationY -= (args.X - lastMouseX) * 0.5f;
-            preview.RotationX -= (args.Y - lastMouseY) * 0.5f;
+            int dx = args.X - lastMouseX;
+            int dy = args.Y - lastMouseY;
+
+            if (panning)
+            {
+                // The frame is painted at a different size than it is rendered at, so mouse pixels
+                // are scaled into framebuffer pixels - otherwise the piece lags behind the cursor.
+                float scale = Bounds.InnerWidth <= 0 ? 1f : (float)(preview.FboSize / Bounds.InnerWidth);
+                preview.PanX += dx * scale;
+                preview.PanY += dy * scale;
+            }
+            else
+            {
+                // Horizontal drag spins the piece, vertical tilts it.
+                preview.RotationY -= dx * 0.5f;
+                preview.RotationX -= dy * 0.5f;
+            }
+
             lastMouseX = args.X;
             lastMouseY = args.Y;
         }
@@ -57,6 +92,21 @@ namespace canjewelry.src.gui
         {
             base.OnMouseUp(api, args);
             dragging = false;
+            panning = false;
+        }
+
+        // The composer offers the wheel to every element under the cursor first, so handling it
+        // here keeps it from reaching whatever sits behind the dialog.
+        public override void OnMouseWheel(ICoreClientAPI api, MouseWheelEventArgs args)
+        {
+            if (!zoomable || preview == null) return;
+            if (!Bounds.PointInside(api.Input.MouseX, api.Input.MouseY)) return;
+
+            args.SetHandled(true);
+
+            // Multiplied rather than added: a step feels the same size at every zoom level.
+            float zoom = preview.Zoom * (float)Math.Pow(ZoomStep, Math.Sign(args.deltaPrecise));
+            preview.Zoom = Math.Clamp(zoom, MinZoom, MaxZoom);
         }
     }
 }

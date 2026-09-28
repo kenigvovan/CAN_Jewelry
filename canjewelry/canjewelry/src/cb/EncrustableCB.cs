@@ -1,9 +1,12 @@
-﻿using canjewelry.src.cb;
+﻿using canjewelry.src.api;
+using canjewelry.src.cb;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
+using canjewelry.src.render;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -18,19 +21,258 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
+using Vintagestory.GameContent;
 using static canjewelry.src.Config;
 
 namespace canjewelry.src.CB
 {
-    public class EncrustableCB : CollectibleBehavior
+    public class EncrustableCB : CollectibleBehavior, IContainedMeshSource
     {
         public EncrustableCB(CollectibleObject collObj) : base(collObj)
         {
 
         }
+        /// <summary>
+        /// Cache name of the built composite meshes. One dictionary for the whole mod: the key
+        /// already carries the item and its gems, and a single cache is what
+        /// <see cref="OnUnloaded"/> has to walk to hand the GPU meshes back.
+        /// </summary>
+        private const string GemMeshRefsCache = "canjewelryGemMeshRefs";
+
+        private static GemMeshCache GemMeshRefs(ICoreClientAPI capi)
+            => ObjectCacheUtil.GetOrCreate(capi, GemMeshRefsCache, () => new GemMeshCache());
+
+        /// <summary>
+        /// The built composites, kept to a ceiling. Every entry is a mesh on the graphics card and
+        /// the key is item plus gems, so a player trying gems on would otherwise fill the card for
+        /// the rest of the session. Least recently drawn is evicted first.
+        /// </summary>
+        private class GemMeshCache
+        {
+            private const int Capacity = 256;
+
+            private readonly Dictionary<string, MultiTextureMeshRef> meshes
+                = new Dictionary<string, MultiTextureMeshRef>();
+
+            // Most recently used at the front.
+            private readonly LinkedList<string> order = new LinkedList<string>();
+            private readonly Dictionary<string, LinkedListNode<string>> nodes
+                = new Dictionary<string, LinkedListNode<string>>();
+
+            public bool TryGet(string key, out MultiTextureMeshRef meshref)
+            {
+                if (!meshes.TryGetValue(key, out meshref)) return false;
+
+                if (nodes.TryGetValue(key, out var node))
+                {
+                    order.Remove(node);
+                    order.AddFirst(node);
+                }
+                return true;
+            }
+
+            public void Put(string key, MultiTextureMeshRef meshref)
+            {
+                if (meshes.TryGetValue(key, out MultiTextureMeshRef previous) && previous != meshref)
+                {
+                    previous?.Dispose();
+                }
+
+                meshes[key] = meshref;
+                if (nodes.TryGetValue(key, out var node)) order.Remove(node);
+                nodes[key] = order.AddFirst(key);
+
+                while (meshes.Count > Capacity && order.Last != null)
+                {
+                    string evicted = order.Last.Value;
+                    order.RemoveLast();
+                    nodes.Remove(evicted);
+                    if (meshes.TryGetValue(evicted, out MultiTextureMeshRef stale)) stale?.Dispose();
+                    meshes.Remove(evicted);
+                }
+            }
+
+            public void DisposeAll()
+            {
+                foreach (var meshref in meshes.Values) meshref?.Dispose();
+                meshes.Clear();
+                order.Clear();
+                nodes.Clear();
+            }
+        }
+
+        /// <summary>
+        /// The gems this stack would show, judged by the stack alone — no player setting enters
+        /// here, so the answer is stable for as long as the stack is. That is what makes it usable
+        /// as a mesh cache key (see <see cref="GetMeshCacheKey"/>).
+        /// </summary>
+        private static List<CANSocketGem> SocketGems(ItemStack stack)
+        {
+            // This runs every frame for every item on screen - every slot of an open inventory, the
+            // held item, everything lying on the ground - and almost none of them have a gem in
+            // them. So the cheapest possible question first: does this stack carry sockets at all.
+            if (stack?.Attributes?.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING) == null)
+            {
+                return CANGemMeshBuilder.NoGems;
+            }
+
+            // Adornments carry their gems inside their own shape and hide an empty socket by
+            // swapping in a transparent texture. Adding a second gem on top would double them.
+            if (CANGemVisual.DrawsOwnGems(stack)) return CANGemMeshBuilder.NoGems;
+
+            return CANGemMeshBuilder.CollectGems(stack);
+        }
+
+        /// <summary>
+        /// The gems that should actually be drawn: <see cref="SocketGems"/>, unless the server
+        /// forbids gem visuals or this player has switched them off.
+        /// </summary>
+        private static List<CANSocketGem> GemsToDraw(ICoreClientAPI capi, ItemStack stack)
+        {
+            if (!CANGemVisibility.Enabled(capi)) return CANGemMeshBuilder.NoGems;
+
+            return SocketGems(stack);
+        }
+
+        /// <summary>
+        /// The item's mesh as it is drawn inside another block — a tool rack, a shelf, a display
+        /// case — gems included. Those build their meshes themselves and never reach
+        /// <see cref="OnBeforeRender"/>; they all ask for this interface, which the game also looks
+        /// for among the behaviours, so one implementation covers every holder.
+        ///
+        /// <para>Never returns null while there is a mesh to be had: <c>BlockEntityToolrack</c>
+        /// dereferences what it gets.</para>
+        ///
+        /// <para>Called on the chunk tesselation thread as well as the main one.</para>
+        /// </summary>
+        public MeshData GenMesh(ItemSlot slot, ITextureAtlasAPI targetAtlas, BlockPos atBlockPos)
+        {
+            ICoreClientAPI capi = canjewelry.capi;
+            ItemStack stack = slot?.Itemstack;
+            if (capi == null || stack?.Collectible?.Code == null) return null;
+
+            // Armour is left to the game. Its item shape is an entity shape, which tesselated as an
+            // item comes out in pieces, and the full body mesh it really wants is not what belongs
+            // in a display case either. Null is the answer the holders understand: they fall back to
+            // their own mesh. Safe for the tool rack, which crashes on null but takes no armour -
+            // a rack holds tools and things flagged rackable.
+            if (IsWornWhole(stack)) return null;
+
+            List<CANSocketGem> gems = GemsToDraw(capi, stack);
+
+            MeshData mesh = gems.Count > 0
+                ? CANGemMeshBuilder.BuildComposite(capi, stack, CANGemVisualTarget.Ground, gems, targetAtlas, wearableFullBody: false)
+                : null;
+
+            mesh = mesh ?? CANGemMeshBuilder.CachedBase(capi, stack, targetAtlas, wearableFullBody: false);
+            if (mesh == null) return null;
+
+            // What the holders do to their own item meshes (BlockEntityDisplay.getDefaultMesh): an
+            // item drawn inside a chunk belongs in the alpha tested, two sided pass.
+            if (stack.Class == EnumItemClass.Item) mesh.RenderPassesAndExtraBits?.Fill((short)EnumChunkRenderPass.BlendNoCull);
+
+            return mesh;
+        }
+
+        // Answered once per item, never again: IAttachableToEntity.FromCollectible deserialises the
+        // "attachableToEntity" attribute on every call, and this is asked from GetMeshCacheKey,
+        // which every holder calls for every item it shows on every chunk tesselation. One behaviour
+        // instance exists per collectible, so the field is the natural place for it.
+        // An int, not a bool?: read from the chunk tesselation thread as well as the main one, and a
+        // bool? is two fields that can be read half written.
+        private const int WornUnknown = 0;
+        private const int WornYes = 1;
+        private const int WornNo = 2;
+
+        private volatile int wornWhole = WornUnknown;
+
+        /// <summary>Whether this is armour or clothing that is fitted onto the wearer's shape.</summary>
+        private bool IsWornWhole(ItemStack stack)
+        {
+            int known = wornWhole;
+            if (known != WornUnknown) return known == WornYes;
+
+            bool worn = stack.Collectible?
+                            .GetCollectibleBehavior<CollectibleBehaviorWearableAttachment>(withInheritance: true) != null
+                        && IAttachableToEntity.FromCollectible(stack.Collectible) != null;
+            wornWhole = worn ? WornYes : WornNo;
+            return worn;
+        }
+
+        /// <summary>
+        /// Names the mesh <see cref="GenMesh"/> builds, for the holders' own caches. Carries the
+        /// gems, so setting one into a racked tool shows up. Deliberately blind to whether gem
+        /// visuals are switched on: a key that changed mid-session would miss the holder's cache,
+        /// and <c>BlockEntityDisplay.OnTesselation</c> hands that miss straight to the mesh pool.
+        /// </summary>
+        public string GetMeshCacheKey(ItemSlot slot)
+        {
+            ItemStack stack = slot?.Itemstack;
+            if (stack?.Collectible?.Code == null) return "canjewelry:empty";
+
+            // Cheapest question first: almost every item asked about has no gem in it, and then the
+            // key is the plain code whether it is worn gear or not.
+            List<CANSocketGem> gems = SocketGems(stack);
+            if (gems.Count == 0 || IsWornWhole(stack)) return stack.Collectible.Code.ToString();
+
+            return CANGemMeshBuilder.CacheKey(stack, CANGemVisualTarget.Ground, gems);
+        }
+
+        /// <summary>
+        /// Lays the gems of the filled sockets onto the item's model.
+        ///
+        /// <para>Runs after every other behavior — ours is appended at runtime — so the model swap
+        /// of the vanilla wearable attachment is already done and gets overwritten here. That is
+        /// why the composite is built on top of the same full body mesh (see
+        /// <see cref="CANGemMeshBuilder.BuildBase"/>). Nothing else of <paramref name="renderinfo"/>
+        /// is touched, so the damage effect the wearable behavior just set survives.</para>
+        /// </summary>
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+
+            var gems = GemsToDraw(capi, itemstack);
+            if (gems.Count == 0) return;
+
+            string visualTarget = CANGemVisualTarget.FromRenderTarget(target);
+            string key = CANGemMeshBuilder.CacheKey(itemstack, visualTarget, gems);
+
+            var meshrefs = GemMeshRefs(capi);
+            if (!meshrefs.TryGet(key, out MultiTextureMeshRef meshref) || meshref == null || meshref.Disposed)
+            {
+                MeshData mesh = CANGemMeshBuilder.BuildComposite(capi, itemstack, visualTarget, gems);
+                // No pose, no shape, no base mesh - leave the item looking as it did rather than
+                // making it invisible.
+                if (mesh == null) return;
+
+                meshref = capi.Render.UploadMultiTextureMesh(mesh);
+                meshrefs.Put(key, meshref);
+            }
+            renderinfo.ModelRef = meshref;
+        }
+
+        /// <summary>
+        /// Hands the built meshes back to the GPU. Without this they would outlive every world
+        /// reload of the session, since the cache hangs off the API object.
+        /// </summary>
+        public override void OnUnloaded(ICoreAPI api)
+        {
+            base.OnUnloaded(api);
+            ClearMeshCache(api);
+        }
+
+        /// <summary>
+        /// Throws away every built composite. The cache key says which gems are in the item but
+        /// not where they sit, so this is what makes a pose edited in the debug menu show up
+        /// without a relog.
+        /// </summary>
+        public static void ClearMeshCache(ICoreAPI api)
+        {
+            var meshrefs = ObjectCacheUtil.TryGet<GemMeshCache>(api, GemMeshRefsCache);
+            if (meshrefs == null) return;
+
+            meshrefs.DisposeAll();
+            ObjectCacheUtil.Delete(api, GemMeshRefsCache);
         }
 
         // Inscriptions are user-supplied free text on jewelry. Allowed chars: letters (Latin /
@@ -66,8 +308,10 @@ namespace canjewelry.src.CB
             int maxSocketNumber = EncrustableCB.GetMaxAmountSockets(encrustable.Itemstack);
             if (encrustable.Itemstack != null && maxSocketNumber > 0)
             {
-                //client can send us anything
-                if (socketNumber + 1 > maxSocketNumber)
+                // The client can send us anything: a socket index past the end, a negative one, or a
+                // slot number that resolved to no slot at all (the jeweler set inventory hands back
+                // null rather than throwing for an index out of range).
+                if (socketNumber < 0 || socketNumber + 1 > maxSocketNumber || socketSlot == null)
                 {
                     inventory.TakeLocked = false;
                     return false;
@@ -102,6 +346,15 @@ namespace canjewelry.src.CB
                         {
                             var tiersList = encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
                             if (tiersList.Count() < tree.GetInt(CANJWConstants.SOCKET_ADDED_NUMBER))
+                            {
+                                inventory.TakeLocked = false;
+                                return false;
+                            }
+
+                            // The tier list and the socket count are two separate item attributes and
+                            // nothing keeps them the same length, so the index is checked against the
+                            // list it indexes rather than against the count.
+                            if (socketNumber >= tiersList.Count())
                             {
                                 inventory.TakeLocked = false;
                                 return false;
@@ -158,6 +411,12 @@ namespace canjewelry.src.CB
                     {
                         var tiersList = encrustable.Itemstack.Collectible.Attributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
 
+                        // As above: indexed by the socket the client named, so bounds first.
+                        if (socketNumber >= tiersList.Count())
+                        {
+                            inventory.TakeLocked = false;
+                            return false;
+                        }
 
                         if (tiersList[socketNumber].AsInt() < socketSlot.Itemstack.Collectible.Attributes[CANJWConstants.LEVEL_OF_SOSCKET_STRING].AsInt())
                         {
@@ -367,14 +626,8 @@ namespace canjewelry.src.CB
                         treeSocket["savedGrindLayerInfo"] = gem_slot.Itemstack.Attributes["cangrindlayerinfo"].Clone();
                     }
 
-                    if (encrustable.Itemstack.Item is CANItemSimpleNecklace || encrustable.Itemstack.Item is CANItemHorusEye)
-                    {
-                        encrustable.Itemstack.Attributes.SetString("gem", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
-                    }
-                    else if (encrustable.Itemstack.Item is CANItemTiara)
-                    {
-                        encrustable.Itemstack.Attributes.SetString("gem_" + (socket_number + 1), gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
-                    }
+                    string gemType = gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last();
+                    CANGemVisual.SetGemVisual(encrustable.Itemstack, socket_number, gemType);
                     // Anti-farming gate (spec §6): re-encrusting a previously-extracted gem
                     // grants no XP. Flag travels with the gem ItemStack via wasExtracted.
                     bool freshGem = !gem_slot.Itemstack.Attributes.GetBool("wasExtracted", false);
@@ -502,14 +755,7 @@ namespace canjewelry.src.CB
                 treeSocket.RemoveAttribute(CANJWConstants.CUTTING_TYPE);
                 treeSocket.SetString(CANJWConstants.GEM_TYPE_IN_SOCKET, "");
 
-                if (encrustable.Itemstack.Item is CANItemSimpleNecklace || encrustable.Itemstack.Item is CANItemHorusEye)
-                {
-                    encrustable.Itemstack.Attributes.RemoveAttribute("gem");
-                }
-                else if (encrustable.Itemstack.Item is CANItemTiara)
-                {
-                    encrustable.Itemstack.Attributes.RemoveAttribute("gem_" + (socket_number + 1));
-                }
+                CANGemVisual.ClearGemVisual(encrustable.Itemstack, socket_number);
 
                 // Resolve jewelry fate. Damage exhausting durability promotes Damaged→Destroyed
                 // — consistent with vanilla item death.
@@ -707,9 +953,11 @@ namespace canjewelry.src.CB
                 && canjewelry.config.CuttingAttributesDict.TryGetValue(cuttingType, out var cutAttrs))
             {
                 float newMain = (float)Math.Round(mainAttrs.GetRandomMainValue(smallerTier), 3) * cutAttrs.GrindingBuffIncreaseMultipliers[0];
-                if (originalNames.Length >= 2)
+                float newSecondary = originalNames.Length >= 2
+                    ? RollSecondaryValue(originalNames[1], smallerTier, cutAttrs)
+                    : 0f;
+                if (newSecondary != 0)
                 {
-                    float newSecondary = (float)Math.Round(mainAttrs.GetRandomSecondaryValue(smallerTier), 3) / 100f;
                     newTree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] = new StringArrayAttribute(new[] { originalNames[0], originalNames[1] });
                     newTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute(new[] { newMain, newSecondary });
                 }
@@ -734,6 +982,24 @@ namespace canjewelry.src.CB
 
         public static bool canItemContainThisGem(string gemType, ItemStack targetItemStack)
         {
+            JsonObject attributes = targetItemStack?.Collectible?.Attributes;
+            if (attributes != null)
+            {
+                string[] allowedGems = attributes[CANJewelryAttributes.AllowedGems].AsArray<string>(null);
+                if (allowedGems != null && Array.IndexOf(allowedGems, gemType) >= 0) return true;
+
+                string[] gemGroups = attributes[CANJewelryAttributes.GemGroups].AsArray<string>(null);
+                if (gemGroups != null
+                    && canjewelry.config.gemToGroups != null
+                    && canjewelry.config.gemToGroups.TryGetValue(gemType, out var coveredGroups))
+                {
+                    foreach (string group in gemGroups)
+                    {
+                        if (group != null && coveredGroups.Contains(group)) return true;
+                    }
+                }
+            }
+
             if (canjewelry.config.buffNameToPossibleItem.TryGetValue(gemType, out var hashSetClasses))
             {
                 foreach (var it in hashSetClasses)
@@ -746,6 +1012,72 @@ namespace canjewelry.src.CB
             }
             return false;
         }
+        // Parsed SocketTiers per item. GetMaxAmountSockets and GetSocketsTiers are called from mesh
+        // building and from tooltips, and used to deserialise the same JSON on every single call.
+        // Keyed by the collectible because the parsed table belongs to the item type, not the stack.
+        private static readonly ConcurrentDictionary<CollectibleObject, Dictionary<string, int[]>> variantTiersCache
+            = new ConcurrentDictionary<CollectibleObject, Dictionary<string, int[]>>();
+
+        /// <summary>
+        /// Drops the parsed tables. Has to run whenever the socket attributes are written anew -
+        /// the config can arrive from the server after items are already loaded, and a stale table
+        /// would keep handing out the previous socket layout.
+        /// </summary>
+        public static void ClearVariantTiersCache()
+        {
+            variantTiersCache.Clear();
+        }
+
+        private static Dictionary<string, int[]> GetVariantTiers(ItemStack itemstack)
+        {
+            CollectibleObject collectible = itemstack.Collectible;
+            if (collectible == null) return null;
+
+            if (variantTiersCache.TryGetValue(collectible, out var cached)) return cached;
+
+            var attribute = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
+            Dictionary<string, int[]> parsed = null;
+            if (attribute != null)
+            {
+                try
+                {
+                    parsed = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(attribute.ToString());
+                }
+                catch (Exception)
+                {
+                    // A malformed rule should cost the item its sockets, not crash the tooltip.
+                    parsed = null;
+                }
+            }
+
+            // Cached even when null, so a broken rule is not re-parsed on every draw.
+            variantTiersCache[collectible] = parsed;
+            return parsed;
+        }
+
+        /// <summary>
+        /// The value a custom variant rule is keyed on. Stack attributes first, then the item's own
+        /// code variant.
+        /// <para>
+        /// The fallback is there because adornments do not all carry their material the same way: a
+        /// tiara keeps "carcassus" on the stack, while a coronet bakes the metal into its code as a
+        /// variant group (cancoronet-gold). Without it such items cannot use a variant rule at all
+        /// and every single code has to be listed by hand instead.
+        /// </para>
+        /// </summary>
+        public static string ResolveVariantValue(ItemStack itemstack, string compareKey)
+        {
+            if (itemstack == null || string.IsNullOrEmpty(compareKey)) return null;
+
+            string fromAttributes = itemstack.Attributes?.GetString(compareKey, null);
+            if (fromAttributes != null) return fromAttributes;
+
+            var variants = itemstack.Collectible?.Variant;
+            if (variants != null && variants.ContainsKey(compareKey)) return variants[compareKey];
+
+            return null;
+        }
+
         public static int GetMaxAmountSockets(ItemStack itemstack)
         {
             if (itemstack != null)
@@ -756,26 +1088,35 @@ namespace canjewelry.src.CB
                         ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
                         : null;
                     if (compareKey == null) return -1;
-                    string searchedValue = itemstack.Attributes.GetString(compareKey, null);
+                    string searchedValue = ResolveVariantValue(itemstack, compareKey);
                     if (searchedValue != null)
                     {
-                        var f = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
-                        if (f != null)
+                        var valueDict = GetVariantTiers(itemstack);
+                        if (valueDict != null && valueDict.TryGetValue(searchedValue, out var value))
                         {
-                            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(f.ToString());
-                            if (valueDict.TryGetValue(searchedValue, out var value))
-                            {
-                                return value.Length;
-                            }
+                            return value.Length;
                         }
                     }
                 }
-                else if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists("canhavesocketsnumber") && itemstack.ItemAttributes["canhavesocketsnumber"].AsInt() > 0)
+                else if (itemstack.ItemAttributes != null)
                 {
-                    return itemstack.ItemAttributes["canhavesocketsnumber"].AsInt();
+                    if (itemstack.ItemAttributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+                    {
+                        int number = itemstack.ItemAttributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt();
+                        return number > 0 ? number : -1;
+                    }
+                    int[] tiers = TiersWithoutNumber(itemstack);
+                    if (tiers != null) return tiers.Length;
                 }
             }
             return -1;
+        }
+
+        // Items from other mods may declare only cansocketstiers; the count is then its length.
+        private static int[] TiersWithoutNumber(ItemStack itemstack)
+        {
+            int[] tiers = itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray<int>(null);
+            return tiers != null && tiers.Length > 0 ? tiers : null;
         }
         public static int[] GetSocketsTiers(ItemStack itemstack)
         {
@@ -787,28 +1128,28 @@ namespace canjewelry.src.CB
                         ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
                         : null;
                     if (compareKey == null) return new int[0];
-                    string searchedValue = itemstack.Attributes.GetString(compareKey, null);
+                    string searchedValue = ResolveVariantValue(itemstack, compareKey);
                     if (searchedValue != null)
                     {
-                        var f = itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS];
-                        if (f != null)
+                        var valueDict = GetVariantTiers(itemstack);
+                        if (valueDict != null && valueDict.TryGetValue(searchedValue, out var value))
                         {
-                            var valueDict = JsonConvert.DeserializeObject<Dictionary<string, int[]>>(f.ToString());
-                            if (valueDict.TryGetValue(searchedValue, out var value))
-                            {
-                                return value;
-                            }
+                            return value;
                         }
                     }
                 }
-                else if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists("canhavesocketsnumber") && itemstack.ItemAttributes["canhavesocketsnumber"].AsInt() > 0)
+                else if (itemstack.ItemAttributes != null)
                 {
-                    return itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray<int>();
-                    /*var c = itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING];
-                    var f = c.AsArray<int>();
-                    return new int[] { 2 };
-                    return new int[] { 1 };*/
-                        //itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray();
+                    if (itemstack.ItemAttributes.KeyExists(CANJWConstants.SOCKETS_NUMBER_STRING))
+                    {
+                        if (itemstack.ItemAttributes[CANJWConstants.SOCKETS_NUMBER_STRING].AsInt() > 0)
+                            return itemstack.ItemAttributes[CANJWConstants.SOCKETS_TIERS_STRING].AsArray<int>();
+                    }
+                    else
+                    {
+                        int[] tiers = TiersWithoutNumber(itemstack);
+                        if (tiers != null) return tiers;
+                    }
                 }
             }
             return new int[0];
@@ -822,6 +1163,21 @@ namespace canjewelry.src.CB
         }
 
         private static string PickRandom(ICollection<string> values) => values.ElementAt(Config.rand.Next(values.Count));
+
+        /// <summary>
+        /// Rolls a baguette's secondary buff value. The range comes from the entry of the stat picked
+        /// as secondary, not from the main stat's entry - the units belong to the stat that owns them.
+        /// Returns 0 when the config has no range for it, which callers read as "no secondary buff".
+        /// </summary>
+        private static float RollSecondaryValue(string secondaryBuffName, int gemTier, CuttingAttributes cuttingAttributes)
+        {
+            if (!canjewelry.config.BuffAttributesDict.TryGetValue(secondaryBuffName, out BuffAttributes secondaryAttributes))
+            {
+                return 0f;
+            }
+            return (float)Math.Round(secondaryAttributes.GetRandomSecondaryValue(gemTier), 3)
+                   * cuttingAttributes.GrindingBuffIncreaseMultipliers[0];
+        }
 
         public static void ApplyCuttingBuff(ItemStack outstack)
         {
@@ -874,10 +1230,11 @@ namespace canjewelry.src.CB
                     && buffAttributes.PossibleSecondaryStats != null
                     && buffAttributes.PossibleSecondaryStats.Count > 0)
                 {
-                    float secondaryBuffValue = (float)Math.Round(buffAttributes.GetRandomSecondaryValue(gemTier), 3) / 100;
+                    string secondaryBuffName = PickRandom(buffAttributes.PossibleSecondaryStats);
+                    float secondaryBuffValue = RollSecondaryValue(secondaryBuffName, gemTier, cuttingAttributes);
                     if (secondaryBuffValue != 0)
                     {
-                        buffNames.Add(PickRandom(buffAttributes.PossibleSecondaryStats));
+                        buffNames.Add(secondaryBuffName);
                         buffValues.Add(secondaryBuffValue);
                     }
                 }

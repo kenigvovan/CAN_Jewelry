@@ -122,6 +122,39 @@ namespace canjewelry.Tests.EncrustableCB
             Assert.Null(ex);
         }
 
+        // ── Forged packets: a client names the socket, so it can name anything ──
+
+        [Fact]
+        public void NegativeSocketNumber_ReturnsFalse_NotCrash()
+        {
+            var encrustableSlot = new TestItemSlot(_inv, ItemStackBuilder.CreateSocketableItem(new[] { 2, 2 }));
+            var socketSlot      = new TestItemSlot(_inv, ItemStackBuilder.CreateSocketItem(2));
+
+            bool result = false;
+            var ex = Record.Exception(() =>
+                result = src.CB.EncrustableCB.TryAddSocket(_inv, encrustableSlot, socketSlot, socketNumber: -1));
+
+            Assert.Null(ex);
+            Assert.False(result);
+            Assert.False(_inv.TakeLocked);
+        }
+
+        [Fact]
+        public void NullSocketSlot_ReturnsFalse_NotCrash()
+        {
+            // The jeweler set inventory hands back null for a slot index out of range rather than
+            // throwing, so a forged slot number arrives here as no slot at all.
+            var encrustableSlot = new TestItemSlot(_inv, ItemStackBuilder.CreateSocketableItem(new[] { 2 }));
+
+            bool result = false;
+            var ex = Record.Exception(() =>
+                result = src.CB.EncrustableCB.TryAddSocket(_inv, encrustableSlot, null, socketNumber: 0));
+
+            Assert.Null(ex);
+            Assert.False(result);
+            Assert.False(_inv.TakeLocked);
+        }
+
         // ── Happy path ────────────────────────────────────────────────────
 
         [Fact]

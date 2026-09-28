@@ -1,0 +1,30 @@
+[
+    {
+        "file": "canjewelry:itemtypes/encrusting/wirehank.json",
+        "op": "addeach",
+        "path": "/variantgroups/0/states/-",
+        "value": [ "blacksteel", "redsteel", "bluesteel", "rosegold", "sterlingsilver" ],
+        "dependsOn": [ { "modid": "canadditionalmetals" } ]
+    },
+    {
+        "file": "canjewelry:itemtypes/encrusting/strap.json",
+        "op": "addeach",
+        "path": "/variantgroups/0/states/-",
+        "value": [ "blacksteel", "redsteel", "bluesteel", "rosegold", "sterlingsilver" ],
+        "dependsOn": [ { "modid": "canadditionalmetals" } ]
+    },
+    {
+        "file": "canjewelry:recipes/smithing/strap.json",
+        "op": "addeach",
+        "path": "/ingredient/allowedVariants/-",
+        "value": [ "blacksteel", "redsteel", "bluesteel", "rosegold", "sterlingsilver" ],
+        "dependsOn": [ { "modid": "canadditionalmetals" } ]
+    },
+    {
+        "file": "canjewelry:recipes/grid/can-wire-hank.json",
+        "op": "addeach",
+        "path": "/0/ingredients/S/allowedVariants/-",
+        "value": [ "blacksteel", "redsteel", "bluesteel", "rosegold", "sterlingsilver" ],
+        "dependsOn": [ { "modid": "canadditionalmetals" } ]
+    }
+]

@@ -1,6 +1,0 @@
-{
-  "game:clothes-nadiya-lowerbody-fisher": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": 0, "y": 0.32, "z": 0 } },
-  "game:clothes-lowerbody-clockmaker-pants": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": 0, "y": 0.32, "z": 0 } },
-  "*:clothes-lowerbody-*": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": 0, "y": 0.35, "z": 0 } },
-  "game:clothes-nadiya-lowerbody-*": { "origin": { "x": 0.5, "y": 0, "z": 0.5 }, "translation": { "x": 0, "y": 0.35, "z": 0 } }
-}

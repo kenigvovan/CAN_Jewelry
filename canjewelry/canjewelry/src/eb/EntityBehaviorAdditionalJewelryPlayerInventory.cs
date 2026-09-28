@@ -23,8 +23,7 @@ namespace canjewelry.src.eb
         {
             get
             {
-                IPlayer player = this.Player;
-                return ((player != null) ? player.InventoryManager.GetOwnInventory("additionaljewelrycharacter") : null) as InventoryBase;
+                return canjewelry.GetAdditionalJewelryInventory(this.Player) as InventoryBase;
             }
         }
         public override string InventoryClassName
@@ -143,21 +142,17 @@ namespace canjewelry.src.eb
         {
             this.Api.Event.EnqueueMainThreadTask(delegate
             {
-                EntityServerProperties server = this.entity.Properties.Server;
-                bool flag;
-                if (server == null)
-                {
-                    flag = true;
-                }
-                else
-                {
-                    ITreeAttribute attributes = server.Attributes;
-                    flag = !((attributes != null) ? new bool?(attributes.GetBool("keepContents", false)) : null).GetValueOrDefault();
-                }
-                if (flag)
-                {
-                    this.Player.InventoryManager.OnDeath();
-                }
+                // NOTE: do NOT call this.Player.InventoryManager.OnDeath() here.
+                // That call is not scoped to this behaviour's inventory - it runs
+                // OnOwningEntityDeath() on *every* InventoryBasePlayer the player owns
+                // (hotbar, backpacks, crafting grid, ...), i.e. it drops the whole
+                // inventory on the ground. The vanilla EntityBehaviorPlayerInventory on
+                // the same player entity already does that, so doing it here only
+                // duplicates it - and it bypasses mods that suppress the vanilla drop
+                // (e.g. "dead", which moves the inventory into a corpse entity instead),
+                // leaving the items on the ground and the corpse empty.
+                // The jewelry inventory itself intentionally keeps its contents on death
+                // (InventoryCharacterAdditionalJewelry.OnOwningEntityDeath is a no-op).
                 EntityServerProperties server2 = this.entity.Properties.Server;
                 bool flag2;
                 if (server2 == null)
@@ -169,9 +164,11 @@ namespace canjewelry.src.eb
                     ITreeAttribute attributes2 = server2.Attributes;
                     flag2 = ((attributes2 != null) ? new bool?(attributes2.GetBool("dropArmorOnDeath", false)) : null).GetValueOrDefault();
                 }
-                if (flag2)
+                // Null when the extra jewelry slots are switched off.
+                InventoryBase inventory = this.Inventory;
+                if (flag2 && inventory != null)
                 {
-                    foreach (ItemSlot slot in this.Inventory)
+                    foreach (ItemSlot slot in inventory)
                     {
                         if (!slot.Empty)
                         {

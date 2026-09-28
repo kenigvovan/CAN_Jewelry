@@ -10,12 +10,14 @@ using canjewelry.src.cb;
 using canjewelry.src.CB;
 using canjewelry.src.eb;
 using canjewelry.src.gui;
+using canjewelry.src.render;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
@@ -214,8 +216,19 @@ namespace canjewelry.src.harmony
                         {
                             continue;
                         }
-                        dsc.Append("<font color=\"#").Append(canjewelry.config.socketTiersColors[treeSlot.GetAsInt("sockettype") - 1]).Append("\"></font>").Append(Lang.Get("canjewelry:item-socket-tier", treeSlot.GetAsInt("sockettype")));
-                        // dsc.Append("<font color=\"" + canjewelry.config.socketTiersColors[2] + "\"><icon name=wpCircle></icon></font>" +  Lang.Get("canjewelry:item-socket-tier", treeSlot.GetAsInt("sockettype")));
+                        // The tier line in the colour of its tier. The font tag used to be closed
+                        // immediately and the text written after it, so the colour applied to
+                        // nothing at all; and the tier is 1-based while the colour list is not, so
+                        // an unusual tier is kept inside the list rather than indexed blindly.
+                        int socketTier = treeSlot.GetAsInt("sockettype");
+                        string[] tierColors = canjewelry.config.socketTiersColors;
+                        string tierColor = tierColors != null && tierColors.Length > 0
+                            ? tierColors[GameMath.Clamp(socketTier - 1, 0, tierColors.Length - 1)]
+                            : null;
+                        string tierText = Lang.Get("canjewelry:item-socket-tier", socketTier);
+
+                        if (tierColor == null) dsc.Append(tierText);
+                        else dsc.Append("<font color=\"#").Append(tierColor).Append("\">").Append(tierText).Append("</font>");
                         dsc.Append("\n");
                         if (treeSlot.GetString("gemtype") != "")
                         {
@@ -378,13 +391,83 @@ namespace canjewelry.src.harmony
             });
             ___charDlg.RenderTabHandlers.Add(new Action<GuiComposer>(composeStatsTab));
 
-            ___charDlg.Tabs.Add(new GuiTab()
-            {
-                Name = Lang.Get("canjewelry:additionaljewelry-tab-name"),
-                DataInt = ___charDlg.Tabs.Count
-            });
-            ___charDlg.RenderTabHandlers.Add(new Action<GuiComposer>(composeAdditionalJewelryTab));
+            characterDialog = ___charDlg;
+            // Only the local config is known this early; the server's value corrects it on sync.
+            ApplyAdditionalJewelryTabVisibility();
         }
+
+        private static GuiDialogCharacterBase characterDialog;
+
+        // One instance, so the tab can be found again among the handlers by reference.
+        private static readonly Action<GuiComposer> additionalJewelryTabHandler = composeAdditionalJewelryTab;
+
+        /// <summary>
+        /// Adds or removes the extra jewelry tab to match the config. The dialog picks a tab's
+        /// handler by <see cref="GuiTab.DataInt"/>, so after a removal every tab is renumbered to its
+        /// position to keep tabs and handlers lined up.
+        /// </summary>
+        internal static void ApplyAdditionalJewelryTabVisibility()
+        {
+            GuiDialogCharacterBase dlg = characterDialog;
+            if (dlg == null) return;
+
+            int index = dlg.RenderTabHandlers.IndexOf(additionalJewelryTabHandler);
+            bool wanted = canjewelry.AdditionalJewelrySlotsEnabled;
+            if (wanted == (index >= 0)) return;
+
+            // The open dialog's current tab could point past the end once one is gone.
+            if (dlg.IsOpened()) dlg.TryClose();
+
+            if (wanted)
+            {
+                dlg.Tabs.Add(new GuiTab() { Name = Lang.Get("canjewelry:additionaljewelry-tab-name") });
+                dlg.RenderTabHandlers.Add(additionalJewelryTabHandler);
+            }
+            else if (index < dlg.Tabs.Count)
+            {
+                dlg.Tabs.RemoveAt(index);
+                dlg.RenderTabHandlers.RemoveAt(index);
+            }
+
+            for (int i = 0; i < dlg.Tabs.Count; i++) dlg.Tabs[i].DataInt = i;
+        }
+        /// <summary>
+        /// Adds the gems of worn gear to the wearer's shape, right after the game has stepped the
+        /// gear itself into it.
+        ///
+        /// <para>There is no hook for this: a collectible can supply its own worn shape through
+        /// IWearableShapeSupplier, but only by implementing it on the item class, which is no help
+        /// for armour that belongs to the game or to somebody else's mod. This is the one place
+        /// where the gear shape of any item passes through, with the wearer's shape in hand.</para>
+        /// </summary>
+        public static void Postfix_EntityBehaviorContainer_addGearToShape(Shape __result, ICoreAPI api,
+            Entity optionalTargetEntity, ITextureAtlasAPI targetAtlas, ItemStack stack, IAttachableToEntity iatta,
+            string slotCode, string shapePathForLogging, IDictionary<string, CompositeTexture> collectedTextures)
+        {
+            if (__result == null || stack == null || iatta == null) return;
+
+            try
+            {
+                // Same prefix the gear elements were renamed with, or the gems would be parented to
+                // an element name that is not in the shape.
+                string texturePrefixCode = iatta.GetTexturePrefixCode(stack);
+                JsonObject attributes = optionalTargetEntity?.Properties?.Attributes;
+                if (attributes != null && attributes["useSlotPrefix"].AsBool(false))
+                {
+                    texturePrefixCode = texturePrefixCode != null ? texturePrefixCode + "-" + slotCode : slotCode;
+                }
+
+                CANGemEntityShape.AddGems(api, targetAtlas, __result, stack, collectedTextures, texturePrefixCode,
+                    shapePathForLogging);
+            }
+            catch (Exception e)
+            {
+                // A gem is decoration; a throw here would cost the wearer their whole model.
+                api?.Logger.Error("[canjewelry] could not add gems to the worn shape of {0}: {1}",
+                    stack.Collectible?.Code, e);
+            }
+        }
+
         public static void Postfix_ItemChisel_OnHeldAttackStart(ItemChisel __instance, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, ref EnumHandHandling handling)
         {
             if (blockSel != null)
@@ -497,9 +580,13 @@ namespace canjewelry.src.harmony
 
             //compo.AddStaticText("hello", CairoFont.WhiteDetailText(), textBounds);
             var invBounds = textBounds.BelowCopy(20, 0).WithFixedSize(350, 250);
-            IInventory additionalJewelryInv = canjewelry.capi.World.Player.InventoryManager.GetOwnInventory("additionaljewelrycharacter");
-            
-            compo.AddItemSlotGrid(additionalJewelryInv, new Action<object>(SendInvPacket), 6, invBounds, "invBounds");
+            IInventory additionalJewelryInv = canjewelry.GetAdditionalJewelryInventory(canjewelry.capi.World.Player);
+
+            // The slot grid dereferences the inventory while composing.
+            if (additionalJewelryInv != null)
+            {
+                compo.AddItemSlotGrid(additionalJewelryInv, new Action<object>(SendInvPacket), 6, invBounds, "invBounds");
+            }
             compo.Compose();
         }
         protected static void SendInvPacket(object packet)

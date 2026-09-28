@@ -632,19 +632,9 @@ namespace canjewelry.src.jewelry
         }
         private string[] GetAvailableGemTypes(ItemStack itemStack)
         {
-            string itemCode = itemStack.Collectible.Code.Path;
-            List<string> res = new List<string>();
-            foreach(var gemTypeSetPair in canjewelry.config.buffNameToPossibleItem)
-            {
-                foreach(var it in gemTypeSetPair.Value)
-                {                 
-                    if (WildcardUtil.Match("*" + it + "*", itemCode))
-                    {
-                        res.Add(gemTypeSetPair.Key);
-                    }
-                }
-            }
-            return res.ToArray();
+            return canjewelry.config.buffNameToPossibleItem.Keys
+                .Where(gemType => EncrustableCB.canItemContainThisGem(gemType, itemStack))
+                .ToArray();
         }
         public static int getStringLength(string name)
         {

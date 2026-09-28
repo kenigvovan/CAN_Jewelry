@@ -20,6 +20,11 @@ namespace canjewelry.src.items
         public static bool carvingTime = DateTime.Now.Month == 10 || DateTime.Now.Month == 11;
         public static bool AllowHalloweenEvent = true;
 
+        // Seconds into the current hold at which the last strike landed. Lives on the item rather
+        // than per stack because only the local player's hold is ever evaluated here - the server
+        // side of OnHeldAttackStep returns before touching it.
+        private float lastHoldStrikeSeconds;
+
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
@@ -108,8 +113,44 @@ namespace canjewelry.src.items
                 {
                     bea.OnUseOver((byEntity as EntityPlayer).Player, blockSel.SelectionBoxIndex);
                     handling = EnumHandHandling.PreventDefault;
+                    // Starts the interval for OnHeldAttackStep, which counts from the same zero.
+                    lastHoldStrikeSeconds = 0;
                 }
             }
+        }
+
+        /// <summary>
+        /// Keeps striking while the attack button is held down, so the player can sweep the cursor
+        /// over the grid instead of aiming a click at every single voxel. Client only: OnUseOver
+        /// sends its own packet, and letting the server run this too would double every strike.
+        /// </summary>
+        public override bool OnHeldAttackStep(float secondsPassed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSelection, EntitySelection entitySel)
+        {
+            if (byEntity.World.Side != EnumAppSide.Client) return false;
+
+            int intervalMs = canjewelry.config?.cuttingHoldStrikeIntervalMs ?? 0;
+            if (intervalMs <= 0) return false;
+
+            IPlayer byPlayer = (byEntity as EntityPlayer)?.Player;
+            if (byPlayer == null) return false;
+            if (!canjewelry.config.IsEasyCuttingEnabledFor(byPlayer.PlayerName)) return false;
+
+            if (byEntity.LeftHandItemSlot?.Itemstack?.Collectible?.Tool != EnumTool.Hammer
+                && byPlayer.WorldData.CurrentGameMode != EnumGameMode.Creative) return false;
+
+            if (blockSelection?.Position == null) return false;
+
+            BlockEntityGemCuttingTable bea = byEntity.World.BlockAccessor
+                .GetBlockEntity(blockSelection.Position) as BlockEntityGemCuttingTable;
+            if (bea == null) return false;
+
+            // Keep the hold alive between strikes, otherwise returning false would end it after
+            // the first interval and the player would have to click again anyway.
+            if (secondsPassed - lastHoldStrikeSeconds < intervalMs / 1000f) return true;
+            lastHoldStrikeSeconds = secondsPassed;
+
+            bea.OnUseOver(byPlayer, blockSelection.SelectionBoxIndex);
+            return true;
         }
 
 

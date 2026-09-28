@@ -1,4 +1,5 @@
-﻿using System;
+﻿using canjewelry.src.render;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -89,29 +90,29 @@ namespace canjewelry.src.eb
 
         public override void OnTesselation(ref Shape entityShape, string shapePathForLogging, ref bool shapeIsCloned, ref string[] willDeleteElements)
         {
-            return;
+            // What hangs the jewelry of the mod's own slots - rings, earrings, armbands - onto the
+            // wearer. Items in the vanilla clothing slots (a necklace is one) travel the game's own
+            // EntityBehaviorContainer instead and never reach here.
+            Shape before = entityShape;
             try
             {
                 this.addGearToShape(ref entityShape, shapePathForLogging, ref shapeIsCloned, ref willDeleteElements);
             }
             catch (Exception e)
             {
-                string text = "Error tesselating entity ";
-                string text2 = this.entity.Code;
-                string text3 = " at ";
+                // One piece of jewelry that cannot be attached must not cost the player their body:
+                // the shape is handed back as it came and the wearer is drawn without it.
+                entityShape = before;
                 BlockPos asBlockPos = this.entity.Pos.AsBlockPos;
-                throw new Exception(text + text2 + text3 + ((asBlockPos != null) ? asBlockPos.ToString() : null), e);
+                Api?.World?.Logger?.Error("[canjewelry] error tesselating jewelry of entity {0} at {1}, drawing it without: {2}",
+                    this.entity.Code, (asBlockPos != null) ? asBlockPos.ToString() : "?", e);
             }
             base.OnTesselation(ref entityShape, shapePathForLogging, ref shapeIsCloned, ref willDeleteElements);
 
-
-
-            //addGearToShape(ref entityShape, shapePathForLogging, ref shapeIsCloned, ref willDeleteElements);
-            //base.OnTesselation(ref entityShape, shapePathForLogging, ref shapeIsCloned, ref willDeleteElements);
-            if (Inventory != null)
+            if (Inventory != null && Inventory.Count > 0)
             {
                 ItemSlot itemSlot = Inventory.MaxBy((ItemSlot slot) => (!slot.Empty) ? slot.Itemstack.Collectible.LightHsv[2] : 0);
-                if (!itemSlot.Empty && itemSlot.Itemstack.Collectible.LightHsv[2] > 0)
+                if (itemSlot?.Empty == false && itemSlot.Itemstack.Collectible.LightHsv[2] > 0)
                 {
                     byte[] jewelryLight = itemSlot.Itemstack.Collectible.GetLightHsv(entity.World.BlockAccessor, null, itemSlot.Itemstack);
                     if (entity.LightHsv == null || jewelryLight[2] > entity.LightHsv[2])
@@ -231,12 +232,20 @@ namespace canjewelry.src.eb
             if (shape == null)
             {
                 compositeShape = iatta.GetAttachedShape(stack, slotCode);
+                if (compositeShape?.Base == null)
+                {
+                    Api.World.Logger.Warning("[canjewelry] {0} {1} sits in a jewelry slot but names no attachable shape, drawing the wearer without it.", stack.Class, stack.Collectible.Code);
+                    return entityShape;
+                }
+
                 assetLocation = compositeShape.Base.CopyWithPath("shapes/" + compositeShape.Base.Path + ".json");
                 shape = Shape.TryGet(Api, assetLocation);
                 if (shape == null)
                 {
                     Api.World.Logger.Warning("Entity attachable shape {0} defined in {1} {2} not found or errored, was supposed to be at {3}. Shape will be invisible.", compositeShape.Base, stack.Class, stack.Collectible.Code, assetLocation);
-                    return null;
+                    // Not null: the caller assigns this straight back to the entity shape, and a null
+                    // there is the wearer's whole body gone over one unreadable ring.
+                    return entityShape;
                 }
 
                 shape.SubclassForStepParenting(texturePrefixCode, damageEffect);
@@ -252,8 +261,27 @@ namespace canjewelry.src.eb
             }
 
             applyStepParentOverrides(overrideStepParent, shape);
-            
-            //fail here
+
+            // ".cangemworn on" prints, for every piece of jewelry hung onto the wearer, what each
+            // texture code its faces ask for actually resolves to once the piece is on: the file,
+            // its place in the entity atlas, and the dimensions the uvs are read against. A blank
+            // white piece is one of these three going wrong.
+            HashSet<string> wanted = null;
+            if (capi != null && CANGemDebug.WornLog)
+            {
+                wanted = new HashSet<string>();
+                foreach (ShapeElement element in shape.Elements ?? new ShapeElement[0])
+                {
+                    element.WalkRecursive(el =>
+                    {
+                        foreach (ShapeElementFace face in el.FacesResolved ?? new ShapeElementFace[0])
+                        {
+                            if (face != null && face.Enabled && face.Texture != null) wanted.Add(face.Texture);
+                        }
+                    });
+                }
+            }
+
             StepParentShape(entityShape, shape,
                 (compositeShape?.Base.ToString() ?? "Custom texture from ItemWearableShapeSupplier") + $" defined in {stack.Class} {stack.Collectible.Code}",
                 shapePathForLogging, Api.World.Logger, delegate (string texcode, AssetLocation tloc)
@@ -296,7 +324,43 @@ namespace canjewelry.src.eb
                     TextureAtlasPosition textureAtlasPosition;
                     capi.EntityTextureAtlas.GetOrInsertTexture(cmpt, out textureSubid, out textureAtlasPosition, 0f);
                     cmpt.Baked.TextureSubId = textureSubid;
+                    publishToWearablesTesselator(val2.Key, textureAtlasPosition);
                 }
+            }
+
+            if (wanted != null)
+            {
+                var report = new StringBuilder();
+                foreach (string code in wanted)
+                {
+                    report.Append("\n  ").Append(code).Append(" -> ");
+                    if (!textures.TryGetValue(code, out CompositeTexture resolved))
+                    {
+                        report.Append("MISSING from the entity, will be drawn with the wearer's skin patch");
+                    }
+                    else
+                    {
+                        report.Append(resolved.Baked?.BakedName?.ToString() ?? resolved.Base?.ToString() ?? "no baked name")
+                              .Append(" subid ").Append(resolved.Baked?.TextureSubId.ToString() ?? "-");
+                        TextureAtlasPosition pos = resolved.Baked != null
+                            ? capi.EntityTextureAtlas.Positions[resolved.Baked.TextureSubId]
+                            : null;
+                        if (pos != null)
+                        {
+                            report.Append(" atlas ").Append(pos.atlasTextureId)
+                                  .Append(" uv [").Append(pos.x1).Append(", ").Append(pos.y1)
+                                  .Append(" .. ").Append(pos.x2).Append(", ").Append(pos.y2).Append(']');
+                        }
+                    }
+
+                    report.Append("; size ")
+                          .Append(entityShape.TextureSizes.TryGetValue(code, out int[] size)
+                              ? size[0] + "x" + size[1]
+                              : "none, falls back to the wearer's " + entityShape.TextureWidth + "x" + entityShape.TextureHeight);
+                }
+
+                capi.World.Logger.Notification("[canjewelry] worn {0} slot '{1}' prefix '{2}', shape {3}x{4}:{5}",
+                    stack.Collectible.Code, slotCode, texturePrefixCode, shape.TextureWidth, shape.TextureHeight, report);
             }
 
             return entityShape;
@@ -355,7 +419,11 @@ namespace canjewelry.src.eb
                 return false;
             }
 
-            /*if (childShape.Textures != null)
+            // The jewelry's own texture codes have to be carried over to the shape it was just hung
+            // onto, exactly as Shape.StepParentShape does it. Without the sizes the uvs of the piece
+            // are read against the wearer's texture dimensions instead of its own, and the piece
+            // comes out sampling empty atlas - a plain white ring.
+            if (childShape.Textures != null)
             {
                 foreach (KeyValuePair<string, AssetLocation> texture in childShape.Textures)
                 {
@@ -367,14 +435,16 @@ namespace canjewelry.src.eb
                     entityShape.TextureSizes[textureSize.Key] = textureSize.Value;
                 }
 
-                if (childShape.Textures.Count > 0 && childShape.TextureSizes.Count == 0)
+                // A code the shape gave no size of its own: the shape's own dimensions, not the
+                // wearer's.
+                foreach (KeyValuePair<string, AssetLocation> texture in childShape.Textures)
                 {
-                    foreach (KeyValuePair<string, AssetLocation> texture2 in childShape.Textures)
+                    if (!entityShape.TextureSizes.ContainsKey(texture.Key))
                     {
-                        entityShape.TextureSizes[texture2.Key] = new int[2] { childShape.TextureWidth, childShape.TextureHeight };
+                        entityShape.TextureSizes[texture.Key] = new int[2] { childShape.TextureWidth, childShape.TextureHeight };
                     }
                 }
-            }*/
+            }
 
             return flag;
         }
@@ -435,16 +505,50 @@ namespace canjewelry.src.eb
         private void addTexture(string texcode, AssetLocation tloc, IDictionary<string, CompositeTexture> textures, string texturePrefixCode, ICoreClientAPI capi)
         {
             if (capi != null)
-            
             {
-                CompositeTexture compositeTexture2 = (textures[texturePrefixCode + texcode] = new CompositeTexture(tloc));
-                CompositeTexture compositeTexture3 = compositeTexture2;
-                compositeTexture3.Bake(Api.Assets);
-                capi.EntityTextureAtlas.GetOrInsertTexture(compositeTexture3.Baked.TextureFilenames[0], out var textureSubId, out var _);
-                compositeTexture3.Baked.TextureSubId = textureSubId;
-            
-                
+                CompositeTexture compositeTexture = (textures[texturePrefixCode + texcode] = new CompositeTexture(tloc));
+                compositeTexture.Bake(Api.Assets);
+                capi.EntityTextureAtlas.GetOrInsertTexture(compositeTexture.Baked.TextureFilenames[0], out var textureSubId, out var texPos);
+                compositeTexture.Baked.TextureSubId = textureSubId;
+                publishToWearablesTesselator(texturePrefixCode + texcode, texPos);
             }
+        }
+
+        // PlayerModelLib swaps the player renderer for one that tesselates with its
+        // WearablesTesselatorBehavior as the texture source, and that source answers only from
+        // its own WearableTextures map - entity.Properties.Client.Textures, where the code above
+        // files the jewelry, is never consulted. An unknown code there resolves to an empty atlas
+        // position, and the piece comes out blank white. So every texture goes into that map as
+        // well. Reflection keeps PlayerModelLib an optional runtime neighbour, not a build
+        // dependency; the lookup is cached per entity because it runs once per texture per
+        // retesselation.
+        private object wearableTextures;
+        private static System.Reflection.MethodInfo wearableTexturesSetValue;
+
+        private void publishToWearablesTesselator(string textureCode, TextureAtlasPosition position)
+        {
+            if (position == null) return;
+
+            if (wearableTextures == null)
+            {
+                var behaviors = entity.Properties?.Client?.Behaviors;
+                if (behaviors == null) return;
+                foreach (EntityBehavior bh in behaviors)
+                {
+                    Type type = bh.GetType();
+                    if (type.FullName != "PlayerModelLib.WearablesTesselatorBehavior") continue;
+
+                    System.Reflection.FieldInfo field = type.GetField("WearableTextures");
+                    wearableTexturesSetValue ??= field?.FieldType.GetMethod("SetValue", new[] { typeof(string), typeof(TextureAtlasPosition) });
+                    if (wearableTexturesSetValue == null) return;
+
+                    wearableTextures = field.GetValue(bh);
+                    break;
+                }
+                if (wearableTextures == null) return;
+            }
+
+            wearableTexturesSetValue.Invoke(wearableTextures, new object[] { textureCode, position });
         }
 
         public override void OnLoadCollectibleMappings(IWorldAccessor worldForNewMappings, Dictionary<int, AssetLocation> oldBlockIdMapping, Dictionary<int, AssetLocation> oldItemIdMapping, bool resolveImports)
