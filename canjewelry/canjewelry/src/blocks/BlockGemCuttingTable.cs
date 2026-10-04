@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using canjewelry.src.be;
+using canjewelry.src.cb;
+using canjewelry.src.items;
+using canjewelry.src.items.resource;
 using canjewelry.src.jewelry;
 using canjewelry.src.render;
 using Newtonsoft.Json.Linq;
@@ -37,112 +40,70 @@ namespace canjewelry.src.blocks
             base.OnLoaded(api);
             AddAllTypesToCreativeInventory();
             if (api.Side != EnumAppSide.Client) return;
-            ICoreClientAPI capi = api as ICoreClientAPI;
 
-            Dictionary<string, MetalPropertyVariant> metalsByCode = new Dictionary<string, MetalPropertyVariant>();
-
-            MetalProperty metals = api.Assets.TryGet("worldproperties/block/metal.json").ToObject<MetalProperty>();
-            for (int i = 0; i < metals.Variants.Length; i++)
+            // These used to be the anvil's hints - ingots and a hammer - which sent new players
+            // trying to smith on a table that only takes rough gems.
+            interactions = ObjectCacheUtil.GetOrCreate(api, "canjewelry:gemCuttingTableInteractions", () =>
             {
-                // Metals currently don't have a domain
-                metalsByCode[metals.Variants[i].Code.Path] = metals.Variants[i];
-            }
-
-            string metalType = LastCodePart();
-            int ownMetalTier = 0;
-            if (metalsByCode.ContainsKey(metalType)) ownMetalTier = metalsByCode[metalType].Tier;
-
-            // Our own key: this used to be "anvilBlockInteractions" + tier, the very key vanilla's
-            // BlockAnvil uses, so whichever block loaded first decided what help text both showed.
-            interactions = ObjectCacheUtil.GetOrCreate(api, "canjewelry:gemCuttingTableInteractions" + ownMetalTier, () =>
-            {
-                List<ItemStack> workableStacklist = new List<ItemStack>();
+                List<ItemStack> roughGemStacklist = new List<ItemStack>();
+                List<ItemStack> chiselStacklist = new List<ItemStack>();
                 List<ItemStack> hammerStacklist = new List<ItemStack>();
 
-
-                bool viableTier = metalsByCode.ContainsKey(metalType) && metalsByCode[metalType].Tier <= ownMetalTier + 1;
                 foreach (Item item in api.World.Items)
                 {
                     if (item.Code == null) continue;
 
-                    if (item is ItemIngot && viableTier)
-                    {
-                        workableStacklist.Add(new ItemStack(item));
-                    }
-
-                    if (item is ItemHammer)
-                    {
-                        hammerStacklist.Add(new ItemStack(item));
-                    }
+                    if (item is CANRoughGemItem || CANGemCuttableCB.IsVanillaRoughGem(item)) roughGemStacklist.Add(new ItemStack(item));
+                    else if (item is CANItemGemChisel) chiselStacklist.Add(new ItemStack(item));
+                    else if (item is ItemHammer) hammerStacklist.Add(new ItemStack(item));
                 }
+
+                bool HasWorkItem(BlockSelection bs) =>
+                    (api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable)?.WorkItemStack != null;
 
                 return new WorldInteraction[] {
                     new WorldInteraction()
                     {
-                        ActionLangCode = "blockhelp-anvil-takeworkable",
-                        HotKeyCode = null,
-                        MouseButton = EnumMouseButton.Right,
-                        ShouldApply = (wi, bs, es) => {
-                            BlockEntityGemCuttingTable bea = api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable;
-                            return bea?.WorkItemStack != null;
-                        }
-                    },
-                    new WorldInteraction()
-                    {
-                        ActionLangCode = "blockhelp-anvil-placeworkable",
+                        ActionLangCode = "canjewelry:blockhelp-gemcuttingtable-placegem",
                         HotKeyCode = "shift",
                         MouseButton = EnumMouseButton.Right,
-                        Itemstacks = workableStacklist.ToArray(),
-                        GetMatchingStacks = (wi, bs, es) => {
-                            BlockEntityGemCuttingTable bea = api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable;
-                            return bea?.WorkItemStack == null ? wi.Itemstacks : null;
-                        }
+                        Itemstacks = roughGemStacklist.ToArray(),
+                        GetMatchingStacks = (wi, bs, es) => HasWorkItem(bs) ? null : wi.Itemstacks
                     },
                     new WorldInteraction()
                     {
-                        ActionLangCode = "blockhelp-anvil-smith",
+                        ActionLangCode = "canjewelry:blockhelp-gemcuttingtable-takegem",
+                        MouseButton = EnumMouseButton.Right,
+                        ShouldApply = (wi, bs, es) => HasWorkItem(bs)
+                    },
+                    new WorldInteraction()
+                    {
+                        ActionLangCode = "canjewelry:blockhelp-gemcuttingtable-cut",
                         MouseButton = EnumMouseButton.Left,
-                        Itemstacks = hammerStacklist.ToArray(),
-                        GetMatchingStacks = (wi, bs, es) => {
-                            BlockEntityGemCuttingTable bea = api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable;
-                            return bea?.WorkItemStack == null ? null : wi.Itemstacks;
-                        }
+                        Itemstacks = chiselStacklist.ToArray(),
+                        GetMatchingStacks = (wi, bs, es) => HasWorkItem(bs) ? wi.Itemstacks : null
                     },
                     new WorldInteraction()
                     {
                         ActionLangCode = "blockhelp-anvil-rotateworkitem",
                         MouseButton = EnumMouseButton.Right,
-                        Itemstacks = hammerStacklist.ToArray(),
-                        GetMatchingStacks = (wi, bs, es) => {
-                            BlockEntityGemCuttingTable bea = api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable;
-                            return bea?.WorkItemStack == null ? null : wi.Itemstacks;
-                        }
+                        Itemstacks = chiselStacklist.ToArray(),
+                        GetMatchingStacks = (wi, bs, es) => HasWorkItem(bs) ? wi.Itemstacks : null
                     },
                     new WorldInteraction()
                     {
                         ActionLangCode = "blockhelp-selecttoolmode",
                         HotKeyCode = "toolmodeselect",
                         MouseButton = EnumMouseButton.None,
-                        Itemstacks = hammerStacklist.ToArray(),
-                        GetMatchingStacks = (wi, bs, es) => {
-                            BlockEntityGemCuttingTable bea = api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable;
-                            return bea?.WorkItemStack == null ? null : wi.Itemstacks;
-                        }
+                        Itemstacks = chiselStacklist.ToArray(),
+                        GetMatchingStacks = (wi, bs, es) => HasWorkItem(bs) ? wi.Itemstacks : null
                     },
                     new WorldInteraction()
                     {
-                        ActionLangCode = "blockhelp-anvil-addvoxels",
-                        HotKeyCode = "shift",
+                        ActionLangCode = "canjewelry:blockhelp-gemcuttingtable-finish",
                         MouseButton = EnumMouseButton.Right,
-                        Itemstacks = workableStacklist.ToArray(),
-                        GetMatchingStacks = (wi, bs, es) => {
-                            BlockEntityGemCuttingTable bea = api.World.BlockAccessor.GetBlockEntity(bs.Position) as BlockEntityGemCuttingTable;
-                            // Null when the work item is not gem-cuttable, which is a "no hint"
-                            // rather than a crash - the cast used to be to IAnvilWorkable.
-                            ItemStack baseMaterial = (bea?.WorkItemStack?.Collectible as IGemCuttingWorkable)
-                                ?.GetBaseMaterial(bea.WorkItemStack);
-                            return baseMaterial == null ? null : new ItemStack[] { baseMaterial };
-                        }
+                        Itemstacks = hammerStacklist.ToArray(),
+                        GetMatchingStacks = (wi, bs, es) => HasWorkItem(bs) ? wi.Itemstacks : null
                     }
                 };
             });
@@ -260,6 +221,31 @@ namespace canjewelry.src.blocks
 
             return val;
         }
+        /// <summary>
+        /// The table as an item, carrying the stone and metal it was built from. The default drop
+        /// has no attributes, so a broken table came back as granite and copper.
+        /// </summary>
+        private ItemStack StackWithMaterials(IWorldAccessor world, BlockPos pos)
+        {
+            ItemStack stack = new ItemStack(this);
+            if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityGemCuttingTable be)
+            {
+                if (be.stoneType != null) stack.Attributes.SetString("stone", be.stoneType);
+                if (be.metalType != null) stack.Attributes.SetString("metal", be.metalType);
+            }
+            return stack;
+        }
+
+        public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
+        {
+            return new ItemStack[] { StackWithMaterials(world, pos) };
+        }
+
+        public override ItemStack OnPickBlock(IWorldAccessor world, BlockPos pos)
+        {
+            return StackWithMaterials(world, pos);
+        }
+
         public MeshData GenMesh(ICoreClientAPI capi, Shape shape, ITesselatorAPI tesselator, ITexPositionSource textureSource)
         {
             tesselator ??= capi.Tesselator;

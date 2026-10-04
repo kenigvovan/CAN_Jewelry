@@ -297,7 +297,7 @@ namespace canjewelry.src.be
             {
                 if (world.Side == EnumAppSide.Client)
                 {
-                    (Api as ICoreClientAPI).TriggerIngameError(this, "toolowtier", Lang.Get("Working this metal needs a tier {0} anvil", requiredTier));
+                    (Api as ICoreClientAPI).TriggerIngameError(this, "toolowtier", Lang.Get("canjewelry:gemcuttingtable-toolowtier", requiredTier));
                 }
 
                 return false;
@@ -1298,8 +1298,8 @@ namespace canjewelry.src.be
             Voxels = deserializeVoxels(tree.GetBytes("voxels"));
             workItemStack = tree.GetItemstack("workItemStack");
             SelectedRecipeId = tree.GetInt("selectedRecipeId", -1);
-            this.stoneType = tree.GetString("stoneType");
-            this.metalType = tree.GetString("metalType");
+            this.stoneType = tree.GetString("stoneType", "granite");
+            this.metalType = tree.GetString("metalType", "copper");
             
             if (Api != null && workItemStack != null)
             {

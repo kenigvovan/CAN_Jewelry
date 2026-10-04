@@ -27,6 +27,30 @@ namespace canjewelry.src.cb
             base.OnLoaded(api);
             aapi = api;
         }
+        public static bool IsVanillaRoughGem(CollectibleObject collectible)
+        {
+            return collectible?.Code?.Domain == "game"
+                && collectible.Code.Path.StartsWith("gem-")
+                && collectible.Code.Path.EndsWith("-rough");
+        }
+
+        /// <summary>
+        /// Makes every rough gem placeable on the cutting table. Independent of the config, so it
+        /// runs on both sides at load: on the client it used to happen only once the server's
+        /// config packet was applied, and if that failed the table silently refused every gem.
+        /// </summary>
+        public static void AttachToRoughGems(ICoreAPI api)
+        {
+            Item[] roughGems = api.World.SearchItems(new AssetLocation("canjewelry:gem-rough-*"))
+                .Append(api.World.SearchItems(new AssetLocation("game:gem-*-rough")));
+
+            foreach (Item gem in roughGems)
+            {
+                if (!gem.HasBehavior<CANGemCuttableCB>())
+                    gem.CollectibleBehaviors = gem.CollectibleBehaviors.Append(new CANGemCuttableCB(gem));
+            }
+        }
+
         public int GetRequiredGemCuttingTableTier(ItemStack stack)
         { 
             return 0; 

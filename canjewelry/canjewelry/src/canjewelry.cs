@@ -584,6 +584,7 @@ namespace canjewelry.src
         public override void AssetsFinalize(ICoreAPI api)
         {
             base.AssetsFinalize(api);
+            CANGemCuttableCB.AttachToRoughGems(api);
             foreach (CollectibleObject obj in api.World.Collectibles)
             {
                 foreach (var restriction in restrictions)
@@ -1084,10 +1085,8 @@ namespace canjewelry.src
                 string gemType = gem.Code.Path.Split('-').Last();
                 if (config.gem_type_to_buff.ContainsKey(gemType))
                     gem.Attributes.Token["canGemTypeToAttribute"] = config.gem_type_to_buff[gemType];
-
-                if (!gem.HasBehavior<CANGemCuttableCB>())
-                    gem.CollectibleBehaviors = gem.CollectibleBehaviors.Append(new CANGemCuttableCB(gem));
             }
+            CANGemCuttableCB.AttachToRoughGems(api);
 
             foreach (var gem in api.World.SearchItems(new AssetLocation("canjewelry:gem-cut-*")))
             {
