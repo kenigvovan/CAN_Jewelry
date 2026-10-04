@@ -10,7 +10,7 @@ A gameplay mod for [Vintage Story](https://www.vintagestory.at/) that adds a ful
 - **Socket system:** tools, weapons and armor get gem sockets; each gem type grants its own buff depending on the item it's set into.
 - **Visible gems:** socketed gems are rendered on the item model itself (in hand, on armor, in display holders).
 - **Jewelry:** 18 adornment slots and a jeweler's table.
-- **Mod API:** other mods can add their own jewelry and socketable items through a documented contract ([docs/API.md](canjewelry/docs/API.md)).
+- **Mod API:** other mods can add their own jewelry and socketable items through a documented contract ([docs/API.md](canjewelry/docs/API.md)). See [canjewelryexample](https://github.com/kenigvovan/canjewelryexample) for a working example mod.
 - **Configurable:** balance and per-gem effects are controlled by a server config and synced to clients.
 
 ## Technical highlights
