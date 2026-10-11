@@ -332,15 +332,6 @@ namespace canjewelry.src
             base.Start(api);
             harmonyInstance = new Harmony(harmonyID);
 
-            // Asking a freshly built Harmony instance what it has patched always answers "nothing",
-            // so the old guard here never fired. What it meant to prevent is patching the same
-            // method twice within one process - the two sides of a single player world both run
-            // this - and that is what Harmony's own registry answers.
-            if (!IsPatchedByUs(typeof(CollectibleObject).GetMethod("GetMaxDurability")))
-            {
-                harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetMaxDurability"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CollectibleObject_GetMaxDurability")));
-            }
-            
             api.RegisterBlockClass("JewelerSetBlock", typeof(JewelerSetBlock));
             api.RegisterBlockEntityClass("JewelerSetBE", typeof(JewelerSetBE));
 
@@ -373,6 +364,22 @@ namespace canjewelry.src
             api.RegisterBlockClass("CANBlockPan", typeof(CANBlockPan));
             api.RegisterBlockClass("BlockGemCuttingTable", typeof(BlockGemCuttingTable));
             api.RegisterEntityBehaviorClass("playeradditionaljewelryinventory", typeof(EntityBehaviorAdditionalJewelryPlayerInventory));
+
+            // After the registrations: a patch that throws (e.g. a clash with another mod) used to
+            // abort Start before any class was registered, leaving the tables as plain blocks.
+            // Asking a freshly built Harmony instance what it has patched always answers "nothing",
+            // so the guard asks Harmony's own registry - both sides of a single player world run this.
+            try
+            {
+                if (!IsPatchedByUs(typeof(CollectibleObject).GetMethod("GetMaxDurability")))
+                {
+                    harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetMaxDurability"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CollectibleObject_GetMaxDurability")));
+                }
+            }
+            catch (Exception e)
+            {
+                api.Logger.Error("[canjewelry] Failed to patch CollectibleObject.GetMaxDurability: {0}", e);
+            }
         }
         /// <summary>
         /// Client-side initialization.

@@ -81,9 +81,14 @@ namespace canjewelry.src.render
         /// texture named by an override is usually not part of any block or item and is therefore
         /// not in the atlas already.
         /// </summary>
+        // Never returns null: the tesselator throws on a missing texture instead of skipping it.
         private TextureAtlasPosition GetOrInsert(AssetLocation texturePath)
         {
-            if (texturePath == null) return null;
+            if (texturePath == null)
+            {
+                capi.World.Logger.Warning("[canjewelry] {0}: no texture for a code, drawing the unknown one", forLogging);
+                return atlas.UnknownTexturePosition;
+            }
 
             TextureAtlasPosition texPos = atlas[texturePath];
             if (texPos != null) return texPos;
@@ -91,9 +96,9 @@ namespace canjewelry.src.render
             IAsset asset = capi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
             if (asset == null)
             {
-                capi.World.Logger.Warning("[canjewelry] {0}: texture {1} is not there, drawing without it",
+                capi.World.Logger.Warning("[canjewelry] {0}: texture {1} is not there, drawing the unknown one",
                     forLogging, texturePath);
-                return null;
+                return atlas.UnknownTexturePosition;
             }
 
             atlas.GetOrInsertTexture(texturePath, out int _, out texPos, () => asset.ToBitmap(capi));

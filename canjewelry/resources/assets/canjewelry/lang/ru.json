@@ -504,6 +504,7 @@
     "blockhelp-gemcuttingtable-cut": "Резать (молоток во второй руке)",
     "blockhelp-gemcuttingtable-finish": "Завершить огранку (с ошибками)",
     "gemcuttingtable-toolowtier": "Для огранки этого камня нужен стол {0} уровня",
+    "gemcuttingtable-norecipe": "Для этого камня нет рецепта огранки",
     "block-canwiredrawingbench": "Верстак для волочения проволоки",
     "item-cangemchisel-tinbronze": "Резец для драгоценных камней из оловянной бронзы",
     "item-cangemchisel-bismuthtinbronze": "Резец из висмутовой бронзы для огранки камней",

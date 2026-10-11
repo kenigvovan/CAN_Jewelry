@@ -302,7 +302,23 @@ namespace canjewelry.src.be
 
                 return false;
             }
-            
+
+            // Checked before TryPlaceOn, which overwrites Voxels: a gem with no recipe used to be
+            // refused in silence and leave the grid of a rough gem behind.
+            List<GemCuttingRecipe> matchingRecipes = null;
+            if (workItemStack == null && stack.Collectible is not CANItemGemCuttingWorkItem)
+            {
+                matchingRecipes = gemBehavior.GetMatchingRecipes(stack);
+                if (matchingRecipes.Count == 0)
+                {
+                    if (world.Side == EnumAppSide.Client)
+                    {
+                        (Api as ICoreClientAPI).TriggerIngameError(this, "norecipe", Lang.Get("canjewelry:gemcuttingtable-norecipe"));
+                    }
+                    return false;
+                }
+            }
+
             ItemStack newWorkItemStack = gemBehavior.TryPlaceOn(stack, this);
             if (newWorkItemStack != null)
             {
@@ -315,7 +331,7 @@ namespace canjewelry.src.be
 
                 if (SelectedRecipeId < 0)
                 {
-                    var list = gemBehavior.GetMatchingRecipes(stack);
+                    var list = matchingRecipes ?? gemBehavior.GetMatchingRecipes(stack);
                     //canjewelry.gemCuttingRecipes
                     if (list.Count == 1)
                     {
@@ -332,6 +348,7 @@ namespace canjewelry.src.be
                     else
                     {
                         workItemStack = null;
+                        Voxels = new byte[16, 14, 16];
                         return false;
                     }
                 }
@@ -1298,15 +1315,26 @@ namespace canjewelry.src.be
             Voxels = deserializeVoxels(tree.GetBytes("voxels"));
             workItemStack = tree.GetItemstack("workItemStack");
             SelectedRecipeId = tree.GetInt("selectedRecipeId", -1);
+            string oldStone = this.stoneType;
+            string oldMetal = this.metalType;
             this.stoneType = tree.GetString("stoneType", "granite");
             this.metalType = tree.GetString("metalType", "copper");
-            
+
             if (Api != null && workItemStack != null)
             {
                 workItemStack.ResolveBlockOrItem(Api.World);
             }
 
             RegenMeshAndSelectionBoxes();
+
+            // A client BE can be initialized before its data arrives (placed by another player,
+            // landed after falling), and Initialize then built the granite/copper default mesh.
+            if (Api is ICoreClientAPI clientApi
+                && (currentMesh == null || oldStone != this.stoneType || oldMetal != this.metalType))
+            {
+                this.currentMesh = this.getMesh(clientApi.Tesselator);
+                clientApi.World.BlockAccessor.MarkBlockDirty(Pos);
+            }
         }
 
         public override void ToTreeAttributes(ITreeAttribute tree)

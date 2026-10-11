@@ -61,17 +61,17 @@ namespace canjewelry.src.jewelry
         /// </summary>
         private render.CANTexSource TexSource(ItemStack itemstack, ITextureAtlasAPI atlas)
         {
-            var shapeTextures = new Dictionary<string, CompositeTexture>();
+            var source = new render.CANTexSource(this.capi, atlas, this.Textures, "processed gem " + this.Code);
+
+            // Shape textures go in as overrides: an unbaked CompositeTexture has no BakedName.
             Shape shape = this.capi.TesselatorManager.GetCachedShape(this.Shape.Base);
             if (shape?.Textures != null)
             {
                 foreach (KeyValuePair<string, AssetLocation> ctex in shape.Textures)
                 {
-                    shapeTextures[ctex.Key] = new CompositeTexture(ctex.Value);
+                    source.Overrides[ctex.Key] = ctex.Value;
                 }
             }
-
-            var source = new render.CANTexSource(this.capi, atlas, shapeTextures, "processed gem " + this.Code);
 
             ITreeAttribute itree = itemstack?.Attributes?.GetTreeAttribute("cangrindlayerinfo");
             string gemBase = itree != null
