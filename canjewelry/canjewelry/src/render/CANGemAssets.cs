@@ -1,5 +1,6 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using canjewelry.src.items;
 
 namespace canjewelry.src.render
 {
@@ -59,6 +60,30 @@ namespace canjewelry.src.render
                 capi.Logger.Warning("[canjewelry] no texture for gem type {0}", gemType);
             }
             return texture;
+        }
+
+        /// <summary>
+        /// Texture for a gem slot of a jewelry shape. Unlike <see cref="AtlasTexture"/> an empty or
+        /// unknown gem gets the invisible texture, not the default gem - the slot should look empty.
+        /// </summary>
+        public static AssetLocation GemTextureOrHidden(ICoreClientAPI capi, string gemType)
+        {
+            if (string.IsNullOrEmpty(gemType) || canjewelry.gems_textures == null
+                || !canjewelry.gems_textures.TryGetValue(gemType, out string path))
+            {
+                return CANItemWearable.NotVisTexture;
+            }
+            return capi.Assets.TryGet(path + ".png")?.Location ?? CANItemWearable.NotVisTexture;
+        }
+
+        /// <summary><see cref="GemTextureOrHidden"/> for the gem encrusted into one socket of the stack.</summary>
+        public static AssetLocation SocketGemTextureOrHidden(ICoreClientAPI capi, ItemStack stack, int socket)
+        {
+            string gemType = stack?.Attributes
+                .GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING)?
+                .GetTreeAttribute("slot" + socket)?
+                .GetString("gemtype");
+            return GemTextureOrHidden(capi, gemType);
         }
 
         /// <summary>

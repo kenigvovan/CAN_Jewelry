@@ -198,6 +198,17 @@ namespace canjewelry.src.items
 
         protected abstract void FillTextureDict(Dictionary<string, AssetLocation> dict, ItemStack itemStack);
 
+        /// <summary>
+        /// Shape for this stack. Override to pick it from stack attributes instead of the item code.
+        /// </summary>
+        public virtual CompositeShape GetStackShape(ItemStack stack)
+        {
+            JsonObject attr = stack.Collectible.Attributes;
+            return attr != null && attr["attachShape"].Exists
+                ? attr["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain)
+                : (stack.Class == EnumItemClass.Item ? stack.Item.Shape : stack.Block.Shape);
+        }
+
         public virtual MeshData genMesh(ICoreClientAPI capi, ItemStack itemstack, ITexPositionSource texSource)
         {
             this.tmpTextures.Clear();
@@ -225,7 +236,7 @@ namespace canjewelry.src.items
             }
             else
             {
-                CompositeShape compositeShape = (attributes["attachShape"].Exists ? attributes["attachShape"].AsObject<CompositeShape>(null, itemstack.Collectible.Code.Domain) : ((itemstack.Class == EnumItemClass.Item) ? itemstack.Item.Shape : itemstack.Block.Shape));
+                CompositeShape compositeShape = GetStackShape(itemstack);
                 if (compositeShape == null)
                 {
                     capi.World.Logger.Warning("Wearable shape {0} {1} does not define a shape through either the shape property or the attachShape Attribute. Item will be invisible.", itemstack.Class, itemstack.Collectible.Code);
@@ -303,10 +314,7 @@ namespace canjewelry.src.items
 
         public virtual Shape GetShape(ItemStack stack, Entity forEntity, string texturePrefixCode)
         {
-            JsonObject attrObj = stack.Collectible.Attributes;
-            CompositeShape compGearShape = (!attrObj["attachShape"].Exists)
-                ? ((stack.Class == EnumItemClass.Item) ? stack.Item.Shape : stack.Block.Shape)
-                : attrObj["attachShape"].AsObject<CompositeShape>(null, stack.Collectible.Code.Domain);
+            CompositeShape compGearShape = GetStackShape(stack);
 
             AssetLocation shapePath = compGearShape.Base.CopyWithPath("shapes/" + compGearShape.Base.Path + ".json");
             Shape gearShape = Vintagestory.API.Common.Shape.TryGet(api, shapePath);
@@ -348,7 +356,7 @@ namespace canjewelry.src.items
 
         public abstract string GetCategoryCode(ItemStack stack);
 
-        public virtual CompositeShape GetAttachedShape(ItemStack stack, string slotCode) => this.Shape;
+        public virtual CompositeShape GetAttachedShape(ItemStack stack, string slotCode) => GetStackShape(stack);
         public virtual string[] GetDisableElements(ItemStack stack) => null;
         public virtual string[] GetKeepElements(ItemStack stack) => null;
         public virtual string GetTexturePrefixCode(ItemStack stack) => GetMeshCacheKey(stack);

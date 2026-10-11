@@ -1078,25 +1078,35 @@ namespace canjewelry.src.CB
             return null;
         }
 
+        /// <summary>
+        /// Rule entry used when the stack has no value for the compare key or a value the rule does
+        /// not list - e.g. stacks crafted before the key existed.
+        /// </summary>
+        public const string VariantTiersFallbackKey = "*";
+
+        private static int[] ResolveVariantTiers(ItemStack itemstack)
+        {
+            string compareKey = itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY)
+                ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
+                : null;
+            if (compareKey == null) return null;
+
+            var valueDict = GetVariantTiers(itemstack);
+            if (valueDict == null) return null;
+
+            string searchedValue = ResolveVariantValue(itemstack, compareKey);
+            if (searchedValue != null && valueDict.TryGetValue(searchedValue, out var matchedTiers)) return matchedTiers;
+            return valueDict.TryGetValue(VariantTiersFallbackKey, out var fallbackTiers) ? fallbackTiers : null;
+        }
+
         public static int GetMaxAmountSockets(ItemStack itemstack)
         {
             if (itemstack != null)
             {
                 if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS))
                 {
-                    string compareKey = itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY)
-                        ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
-                        : null;
-                    if (compareKey == null) return -1;
-                    string searchedValue = ResolveVariantValue(itemstack, compareKey);
-                    if (searchedValue != null)
-                    {
-                        var valueDict = GetVariantTiers(itemstack);
-                        if (valueDict != null && valueDict.TryGetValue(searchedValue, out var value))
-                        {
-                            return value.Length;
-                        }
-                    }
+                    int[] variantTiers = ResolveVariantTiers(itemstack);
+                    if (variantTiers != null) return variantTiers.Length;
                 }
                 else if (itemstack.ItemAttributes != null)
                 {
@@ -1124,19 +1134,8 @@ namespace canjewelry.src.CB
             {
                 if (itemstack.ItemAttributes != null && itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS))
                 {
-                    string compareKey = itemstack.ItemAttributes.KeyExists(CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY)
-                        ? itemstack.ItemAttributes[CANJWConstants.CAN_CUSTOM_VARIANTS_COMPARE_KEY].AsString()
-                        : null;
-                    if (compareKey == null) return new int[0];
-                    string searchedValue = ResolveVariantValue(itemstack, compareKey);
-                    if (searchedValue != null)
-                    {
-                        var valueDict = GetVariantTiers(itemstack);
-                        if (valueDict != null && valueDict.TryGetValue(searchedValue, out var value))
-                        {
-                            return value;
-                        }
-                    }
+                    int[] variantTiers = ResolveVariantTiers(itemstack);
+                    if (variantTiers != null) return variantTiers;
                 }
                 else if (itemstack.ItemAttributes != null)
                 {
