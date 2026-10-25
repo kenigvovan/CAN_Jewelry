@@ -1348,7 +1348,9 @@ namespace canjewelry.src
                     // world load with nothing but a parser message. The broken file is kept, under
                     // a name that says what happened, and the world starts on defaults.
                     api.Logger.Error("[canjewelry] could not read {0}, starting from defaults. {1}", fileName, e);
-                    BackupConfigFile(api, "unreadable", "defaults");
+                    // Timestamped: BackupConfigFile keeps an existing backup, so a fixed name would
+                    // let the second broken edit be overwritten with defaults without a copy.
+                    BackupConfigFile(api, "unreadable_" + DateTime.Now.ToString("yyyyMMdd-HHmmss"), "defaults");
                     config = null;
                 }
                 if (config != null && config.items_codes_with_socket_count.Count != 1)

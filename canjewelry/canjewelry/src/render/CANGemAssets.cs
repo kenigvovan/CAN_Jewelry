@@ -48,18 +48,19 @@ namespace canjewelry.src.render
         }
 
         /// <summary>
-        /// The texture as the atlas knows it, for tesselating a gem mesh. Null with a warning when
-        /// the gem type has no texture.
+        /// The texture as the atlas knows it, for tesselating a gem mesh: keyed like a baked name,
+        /// without "textures/" and ".png", so it finds the copy already in the atlas instead of
+        /// inserting a second one. Null with a warning when the gem type has no texture.
         /// </summary>
         public static AssetLocation AtlasTexture(ICoreClientAPI capi, string gemType)
         {
             string stored = StoredTexturePath(gemType);
-            AssetLocation texture = stored == null ? null : capi.Assets.TryGet(stored + ".png")?.Location;
-            if (texture == null)
+            if (stored == null || capi.Assets.TryGet(stored + ".png") == null)
             {
                 capi.Logger.Warning("[canjewelry] no texture for gem type {0}", gemType);
+                return null;
             }
-            return texture;
+            return ShapeTexture(capi, gemType);
         }
 
         /// <summary>

@@ -171,7 +171,8 @@ namespace canjewelry.src.jewelry
             // One uploaded mesh per look of the gem. A stack with no grinding info used to leave the
             // id at zero, which made the condition below always true: every frame uploaded a fresh
             // mesh and dropped the previous one on the floor, and the dictionary was never emptied.
-            string key = LookKey(itemstack);
+            // The cache is shared by every construction variant, each with its own shape.
+            string key = this.Code.ToShortString() + "-" + LookKey(itemstack);
             if (!this.meshrefs.TryGetValue(key, out MultiTextureMeshRef modelref) || modelref.Disposed)
             {
                 MeshData mesh = this.GenMesh(itemstack, capi.ItemTextureAtlas, null);

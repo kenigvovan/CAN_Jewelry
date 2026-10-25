@@ -192,6 +192,15 @@ namespace canjewelry.src.harmony
             }
         }
 
+        // Every material variant of a wearable shares the single handbook page it gets
+        public static void Postfix_PageCodeForStack(ItemStack stack, ref string __result)
+        {
+            if (stack?.Collectible is items.CANItemWearable wearable)
+            {
+                __result = wearable.HandbookPageCode;
+            }
+        }
+
         public static void Postfix_GetHeldItemInfo(CollectibleObject __instance, ItemSlot inSlot,
         StringBuilder dsc,
         IWorldAccessor world,

@@ -71,6 +71,13 @@ namespace canjewelry.src.blocks
                 }
             }
         }
+        public override void OnUnloaded(ICoreAPI api)
+        {
+            // Otherwise a re-join in the same process keeps the previous world's blocks alive here.
+            loadedPans.Remove(this);
+            base.OnUnloaded(api);
+        }
+
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);

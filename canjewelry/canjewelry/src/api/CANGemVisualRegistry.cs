@@ -390,7 +390,7 @@ namespace canjewelry.src.api
             foreach (var rule in rules)
             {
                 int tier = MatchTier(rule, stack, cut, size);
-                if (tier < bestTier) continue;
+                if (tier < 0 || tier < bestTier) continue;
                 // Same tier: the hiding rule is the one that would answer, it wins outright there.
                 if (tier > bestTier) { bestTier = tier; hidden = rule.Hidden; continue; }
 

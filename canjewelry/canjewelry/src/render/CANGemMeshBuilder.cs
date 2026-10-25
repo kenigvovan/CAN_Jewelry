@@ -432,6 +432,9 @@ namespace canjewelry.src.render
             if (mesh.TextureIndicesCount >= faces) return;
 
             int textureId = mesh.TextureIds != null && mesh.TextureIds.Length > 0 ? mesh.TextureIds[0] : 0;
+            // new MeshData(capacity) leaves both arrays null, and AddTextureId dereferences them.
+            mesh.TextureIds ??= new int[0];
+            mesh.TextureIndices ??= new byte[faces];
             while (mesh.TextureIndicesCount < faces) mesh.AddTextureId(textureId);
         }
 
@@ -585,17 +588,19 @@ namespace canjewelry.src.render
                     if (path == null) shape?.Textures?.TryGetValue(textureCode, out path);
                     if (path == null) path = new AssetLocation(textureCode);
 
-                    return TexPos(capi, atlas, path) ?? atlas.UnknownTexturePosition;
+                    return TexPos(capi, atlas, path);
                 }
             }
         }
 
         /// <summary>
-        /// The place of a texture in an atlas, inserting it there when it is not in yet. Null when
-        /// there is no such texture at all.
+        /// The place of a texture in an atlas, inserting it there when it is not in yet. The unknown
+        /// texture when there is no such texture at all: the tesselator throws on a null position.
         /// </summary>
         private static TextureAtlasPosition TexPos(ICoreClientAPI capi, ITextureAtlasAPI atlas, AssetLocation texture)
         {
+            if (texture == null) return atlas.UnknownTexturePosition;
+
             TextureAtlasPosition texpos = atlas[texture];
             if (texpos != null) return texpos;
 
@@ -604,10 +609,10 @@ namespace canjewelry.src.render
             if (texAsset == null)
             {
                 capi.World.Logger.Warning("[canjewelry] texture {0} not found", texture);
-                return null;
+                return atlas.UnknownTexturePosition;
             }
             atlas.GetOrInsertTexture(texture, out _, out texpos, () => texAsset.ToBitmap(capi), 0f);
-            return texpos;
+            return texpos ?? atlas.UnknownTexturePosition;
         }
     }
 }

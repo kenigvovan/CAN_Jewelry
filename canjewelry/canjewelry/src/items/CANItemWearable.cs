@@ -139,6 +139,20 @@ namespace canjewelry.src.items
             };
         }
 
+        /// <summary>
+        /// One handbook page per code instead of one per material combination; the creative tab
+        /// keeps every variant. Links to any variant land on this page through the page code patch.
+        /// </summary>
+        public override List<ItemStack> GetHandBookStacks(ICoreClientAPI capi)
+        {
+            List<ItemStack> stacks = base.GetHandBookStacks(capi);
+            if (stacks == null || stacks.Count <= 1) return stacks;
+            return new List<ItemStack> { stacks[0] };
+        }
+
+        /// <summary>Page code shared by every stack of this item, whatever its attributes.</summary>
+        public string HandbookPageCode => "item-" + Code.ToShortString();
+
         protected virtual string JstackResolveLabel => Code.Path + " type";
 
         protected JsonItemStack GenJstack(string json)

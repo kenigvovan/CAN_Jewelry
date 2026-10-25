@@ -34,7 +34,9 @@ namespace canjewelry.src
         public Dictionary<string, float> max_buff_values = new Dictionary<string, float>();
         public Dictionary<string, DropInfo[]> gems_drops_table = new Dictionary<string, DropInfo[]>();
         public bool debugMode;
-        public float chance_gem_drop_on_item_broken;
+        // Initialised here so a config written before the field existed reads 0.2 rather than 0,
+        // which leaves an explicit 0 free to mean "never drop".
+        public float chance_gem_drop_on_item_broken = 0.2f;
         [JsonConverter(typeof(utils.CompactStringSetConverter))]
         public HashSet<string> buffs_to_show_gui = new HashSet<string>();
         public string config_version;
@@ -192,7 +194,7 @@ namespace canjewelry.src
         private static readonly HashSet<string> MeleeWeaponSets = new HashSet<string>
         {
             "halberd", "mace", "spear", "rapier", "longsword", "zweihander", "messer", "falx",
-            "ihammer", "tshammer", "biа axe", "tssword", "shammer", "hamb", "atgeir", "blade",
+            "ihammer", "tshammer", "biaxe", "tssword", "shammer", "hamb", "atgeir", "blade",
             "axe-long", "sword-long", "sword-great", "sword-short",
             "javelin-plain", "pike-plain", "club-plain", "mace-plain", "poleaxe-plain",
             "halberd-plain", "quarterstaff-plain", "claymore", "warhammer", "dagger",
@@ -274,13 +276,7 @@ namespace canjewelry.src
             // drop chance back to the default, quietly, on every update.
             if (!onlyEmptyStructs) debugMode = false;
 
-            // The chance keeps the "or it is still zero" half of the guard, the way pan_take_per_use
-            // above does: a config written before the field existed deserialises to zero and would
-            // otherwise silently mean "never drop a gem".
-            if (!onlyEmptyStructs || chance_gem_drop_on_item_broken == 0)
-            {
-                chance_gem_drop_on_item_broken = 0.2f;
-            }
+            if (!onlyEmptyStructs) chance_gem_drop_on_item_broken = 0.2f;
 
             if (buffs_to_show_gui.Count == 0)
             {

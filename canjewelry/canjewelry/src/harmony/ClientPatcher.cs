@@ -23,6 +23,8 @@ namespace canjewelry.src.harmony
 
             harmonyInstance.Patch(typeof(Vintagestory.API.Common.CollectibleObject).GetMethod("GetHeldItemInfo"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GetHeldItemInfo")));
 
+            harmonyInstance.Patch(typeof(GuiHandbookItemStackPage).GetMethod("PageCodeForStack"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_PageCodeForStack")));
+
             harmonyInstance.Patch(typeof(CharacterSystem).GetMethod("StartClientSide"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CharacterSystem_StartClientSide")));
 
             harmonyInstance.Patch(typeof(ItemChisel).GetMethod("OnHeldAttackStart"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemChisel_OnHeldAttackStart")));

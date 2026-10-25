@@ -121,11 +121,15 @@ namespace canjewelry.src.items
             }
             MeshData metVoxOffset = metalVoxelMesh.Clone();
             MeshData slagVoxOffset = slagVoxelMesh.Clone();
-            for (int x = 0; x < 16; x++)
+            // CreateVoxelsFromIngot swaps in a [16,6,16] array, so bounds come from the array itself
+            int sizeX = Math.Min(16, voxels.GetLength(0));
+            int sizeY = Math.Min(7, voxels.GetLength(1));
+            int sizeZ = Math.Min(16, voxels.GetLength(2));
+            for (int x = 0; x < sizeX; x++)
             {
-                for (int y = 0; y < 7; y++)
+                for (int y = 0; y < sizeY; y++)
                 {
-                    for (int z = 0; z < 16; z++)
+                    for (int z = 0; z < sizeZ; z++)
                     {
                         EnumVoxelMaterial mat = (EnumVoxelMaterial)voxels[x, y, z];
                         if (mat != EnumVoxelMaterial.Empty)

@@ -227,6 +227,8 @@ namespace canjewelry.src.api
             foreach (string key in keys) flipOverrides.Remove(key);
 
             RebuildTunedBases();
+            // hiddenOverrides is read inside ResolveHit, so cached answers may still carry it.
+            ClearResolveCache();
         }
 
         /// <summary>
