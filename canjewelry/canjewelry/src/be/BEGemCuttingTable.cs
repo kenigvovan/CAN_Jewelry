@@ -184,32 +184,7 @@ namespace canjewelry.src.be
             {
                 if(MatchesRecipeWithPossibleMistake(out int mistakes))
                 {
-                    Voxels = new byte[16, 14, 16];
-                    ItemStack outstack = SelectedRecipe.Output.ResolvedItemstack.Clone();
-                    EncrustableCB.ApplyCuttingBuff(outstack);
-                    float mistakeValueMult = Math.Max(0, 1 - (float)(canjewelry.config.minFineForMistake + Config.rand.NextDouble() * (canjewelry.config.maxFineForMistake - canjewelry.config.minFineForMistake)) * mistakes);
-
-                    EncrustableCB.ReduceBuffValueBecauseOfMistakes(outstack, mistakeValueMult);
-                    //ApplyCuttingBuff(outstack);
-                    //outstack.Collectible.SetTemperature(Api.World, outstack, workItemStack.Collectible.GetTemperature(Api.World, workItemStack));
-                    EncrustableCB.FireCutCompletionEvents(byPlayer, workItemStack, outstack);
-                    workItemStack = null;
-
-                    SelectedRecipeId = -1;
-
-                    if (byPlayer?.InventoryManager.TryGiveItemstack(outstack) == true)
-                    {
-                        Api.World.PlaySoundFor(new AssetLocation("game:sounds/player/collect"), byPlayer, false, 24);
-                    }
-                    else
-                    {
-                        Api.World.SpawnItemEntity(outstack, Pos.ToVec3d().Add(0.5, 0.626, 0.5));
-                    }
-
-                    RegenMeshAndSelectionBoxes();
-                    MarkDirty(true);
-                    Api.World.BlockAccessor.MarkBlockDirty(Pos);
-                    //rotation = 0;
+                    FinishCut(byPlayer, mistakes);
                     return false;
                 }
             }
@@ -821,36 +796,63 @@ namespace canjewelry.src.be
 
             if (MatchesRecipe() && Api.World is IServerWorldAccessor)
             {
-                Voxels = new byte[16, 14, 16];
-                ItemStack outstack = SelectedRecipe.Output.ResolvedItemstack.Clone();
-                EncrustableCB.ApplyCuttingBuff(outstack);
-                //ApplyCuttingBuff(outstack);
-                //outstack.Collectible.SetTemperature(Api.World, outstack, workItemStack.Collectible.GetTemperature(Api.World, workItemStack));
-                EncrustableCB.FireCutCompletionEvents(byPlayer, workItemStack, outstack);
-                workItemStack = null;
-
-                SelectedRecipeId = -1;
-
-                if (byPlayer?.InventoryManager.TryGiveItemstack(outstack) == true)
-                {
-                    Api.World.PlaySoundFor(new AssetLocation("game:sounds/player/collect"), byPlayer, false, 24);
-                }
-                else
-                {
-                    Api.World.SpawnItemEntity(outstack, Pos.ToVec3d().Add(0.5, 0.626, 0.5));
-                }
-
-                RegenMeshAndSelectionBoxes();
-                MarkDirty();
-                Api.World.BlockAccessor.MarkBlockDirty(Pos);
-                rotation = 0;
+                FinishCut(byPlayer, 0);
             }
+        }
+
+        /// <summary>
+        /// Hands out the cut gem and clears the table. The one way a cut ends: the hammer and the
+        /// last chisel strike used to carry two copies of this that had drifted apart.
+        /// </summary>
+        /// <param name="mistakes">Voxels off the recipe; each one lowers the buff values.</param>
+        protected void FinishCut(IPlayer byPlayer, int mistakes)
+        {
+            Voxels = new byte[16, 14, 16];
+            ItemStack outstack = SelectedRecipe.Output.ResolvedItemstack.Clone();
+            EncrustableCB.ApplyCuttingBuff(outstack);
+            if (mistakes > 0)
+            {
+                float mistakeValueMult = Math.Max(0, 1 - (float)(canjewelry.config.minFineForMistake + Config.rand.NextDouble() * (canjewelry.config.maxFineForMistake - canjewelry.config.minFineForMistake)) * mistakes);
+                EncrustableCB.ReduceBuffValueBecauseOfMistakes(outstack, mistakeValueMult);
+            }
+            EncrustableCB.FireCutCompletionEvents(byPlayer, workItemStack, outstack);
+            workItemStack = null;
+            returnOnCancelStack = null;
+
+            SelectedRecipeId = -1;
+
+            if (byPlayer?.InventoryManager.TryGiveItemstack(outstack) == true)
+            {
+                Api.World.PlaySoundFor(new AssetLocation("game:sounds/player/collect"), byPlayer, false, 24);
+            }
+            else
+            {
+                Api.World.SpawnItemEntity(outstack, Pos.ToVec3d().Add(0.5, 0.626, 0.5));
+            }
+
+            RegenMeshAndSelectionBoxes();
+            MarkDirty(true);
+            Api.World.BlockAccessor.MarkBlockDirty(Pos);
+            rotation = 0;
         }
 
         public void ditchWorkItemStack(IPlayer byPlayer = null)
         {
             if (workItemStack == null) return;
 
+            ItemStack ditchedStack = StackToGiveBack();
+            if (byPlayer == null || !byPlayer.InventoryManager.TryGiveItemstack(ditchedStack))
+            {
+                Api.World.SpawnItemEntity(ditchedStack, Pos.ToVec3d().Add(0.5, 0.5, 0.5));
+            }
+
+            clearWorkSpace();
+        }
+
+        // Before a recipe is chosen the rough gem put on the table comes back; after, the work
+        // item with its progress.
+        private ItemStack StackToGiveBack()
+        {
             ItemStack ditchedStack;
             if (SelectedRecipe == null)
             {
@@ -872,18 +874,13 @@ namespace canjewelry.src.be
 
                 ditchedStack = workItemStack;
             }
-
-            if (byPlayer == null || !byPlayer.InventoryManager.TryGiveItemstack(ditchedStack))
-            {
-                Api.World.SpawnItemEntity(ditchedStack, Pos.ToVec3d().Add(0.5, 0.5, 0.5));
-            }
-
-            clearWorkSpace();
+            return ditchedStack;
         }
 
         protected void clearWorkSpace()
         {
             workItemStack = null;
+            returnOnCancelStack = null;
             Voxels = new byte[16, 14, 16];
             RegenMeshAndSelectionBoxes();
             MarkDirty();
@@ -1299,12 +1296,10 @@ namespace canjewelry.src.be
 
         public override void OnBlockBroken(IPlayer byPlayer = null)
         {
+            // A work item without a recipe would not go back on a table: the gem was lost.
             if (workItemStack != null)
             {
-                workItemStack.Attributes.SetBytes("voxels", serializeVoxels(Voxels));
-                workItemStack.Attributes.SetInt("selectedRecipeId", SelectedRecipeId);
-
-                Api.World.SpawnItemEntity(workItemStack, Pos.ToVec3d().Add(0.5, 0.5, 0.5));
+                Api.World.SpawnItemEntity(StackToGiveBack(), Pos.ToVec3d().Add(0.5, 0.5, 0.5));
             }
         }
 
@@ -1315,14 +1310,17 @@ namespace canjewelry.src.be
             Voxels = deserializeVoxels(tree.GetBytes("voxels"));
             workItemStack = tree.GetItemstack("workItemStack");
             SelectedRecipeId = tree.GetInt("selectedRecipeId", -1);
+            rotation = tree.GetInt("rotation");
+            returnOnCancelStack = tree.GetItemstack("returnOnCancelStack");
             string oldStone = this.stoneType;
             string oldMetal = this.metalType;
             this.stoneType = tree.GetString("stoneType", "granite");
             this.metalType = tree.GetString("metalType", "copper");
 
-            if (Api != null && workItemStack != null)
+            if (Api != null)
             {
-                workItemStack.ResolveBlockOrItem(Api.World);
+                workItemStack?.ResolveBlockOrItem(Api.World);
+                returnOnCancelStack?.ResolveBlockOrItem(Api.World);
             }
 
             RegenMeshAndSelectionBoxes();
@@ -1343,6 +1341,8 @@ namespace canjewelry.src.be
             tree.SetBytes("voxels", serializeVoxels(Voxels));
             tree.SetItemstack("workItemStack", workItemStack);
             tree.SetInt("selectedRecipeId", SelectedRecipeId);
+            tree.SetInt("rotation", rotation);
+            tree.SetItemstack("returnOnCancelStack", returnOnCancelStack);
             tree.SetString("stoneType", this.stoneType);
             tree.SetString("metalType", this.metalType);
         }

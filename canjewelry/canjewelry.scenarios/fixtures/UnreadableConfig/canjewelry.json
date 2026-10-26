@@ -1,0 +1,5 @@
+{
+  "config_version": "0.7.12",
+  "debugMode": true,
+  "chance_gem_drop_on_item_broken": 0.5,
+  "pan_take_per_use": 3,

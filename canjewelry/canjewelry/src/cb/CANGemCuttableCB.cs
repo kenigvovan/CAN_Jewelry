@@ -2,6 +2,7 @@
 using canjewelry.src.items;
 using canjewelry.src.items.resource;
 using canjewelry.src.jewelry;
+using canjewelry.src.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -91,7 +92,7 @@ namespace canjewelry.src.cb
 
                     if (checkRecipeAttributes
                         && recipe.Ingredient.RecipeAttributes != null
-                        && !stack.Attributes.ToJsonToken().Equals(recipe.Ingredient.RecipeAttributes.ToAttribute().ToJsonToken()))
+                        && !RecipeAttributesMatch(stack.Attributes, recipe.Ingredient.RecipeAttributes.ToAttribute() as ITreeAttribute))
                     {
                         continue;
                     }
@@ -110,6 +111,24 @@ namespace canjewelry.src.cb
             }
 
             return result.OrderBy(r => r.Output.ResolvedItemstack.Collectible.Code).ToList();
+        }
+
+        /// <summary>
+        /// Whether the stack carries every attribute the recipe names, with the same value. Extra
+        /// attributes on the stack are allowed: the whole tree used to be compared, so anything new
+        /// written onto a work item would have stopped every recipe from matching it.
+        /// </summary>
+        public static bool RecipeAttributesMatch(ITreeAttribute stackAttributes, ITreeAttribute recipeAttributes)
+        {
+            if (recipeAttributes == null) return true;
+            if (stackAttributes == null) return recipeAttributes.Count == 0;
+
+            foreach (var pair in recipeAttributes)
+            {
+                IAttribute own = stackAttributes[pair.Key];
+                if (own == null || own.ToJsonToken() != pair.Value?.ToJsonToken()) return false;
+            }
+            return true;
         }
 
         public bool CanWork(ItemStack stack)
@@ -157,19 +176,7 @@ namespace canjewelry.src.cb
             string qualityName = stack.Collectible.Variant["quality"];
             if (stack.Attributes.HasAttribute("potential"))
             {
-                string potName = stack.Attributes.GetString("potential");
-                switch (potName)
-                {
-                    case "low":
-                        qualityName = "chipped";
-                        break;
-                    case "medium":
-                        qualityName = "flawed";
-                        break;
-                    case "high":
-                        qualityName = "normal";
-                        break;
-                }
+                qualityName = CANGemSize.RoughQualityOfPotential(stack.Attributes.GetString("potential")) ?? qualityName;
             }
             gemItemAttribute.SetString(CANJWConstants.ENCRUSTED_GEM_SIZE, qualityName);
             workItemStack.Attributes = gemItemAttribute;
@@ -189,19 +196,34 @@ namespace canjewelry.src.cb
         {
             if (stack.Item is CANItemGemCuttingWorkItem)
             {
-                Item item = aapi.World.GetItem(AssetLocation.Create("canjewelry:gem-rough-" + stack.Attributes.GetString(CANJWConstants.ENCRUSTED_GEM_SIZE) + "-" + stack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET)));
-                //Item item = api.World.GetItem(AssetLocation.Create("ingot-" + Variant["metal"], Attributes?["baseMaterialDomain"].AsString("game")));
-                if(item == null)
-                {
-                    item = aapi.World.GetItem(AssetLocation.Create("game:gem-" + stack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET)) + "-rough");
-                }
-                if (item == null)
-                {
-                    throw new Exception(string.Format("Base material for not found, there is no item with code 'ingot'"));
-                }
-                return new ItemStack(item);                
+                return RoughGemOfWorkItem(aapi.World, stack);
             }
             return stack;
+        }
+
+        /// <summary>
+        /// The rough gem a work item was made from: our own rough gem of that quality, or the
+        /// vanilla one with the matching "potential" when there is no such item of ours.
+        /// </summary>
+        public static ItemStack RoughGemOfWorkItem(IWorldAccessor world, ItemStack workItem)
+        {
+            string quality = workItem.Attributes.GetString(CANJWConstants.ENCRUSTED_GEM_SIZE);
+            string gemType = workItem.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET);
+
+            Item item = world.GetItem(CANGemSize.RoughGemCode(quality, gemType));
+            if (item != null) return new ItemStack(item);
+
+            item = world.GetItem(CANGemSize.VanillaRoughGemCode(gemType));
+            if (item == null)
+            {
+                throw new Exception(string.Format("No rough gem for work item {0}: neither {1} nor {2} exists",
+                    workItem.Collectible.Code, CANGemSize.RoughGemCode(quality, gemType), CANGemSize.VanillaRoughGemCode(gemType)));
+            }
+
+            var vanilla = new ItemStack(item);
+            string potential = CANGemSize.PotentialOfRoughQuality(quality);
+            if (potential != null) vanilla.Attributes.SetString("potential", potential);
+            return vanilla;
         }
     }
 }

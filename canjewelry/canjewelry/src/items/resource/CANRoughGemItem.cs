@@ -39,14 +39,17 @@ namespace canjewelry.src.items.resource
                 return;
             }
             bool mainStatHeaderAdded = false;
-            if (canjewelry.config.PossibleGemBuffs.TryGetValue(gemType, out var possibleBuffs))
+            int gemTier = itemStack.Collectible.Attributes?["canGemType"].AsInt() ?? 0;
+            if (gemType != null && canjewelry.config.PossibleGemBuffs.TryGetValue(gemType, out var possibleBuffs))
             {
                 foreach(var buffName in possibleBuffs)
                 {
                     if (canjewelry.config.BuffAttributesDict.TryGetValue(buffName, out BuffAttributes buffAttributes))
                     {
-                        if(buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()] == null ||
-                            buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()].Length < 2)
+                        // A tier the config does not list is skipped instead of throwing in the tooltip.
+                        if (buffAttributes.MainStatValueRange == null
+                            || !buffAttributes.MainStatValueRange.TryGetValue(gemTier, out float[] range)
+                            || range == null || range.Length < 2)
                         {
                             continue;
                         }
@@ -58,18 +61,18 @@ namespace canjewelry.src.items.resource
                         if (buffName.Equals("maxhealthExtraPoints"))
                         {
                             dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName))
-                                .Append(string.Format(" {0}/{1}", buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][0], buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][1]))
-                                .AppendLine();                      
+                                .Append(string.Format(" {0}/{1}", range[0], range[1]))
+                                .AppendLine();
                         }
                         else
                         {
                             dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName))
-                                .Append(string.Format("{0}/{1}", (buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][0] > 0
-                                                                                                    ? " +" + Math.Round(buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][0] * 100, 3)
-                                                                                                    : Math.Round(buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][0] * 100, 3)) + "%",
-                                                                    buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][1] > 0
-                                                                                                    ? " +" + Math.Round(buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][1] * 100, 2)
-                                                                                                    :  Math.Round(buffAttributes.MainStatValueRange[itemStack.Collectible.Attributes["canGemType"].AsInt()][1] * 100, 2))).Append("%")
+                                .Append(string.Format("{0}/{1}", (range[0] > 0
+                                                                    ? " +" + Math.Round(range[0] * 100, 3)
+                                                                    : Math.Round(range[0] * 100, 3)) + "%",
+                                                                range[1] > 0
+                                                                    ? " +" + Math.Round(range[1] * 100, 2)
+                                                                    : Math.Round(range[1] * 100, 2))).Append("%")
                                 .AppendLine();
                 
                         }
@@ -84,16 +87,18 @@ namespace canjewelry.src.items.resource
                 string buffName = inSlot.Itemstack.Collectible.Attributes["canGemTypeToAttribute"].ToString();
                 if (buffName.Equals("maxhealthExtraPoints"))
                 {
-                    if (canjewelry.config.gems_buffs.TryGetValue(buffName, out var buffValuesDict))
+                    if (canjewelry.config.gems_buffs.TryGetValue(buffName, out var buffValuesDict)
+                        && buffValuesDict.TryGetValue(gemTier.ToString(), out float flatValue))
                     {
-                        dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName)).Append(" +" + buffValuesDict[inSlot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()]);
+                        dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName)).Append(" +" + flatValue);
                     }
                 }
                 else
                 {
-                    if (canjewelry.config.gems_buffs.TryGetValue(buffName, out var buffValuesDict))
+                    if (canjewelry.config.gems_buffs.TryGetValue(buffName, out var buffValuesDict)
+                        && buffValuesDict.TryGetValue(gemTier.ToString(), out float rawValue))
                     {
-                        float buffValue = buffValuesDict[inSlot.Itemstack.Collectible.Attributes["canGemType"].AsInt().ToString()] * 100;
+                        float buffValue = rawValue * 100;
                         dsc.Append(Lang.Get("canjewelry:buff-name-" + buffName));
                         dsc.Append(buffValue > 0 ? " +" + Math.Round(buffValue) + "%" : " " + Math.Round(buffValue) + "%");
                     }
@@ -220,35 +225,6 @@ namespace canjewelry.src.items.resource
                     }
                 }
             }
-        }
-        public ItemStack TryPlaceOn(ItemStack stack, BlockEntityGemCuttingTable beGemCuttingTable)
-        {
-            if (!CanWork(stack))
-            {
-                return null;
-            }
-            Item item = api.World.GetItem(new AssetLocation("canjewelry:gemcuttingworkitem"));  //this.Variant["metal"]
-            // + this.Variant["gemtype"]
-            
-            if (item == null)
-            {
-                return null;
-            }
-            ItemStack workItemStack = new ItemStack(item, 1);
-            ITreeAttribute gemItemAttribute = new TreeAttribute();
-            gemItemAttribute.SetString(CANJWConstants.GEM_TYPE_IN_SOCKET, Variant[CANJWConstants.GEM_TYPE_IN_SOCKET]);
-            gemItemAttribute.SetString(CANJWConstants.ENCRUSTED_GEM_SIZE, Variant["quality"]);
-            workItemStack.Attributes = gemItemAttribute;
-            //workItemStack.Collectible.SetTemperature(this.api.World, workItemStack, stack.Collectible.GetTemperature(this.api.World, stack), true);
-            if (beGemCuttingTable.WorkItemStack == null)
-            {
-                CreateVoxelsFromRoughGem(api, ref beGemCuttingTable.Voxels, false);
-            }
-            else
-            {
-                return null;
-            }
-            return workItemStack;
         }
     }
 

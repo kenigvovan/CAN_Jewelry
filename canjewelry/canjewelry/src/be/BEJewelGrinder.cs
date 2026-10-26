@@ -514,6 +514,14 @@ namespace canjewelry.src.jewelry
                     return;
                 }
 
+                // Grinding writes into the stack's attributes, so a stack of several gems would
+                // have them all ground at once by one gem's worth of work.
+                if (activeItemStack.StackSize > 1)
+                {
+                    (player as IServerPlayer)?.SendIngameError("canjewelry-grind-one-gem", Lang.Get("canjewelry:grinder-one-gem-only"));
+                    return;
+                }
+
                 if (!activeSlot.Itemstack.Attributes.HasAttribute("cangrindlayerinfo"))
                 {
 

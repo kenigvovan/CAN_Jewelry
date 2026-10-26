@@ -157,10 +157,10 @@ namespace canjewelry.src.eb
             // in them gives no buffs.
             AccumulateInventory(canjewelry.GetAdditionalJewelryInventory(player), ADDITIONAL_INV, totals, debug);
 
-            // Wearables in the active hotbar slot are skipped here: their buffs are already
-            // accounted for via the character/additional inventories (otherwise double-counted).
+            // Wearables count where they are worn, not in the hand. Since 1.22 vanilla armour and
+            // clothes are plain items with the Wearable behavior, not ItemWearable.
             ItemStack activeStack = player.InventoryManager.ActiveHotbarSlot?.Itemstack;
-            if (activeStack?.Item != null && activeStack.Item is not ItemWearable && activeStack.Item is not CANItemWearable)
+            if (activeStack?.Item != null && !IsWearable(activeStack.Item))
             {
                 Accumulate(activeStack, HOTBAR_INV + "/active", totals, debug);
             }
@@ -173,6 +173,10 @@ namespace canjewelry.src.eb
                     debug.Length == 0 ? " nothing found" : debug.ToString());
             }
         }
+
+        private static bool IsWearable(Item item) =>
+            item is ItemWearable || item is CANItemWearable
+            || item.GetCollectibleBehavior<CollectibleBehaviorWearable>(withInheritance: true) != null;
 
         private void AccumulateInventory(IInventory inv, string invName, Dictionary<string, float> totals, StringBuilder debug)
         {

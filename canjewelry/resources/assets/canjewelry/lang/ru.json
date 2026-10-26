@@ -492,6 +492,7 @@
     "item-grindlayeritem-medium": "Среднее полотно для шлифовки",
     "item-grindlayeritem-fine": "Финишное полотно для шлифовки",
     "need_to_be_processed": "<font color=\"#9966ff\">Требуется обработка</font>",
+    "grinder-one-gem-only": "Для шлифовки держите в руке один камень",
 
     "item-wire-hank": " моток канители",
 

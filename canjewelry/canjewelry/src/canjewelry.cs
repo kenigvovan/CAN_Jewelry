@@ -509,7 +509,7 @@ namespace canjewelry.src
             Item[] arrayResult = api.World.SearchItems(new AssetLocation("canjewelry:gem-cut-*"));
             foreach(var gem in arrayResult)
             {
-                string gemType = gem.Code.Path.Split('-').Last();
+                string gemType = CANGemSize.GemTypeOf(gem);
                 if(!BEJewelGrinder.gemTypeToColor.TryGetValue(gemType, out _))
                 {
                     int color = gem.GetRandomColor(capi, null);
@@ -606,8 +606,8 @@ namespace canjewelry.src
             foreach (var gem in cut_gems_items)
             {
                 //catch if not present?
-                gems_textures.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
-                gems_textures_pngs.TryAdd(gem.Code.Path.Split('-').Last(), gem.Textures["gem"].Base.Domain + ":" + gem.Textures["gem"].Base.Path + ".png");
+                gems_textures.TryAdd(CANGemSize.GemTypeOf(gem), gem.Textures["gem"].Base.Domain + ":textures/" + gem.Textures["gem"].Base.Path);
+                gems_textures_pngs.TryAdd(CANGemSize.GemTypeOf(gem),gem.Textures["gem"].Base.Domain + ":" + gem.Textures["gem"].Base.Path + ".png");
             }
             
         }
@@ -1089,7 +1089,7 @@ namespace canjewelry.src
 
             foreach (var gem in roughGems)
             {
-                string gemType = gem.Code.Path.Split('-').Last();
+                string gemType = CANGemSize.GemTypeOf(gem);
                 if (config.gem_type_to_buff.ContainsKey(gemType))
                     gem.Attributes.Token["canGemTypeToAttribute"] = config.gem_type_to_buff[gemType];
             }
@@ -1097,7 +1097,7 @@ namespace canjewelry.src
 
             foreach (var gem in api.World.SearchItems(new AssetLocation("canjewelry:gem-cut-*")))
             {
-                string gemType = gem.Code.Path.Split('-').Last();
+                string gemType = CANGemSize.GemTypeOf(gem);
                 if (config.gem_type_to_buff.ContainsKey(gemType))
                     gem.Attributes.Token["canGemTypeToAttribute"] = config.gem_type_to_buff[gemType];
             }

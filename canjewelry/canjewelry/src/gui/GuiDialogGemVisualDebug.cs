@@ -68,7 +68,10 @@ namespace canjewelry.src.gui
             CANJWConstants.CUTTING_ROUND, CANJWConstants.CUTTING_BAGUETTE, CANJWConstants.CUTTING_PEAR
         };
 
-        private static readonly string[] sizeLabels = { "normal", "flawless", "exquisite" };
+        private static readonly string[] sizeLabels =
+        {
+            utils.CANGemSize.CutNormal, utils.CANGemSize.CutFlawless, utils.CANGemSize.CutExquisite
+        };
 
         private static readonly string[] sliderKeys = { "tx", "ty", "tz", "rx", "ry", "rz", "scale" };
 

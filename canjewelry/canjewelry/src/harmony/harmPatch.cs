@@ -11,6 +11,7 @@ using canjewelry.src.CB;
 using canjewelry.src.eb;
 using canjewelry.src.gui;
 using canjewelry.src.render;
+using canjewelry.src.utils;
 using HarmonyLib;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -255,10 +256,11 @@ namespace canjewelry.src.harmony
                             }
                             else
                             {
-                                string[] buffNames = (treeSlot[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
-                                float[] buffValues = (treeSlot[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
+                                string[] buffNames = (treeSlot[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value;
+                                float[] buffValues = (treeSlot[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value;
+                                if (buffNames == null || buffValues == null) continue;
 
-                                for (int j = 0; j < buffNames.Length; j++)
+                                for (int j = 0; j < buffNames.Length && j < buffValues.Length; j++)
                                 {
                                     if (buffNames[j].Equals("maxhealthExtraPoints"))
                                     {
@@ -309,84 +311,37 @@ namespace canjewelry.src.harmony
                 }
             }
         }
-        public static void TryDropGems(Entity byEntity, ItemSlot itemslot)
+        /// <summary>
+        /// Drops some of the gems of a piece that just broke, each with the configured chance.
+        /// Server only. The transpiler on DamageItem this used to hang off stopped matching once the
+        /// game moved the slot clearing into DestroyItem, and the side check let it run only on the
+        /// client - gems never dropped.
+        /// </summary>
+        public static void Prefix_CollectibleObject_DestroyItem(IWorldAccessor world, Entity byEntity, ItemSlot itemSlot)
         {
-            if (byEntity == null || byEntity.Api != null && byEntity.Api.Side != EnumAppSide.Client)
-            {
-                return;
-            }
-            /*if(byEntity.Api.Side == EnumAppSide.Client)
-            {
-                return;
-            }*/
-            if (itemslot.Itemstack != null && itemslot.Itemstack.Attributes.HasAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING))
-            {
-                Random r = new Random();
-                var tree = itemslot.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
-                for (int i = 0; i < EncrustableCB.GetMaxAmountSockets(itemslot.Itemstack); i++)
-                {
-                    if(canjewelry.config.chance_gem_drop_on_item_broken == 0 || r.NextDouble() > canjewelry.config.chance_gem_drop_on_item_broken)
-                    {
-                        continue;
-                    }
-                    ITreeAttribute socketSlot = tree.GetTreeAttribute("slot" + i.ToString());
-                    if (socketSlot != null)
-                    {
-                        int size = socketSlot.GetInt("size");
-                        string gemType = socketSlot.GetString("gemtype");
-                        string gemSize;
-                        switch (size)
-                        {
-                            case 1:
-                                gemSize = "normal";
-                                break;
-                            case 2:
-                                gemSize = "flawless";
-                                break;
-                            case 3:
-                                gemSize = "exquisite";
-                                break;
-                            default:
-                                return;
-                        }
-
-                        string[] buffNames = (socketSlot[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
-                        float[] buffValues = (socketSlot[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
-                        ITreeAttribute isTree = new TreeAttribute();
-                        tree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] = new StringArrayAttribute(buffNames);
-                        tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute(buffValues);
-                        tree.SetString(CANJWConstants.CUTTING_TYPE, socketSlot.GetString(CANJWConstants.CUTTING_TYPE));
-                        /* ITreeAttribute tree = new TreeAttribute();
-                         tree.SetString(CANJWConstants.CUTTING_TYPE, newCuttingType);
-                         workStack.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
-                         EncrustableCB.ApplyCuttingBuff(workStack);*/
-
-
-                        Item currentItem = canjewelry.sapi.World.GetItem(new AssetLocation("canjewelry:" + "gem-cut-" + gemSize + "-" + gemType));
-                        ItemStack newIS = new ItemStack(currentItem, 1);
-                        newIS.Attributes[CANJWConstants.CUT_GEM_TREE] = tree;
-                        canjewelry.sapi.World.SpawnItemEntity(newIS, byEntity.Pos.XYZ.Clone().Add(0.5f, 0.25f, 0.5f));
-                    }
-                }
-            }              
+            if (world?.Side != EnumAppSide.Server) return;
+            TryDropGems(world, byEntity, itemSlot);
         }
-        public static IEnumerable<CodeInstruction> Transpiler_CollectibleObject_DamageItem(IEnumerable<CodeInstruction> instructions, ILGenerator il)
-        {
-            bool found = false;
-            var codes = new List<CodeInstruction>(instructions);
-            var proxyMethod = AccessTools.Method(typeof(harmPatch), "TryDropGems");
-            for (int i = 0; i < codes.Count; i++)
-            {
 
-                if (!found &&
-                        codes[i].opcode == OpCodes.Ldarg_3 && codes[i + 1].opcode == OpCodes.Ldnull && codes[i + 2].opcode == OpCodes.Callvirt && codes[i - 1].opcode == OpCodes.Bgt)
-                {
-                    yield return new CodeInstruction(OpCodes.Ldarg_2);
-                    yield return new CodeInstruction(OpCodes.Ldarg_3);
-                    yield return new CodeInstruction(OpCodes.Call, proxyMethod);
-                    found = true;
-                }               
-                yield return codes[i];
+        public static void TryDropGems(IWorldAccessor world, Entity byEntity, ItemSlot itemslot)
+        {
+            ItemStack jewelry = itemslot?.Itemstack;
+            ITreeAttribute tree = jewelry?.Attributes?.GetTreeAttribute(CANJWConstants.ITEM_ENCRUSTED_STRING);
+            float chance = canjewelry.config?.chance_gem_drop_on_item_broken ?? 0;
+            if (byEntity == null || tree == null || chance <= 0) return;
+
+            int sockets = EncrustableCB.GetMaxAmountSockets(jewelry);
+            for (int i = 0; i < sockets; i++)
+            {
+                if (world.Rand.NextDouble() > chance) continue;
+
+                // Built like an extracted gem: own cut gem tree, grinding progress, and the
+                // wasExtracted taint so a dropped gem earns no encrust XP again.
+                ItemStack gem = CANGemSize.BuildCutGemFromSocket(world, tree.GetTreeAttribute("slot" + i));
+                if (gem == null) continue;
+
+                gem.Attributes.SetBool("wasExtracted", true);
+                world.SpawnItemEntity(gem, byEntity.Pos.XYZ.Clone().Add(0.5f, 0.25f, 0.5f));
             }
         }
 

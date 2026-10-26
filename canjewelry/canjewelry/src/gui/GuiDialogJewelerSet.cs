@@ -1,4 +1,5 @@
 ﻿using canjewelry.src.CB;
+using canjewelry.src.utils;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -131,40 +132,17 @@ namespace canjewelry.src.jewelry
                         string gemType = tree.GetTreeAttribute("slot" + i).GetString(CANJWConstants.GEM_TYPE_IN_SOCKET);
                         if(!(gemType == ""))
                         {
-                            int gemSizeInt = tree.GetTreeAttribute("slot" + i).GetInt(CANJWConstants.ENCRUSTED_GEM_SIZE);
-                            ITreeAttribute imaginaryGemTree = tree.GetTreeAttribute("slot" + i);
-                            string gemSize = "normal";
-                            if (gemSizeInt == 3)
-                            {
-                                gemSize = "exquisite";
-                            }
-                            else if(gemSizeInt == 2)
-                            {
-                                gemSize = "flawless";
-                            }
-
                             // One slot height above its own slot. The +20 offsets the shift a
                             // richtext itemstack draws with (see the socket icon below).
                             var elGem = tmpEl.FlatCopy();
                             elGem.fixedX += 20;
                             elGem.fixedY += 20 - 48;
-                            var bucketSatck = new ItemStack(capi.World.GetItem(new AssetLocation("canjewelry:gem-cut-" + gemSize + "-" + gemType)), 1);
-
-                            if (imaginaryGemTree.HasAttribute(CANJWConstants.ENCRUSTABLE_BUFFS_NAMES) && imaginaryGemTree.HasAttribute(CANJWConstants.ENCRUSTABLE_BUFFS_VALUES))
+                            // The same stack extraction would hand back; null when the item is gone.
+                            ItemStack previewStack = CANGemSize.BuildCutGemFromSocket(capi.World, tree.GetTreeAttribute("slot" + i));
+                            if (previewStack != null)
                             {
-                                var imaginaryGemTreeNew = new TreeAttribute();
-                                string[] currentBuffNames = (imaginaryGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value;
-                                float[] currentBuffValues = (imaginaryGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value;
-                                imaginaryGemTreeNew[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] = new StringArrayAttribute(currentBuffNames);
-                                imaginaryGemTreeNew[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute(currentBuffValues);
-                                imaginaryGemTreeNew.SetString(CANJWConstants.CUTTING_TYPE, imaginaryGemTree.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND));
-                                bucketSatck.Attributes[CANJWConstants.CUT_GEM_TREE] = imaginaryGemTreeNew;
-                             }
-                            var sli = new SlideshowItemstackTextComponent(capi, new ItemStack[] { bucketSatck }, 48, EnumFloat.Inline);
-                            var rc = new RichTextComponentBase[] { sli };
-                            if (bucketSatck != null)
-                            {
-                                SingleComposer.AddRichtext(rc, elGem, "gem_slot" + i);
+                                var sli = new SlideshowItemstackTextComponent(capi, new ItemStack[] { previewStack }, 48, EnumFloat.Inline);
+                                SingleComposer.AddRichtext(new RichTextComponentBase[] { sli }, elGem, "gem_slot" + i);
                             }
 
                             // Pull the gem back out. Asks first - it can break the piece. Sits on
@@ -415,8 +393,7 @@ namespace canjewelry.src.jewelry
             if (socketTier < gemStack.Collectible.Attributes["canGemType"].AsInt()) return false;
             if (gemStack.Attributes?.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE) == null) return false;
 
-            string gemType = gemStack.Collectible.Code.Path.Split('-').Last();
-            return EncrustableCB.canItemContainThisGem(gemType, jewelry);
+            return EncrustableCB.canItemContainThisGem(CANGemSize.GemTypeOf(gemStack.Collectible), jewelry);
         }
 
         /// <summary>

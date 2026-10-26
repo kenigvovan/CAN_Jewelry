@@ -131,24 +131,35 @@ namespace canjewelry.Tests.Helpers
                 ? new HashSet<string>()
                 : new HashSet<string> { secondaryBuff };
 
+            var buffs = new Dictionary<string, Config.BuffAttributes>
+            {
+                {
+                    mainBuff, new Config.BuffAttributes(
+                        mainStatValueRange: new Dictionary<int, float[]>
+                            { { gemTier, new[] { 0.15f } } },          // deterministic: always 0.15
+                        secondaryStatValueRange: null,
+                        possibleSecondaryStats: secondaryStats
+                    )
+                }
+            };
+            // A baguette's secondary value comes from the secondary stat's own entry, in its units.
+            if (!string.IsNullOrEmpty(secondaryBuff))
+            {
+                buffs[secondaryBuff] = new Config.BuffAttributes(
+                    mainStatValueRange: null,
+                    secondaryStatValueRange: new Dictionary<int, float[]>
+                        { { gemTier, new[] { 0.05f } } },              // deterministic: always 0.05
+                    possibleSecondaryStats: null
+                );
+            }
+
             return new Config
             {
                 PossibleGemBuffs = new Dictionary<string, HashSet<string>>
                 {
                     { gemType, new HashSet<string> { mainBuff } }
                 },
-                BuffAttributesDict = new Dictionary<string, Config.BuffAttributes>
-                {
-                    {
-                        mainBuff, new Config.BuffAttributes(
-                            mainStatValueRange: new Dictionary<int, float[]>
-                                { { gemTier, new[] { 0.15f } } },          // deterministic: always 0.15
-                            secondaryStatValueRange: new Dictionary<int, float[]>
-                                { { gemTier, new[] { 5.0f } } },           // deterministic: always 5.0 → /100 = 0.05
-                            possibleSecondaryStats: secondaryStats
-                        )
-                    }
-                },
+                BuffAttributesDict = buffs,
                 CuttingAttributesDict = new Dictionary<string, Config.CuttingAttributes>
                 {
                     { "round",    new Config.CuttingAttributes(new[] { 1.0f }) },

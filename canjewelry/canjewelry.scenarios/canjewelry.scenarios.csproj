@@ -1,0 +1,66 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Atlas scenarios: each test class boots a real headless Vintage Story server with the mod
+       loaded. Kept apart from canjewelry.Tests, whose unit tests replace canjewelry.config with
+       a minimal one that a running server would then see. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <!-- Local Atlas checkout, the same one CAN_claims uses. Override with -p:AtlasRoot=... -->
+    <AtlasRoot Condition="'$(AtlasRoot)' == ''">..\..\..\libs\1.22\Atlas-main\Atlas-main</AtlasRoot>
+    <!-- VS build acceleration copies a rebuilt canjewelry.dll next to the tests without running
+         MSBuild, so the atlas-mods staging target is skipped and the two copies diverge. -->
+    <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(AtlasRoot)\src\Atlas.XUnit\Atlas.XUnit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- [AtlasDataFiles] sources resolve against the test output folder. -->
+  <ItemGroup>
+    <None Include="fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="VintagestoryAPI">
+      <HintPath>$(VINTAGE_STORY)\VintagestoryAPI.dll</HintPath>
+    </Reference>
+    <!-- Harmony, to check the mod's patches landed. The game provides it at run time. -->
+    <Reference Include="0Harmony">
+      <HintPath>$(VINTAGE_STORY)\Lib\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="VSSurvivalMod">
+      <HintPath>$(VINTAGE_STORY)\Mods\VSSurvivalMod.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="VSEssentials">
+      <HintPath>$(VINTAGE_STORY)\Mods\VSEssentials.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- AtlasMod stages the built mod (a folder mod: modinfo.json is in its output) into every
+         test server, and the scenarios bind the same assembly, so its statics are reachable. -->
+    <ProjectReference Include="..\canjewelry\canjewelry.csproj">
+      <AtlasMod>true</AtlasMod>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!-- What the package would bring in as buildTransitive: the game's Newtonsoft.Json over the
+       test SDK's copy, and the staging of AtlasMod references. -->
+  <Import Project="$(AtlasRoot)\build\Atlas.E2E.targets" />
+
+</Project>

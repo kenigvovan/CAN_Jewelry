@@ -491,6 +491,7 @@
   "item-grindlayeritem-medium": "Medium grindlayer",
   "item-grindlayeritem-fine": "Fine grindlayer",
   "need_to_be_processed": "<font color=\"#9966ff\">Need to be processed</font>",
+  "grinder-one-gem-only": "Hold a single gem to grind it",
 
   "item-wire-hank": " wires",
 

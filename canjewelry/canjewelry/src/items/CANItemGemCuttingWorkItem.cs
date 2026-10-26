@@ -220,21 +220,7 @@ namespace canjewelry.src.items
             return stack.Clone();
         }*/
         public ItemStack GetBaseMaterial(ItemStack stack)
-        {
-            Item item = api.World.GetItem(AssetLocation.Create("canjewelry:gem-rough-" + stack.Attributes.GetString(CANJWConstants.ENCRUSTED_GEM_SIZE) + "-" + stack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET)));
-            //Item item = api.World.GetItem(AssetLocation.Create("ingot-" + Variant["metal"], Attributes?["baseMaterialDomain"].AsString("game")));
-
-            if (item == null)
-            {
-                item = api.World.GetItem(AssetLocation.Create("game:gem-" + stack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET)) + "-rough");
-            }
-
-            if (item == null)
-            {
-                throw new Exception(string.Format("Base material for {0} not found, there is no item with code 'ingot-{1}'", stack.Collectible.Code, Variant["metal"]));
-            }
-            return new ItemStack(item);
-        }
+            => cb.CANGemCuttableCB.RoughGemOfWorkItem(api.World, stack);
         public EnumHelveWorkableMode GetHelveWorkableMode(ItemStack stack, BlockEntityAnvil beAnvil)
         {
             if (beAnvil.SelectedRecipe.Name.Path == "plate" || beAnvil.SelectedRecipe.Name.Path == "blistersteel")

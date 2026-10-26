@@ -145,10 +145,11 @@ namespace canjewelry.src.items.resource
                 if (inSlot.Itemstack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))
                 {
                     ITreeAttribute tree = inSlot.Itemstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
-                    string[] buffNames = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
-                    float[] buffValues = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
+                    // A gem straight from the creative tab or a give command has a tree without buffs.
+                    string[] buffNames = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value ?? new string[0];
+                    float[] buffValues = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value ?? new float[0];
 
-                    for (int i = 0; i < buffNames.Length; i++)
+                    for (int i = 0; i < buffNames.Length && i < buffValues.Length; i++)
                     {
                         if (buffNames[i].Equals("maxhealthExtraPoints"))
                         {

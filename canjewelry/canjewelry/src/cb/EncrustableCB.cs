@@ -3,6 +3,7 @@ using canjewelry.src.cb;
 using canjewelry.src.inventories;
 using canjewelry.src.items;
 using canjewelry.src.render;
+using canjewelry.src.utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -484,7 +485,7 @@ namespace canjewelry.src.CB
                         return false;
                     }
                     //item cannot have this gem encrusted
-                    if (!canItemContainThisGem(gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last(), encrustable.Itemstack))
+                    if (!canItemContainThisGem(CANGemSize.GemTypeOf(gem_slot.Itemstack.Collectible), encrustable.Itemstack))
                     {
                         inventory.TakeLocked = false;
                         return false;
@@ -607,7 +608,8 @@ namespace canjewelry.src.CB
                     }
                     treeSocket.SetInt(CANJWConstants.GEM_BUFF_TYPE, (int)EnumGemBuffType.STATS_BUFF);
                     treeSocket.SetInt("size", gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt());
-                    treeSocket.SetString("gemtype", gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last());
+                    string gemType = CANGemSize.GemTypeOf(gem_slot.Itemstack.Collectible);
+                    treeSocket.SetString("gemtype", gemType);
 
                     treeSocket.SetString(CANJWConstants.CUTTING_TYPE, cutGemTree.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND));
 
@@ -625,8 +627,12 @@ namespace canjewelry.src.CB
                     {
                         treeSocket["savedGrindLayerInfo"] = gem_slot.Itemstack.Attributes["cangrindlayerinfo"].Clone();
                     }
+                    else
+                    {
+                        // Older versions left the previous gem's progress in an emptied socket.
+                        treeSocket.RemoveAttribute("savedGrindLayerInfo");
+                    }
 
-                    string gemType = gem_slot.Itemstack.Collectible.Code.Path.Split('-').Last();
                     CANGemVisual.SetGemVisual(encrustable.Itemstack, socket_number, gemType);
                     // Anti-farming gate (spec §6): re-encrusting a previously-extracted gem
                     // grants no XP. Flag travels with the gem ItemStack via wasExtracted.
@@ -669,8 +675,6 @@ namespace canjewelry.src.CB
                 if (string.IsNullOrEmpty(gemType)) return false;
 
                 int sizeInt = treeSocket.GetInt(CANJWConstants.ENCRUSTED_GEM_SIZE);
-                string sizeStr = sizeInt == 3 ? "exquisite" : sizeInt == 2 ? "flawless" : "normal";
-                string cuttingType = treeSocket.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND);
                 int socketTier = treeSocket.GetInt(CANJWConstants.ADDED_SOCKET_TYPE);
                 string[] buffNames = (treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value;
                 float[] buffValues = (treeSocket[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value;
@@ -678,32 +682,10 @@ namespace canjewelry.src.CB
                 IWorldAccessor world = inventory?.Api?.World ?? player?.Entity?.World;
                 if (world == null) return false;
 
-                Item gemItem = world.GetItem(new AssetLocation("canjewelry:gem-cut-" + sizeStr + "-" + gemType));
-                if (gemItem == null) return false;
-
-                ItemStack gemStack = new ItemStack(gemItem);
-                ITreeAttribute cutGemTree = new TreeAttribute();
-                cutGemTree.SetString(CANJWConstants.CUTTING_TYPE, cuttingType);
-                if (buffNames != null && buffValues != null)
-                {
-                    cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] = new StringArrayAttribute((string[])buffNames.Clone());
-                    cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute((float[])buffValues.Clone());
-                }
-                // Restore grinder progress saved at encrust. WAS_GROUND_BEFORE → fully done;
-                // savedGrindLayerInfo → mid-process state (phase + remaining counter). Legacy
-                // sockets (no flag at all) are treated as fully ground for safety.
-                bool wasFullyGround = treeSocket.GetBool(CANJWConstants.WAS_GROUND_BEFORE, true);
-                cutGemTree.SetBool(CANJWConstants.GEM_FULL_PROCESSED, wasFullyGround);
-                gemStack.Attributes[CANJWConstants.CUT_GEM_TREE] = cutGemTree;
-                if (!wasFullyGround && treeSocket.HasAttribute("savedGrindLayerInfo"))
-                {
-                    gemStack.Attributes["cangrindlayerinfo"] = treeSocket["savedGrindLayerInfo"].Clone();
-                }
-
-                // The taint travels through the encrust→extract cycle so a single extract
-                // doesn't unlock a fresh XP roll on what was already a recycled gem.
-                bool alreadyTainted = treeSocket.GetBool("wasExtracted", false);
-                if (alreadyTainted) gemStack.Attributes.SetBool("wasExtracted", true);
+                // Restores cut, buffs, grinding progress and the wasExtracted taint.
+                ItemStack gemStack = CANGemSize.BuildCutGemFromSocket(world, treeSocket);
+                if (gemStack == null) return false;
+                ITreeAttribute cutGemTree = gemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
 
                 var ev = new src.integration.ExtractEvent
                 {
@@ -753,6 +735,9 @@ namespace canjewelry.src.CB
                 treeSocket.RemoveAttribute(CANJWConstants.GEM_BUFF_TYPE);
                 treeSocket.RemoveAttribute(CANJWConstants.ENCRUSTED_GEM_SIZE);
                 treeSocket.RemoveAttribute(CANJWConstants.CUTTING_TYPE);
+                treeSocket.RemoveAttribute(CANJWConstants.WAS_GROUND_BEFORE);
+                treeSocket.RemoveAttribute("savedGrindLayerInfo");
+                treeSocket.RemoveAttribute("wasExtracted");
                 treeSocket.SetString(CANJWConstants.GEM_TYPE_IN_SOCKET, "");
 
                 CANGemVisual.ClearGemVisual(encrustable.Itemstack, socket_number);
@@ -930,15 +915,11 @@ namespace canjewelry.src.CB
         // Returns null if already the smallest size or if the smaller item code can't be resolved.
         private static ItemStack TryDowngradeCutGem(IWorldAccessor world, ItemStack source, int currentSizeInt, string gemType, ITreeAttribute cutGemTree)
         {
-            (string smallerSizeStr, int smallerTier) = currentSizeInt switch
-            {
-                3 => ("flawless", 2),
-                2 => ("normal",   1),
-                _ => (null,       0),
-            };
+            int smallerTier = currentSizeInt - 1;
+            string smallerSizeStr = currentSizeInt <= 3 ? CANGemSize.CutQualityOrNull(smallerTier) : null;
             if (smallerSizeStr == null) return null;
 
-            Item smallerItem = world.GetItem(new AssetLocation("canjewelry:gem-cut-" + smallerSizeStr + "-" + gemType));
+            Item smallerItem = world.GetItem(CANGemSize.CutGemCode(smallerSizeStr, gemType));
             if (smallerItem == null) return null;
 
             string cuttingType = cutGemTree.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND);
@@ -982,6 +963,8 @@ namespace canjewelry.src.CB
 
         public static bool canItemContainThisGem(string gemType, ItemStack targetItemStack)
         {
+            if (gemType == null || targetItemStack?.Collectible?.Code == null) return false;
+
             JsonObject attributes = targetItemStack?.Collectible?.Attributes;
             if (attributes != null)
             {
@@ -1318,10 +1301,10 @@ namespace canjewelry.src.CB
 
                 if (tree.HasAttribute(CANJWConstants.ENCRUSTABLE_BUFFS_NAMES))
                 {
-                    string[] buffNames = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute).value;
-                    float[] buffValues = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute).value;
-                        
-                    for (int j = 0; j < buffValues.Count(); j++)
+                    float[] buffValues = (tree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value;
+                    if (buffValues == null) return;
+
+                    for (int j = 0; j < buffValues.Length; j++)
                     {
                         buffValues[j] *= mult;
                     }

@@ -12,10 +12,7 @@ namespace canjewelry.src.render
     public static class CANGemAssets
     {
         /// <summary>The name the shapes are filed under: 1 normal, 2 flawless, 3 exquisite.</summary>
-        public static string QualityOf(int size)
-        {
-            return size >= 3 ? "exquisite" : (size == 2 ? "flawless" : "normal");
-        }
+        public static string QualityOf(int size) => utils.CANGemSize.CutQualityClamped(size);
 
         /// <summary>The shape of one cut gem, null with a warning when it is not there.</summary>
         public static IAsset ShapeAsset(ICoreClientAPI capi, int size, string cuttingType)

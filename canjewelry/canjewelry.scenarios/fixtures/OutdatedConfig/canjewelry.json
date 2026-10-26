@@ -1,0 +1,47 @@
+{
+  "config_version": "0.0.1",
+  "debugMode": true,
+  "chance_gem_drop_on_item_broken": 0.0,
+  "pan_take_per_use": 0,
+  "grindTimeOneTick": 7.5,
+  "cuttingAccessMode": "whitelist",
+  "item_groups": {
+    "testgroup": [ "testitem-a", "testitem-b" ],
+    "melee": [ "biaxe", "halberd" ]
+  },
+  "buffNameToPossibleItem": {
+    "malachite": [ "$testgroup", "knife" ],
+    "diamond": "$melee"
+  },
+  "items_codes_with_socket_count": {
+    "*knife-generic-gold": 2,
+    "*knife-generic-silver": 1
+  },
+  "items_codes_with_socket_count_and_tiers": {
+    "*knife-generic-steel": "2,1",
+    "*knife-generic-iron": [ 1, 1 ],
+    "*knife-generic-meteoriciron": 3,
+    "*pickaxe-steel": ""
+  },
+  "gems_buffs": {
+    "walkspeed": "0.1,0.2,0.3",
+    "hungerrate": { "1": -0.01, "3": -0.03 }
+  },
+  "max_buff_values": { "walkspeed": 0.9 },
+  "gems_drops_table": {
+    "ore-*-malachite-*": [
+      "canjewelry:gem-rough-chipped-malachite 0.25",
+      {
+        "TypeCollectable": "item",
+        "NameCollectable": "canjewelry:gem-rough-flawed-malachite",
+        "avg": 0.5,
+        "var": 0.1,
+        "LastDrop": false
+      }
+    ]
+  },
+  "buffs_to_show_gui": "walkspeed, hungerrate",
+  "PossibleGemBuffs": { "malachite": "walkspeed,hungerrate" },
+  "socketTiersColorsWords": [ "red", "notacolour" ],
+  "LevelOfSocketByType": { "canjewelry:cansocket-steel": 2 }
+}

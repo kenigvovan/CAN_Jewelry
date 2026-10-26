@@ -20,7 +20,7 @@ namespace canjewelry.Tests.EncrustableCB
 
         public ApplyCuttingBuffTests()
         {
-            // Single-value ranges → GetRandomMainValue always returns 0.15, secondary always 5.0
+            // Single-value ranges → main always 0.15, the secondary stat's own entry always 0.05
             ModMain.config = ItemStackBuilder.BuildMinimalConfig(GemType, GemTier, MainBuff, SecondaryBuff);
         }
 
@@ -68,7 +68,7 @@ namespace canjewelry.Tests.EncrustableCB
             Assert.Equal(MainBuff, names[0]);
             Assert.Equal(SecondaryBuff, names[1]);
             Assert.Equal(0.15f, values[0]);
-            Assert.Equal(0.05f, values[1], precision: 4); // 5.0f / 100 = 0.05f
+            Assert.Equal(0.05f, values[1], precision: 4);
         }
 
         [Fact]
