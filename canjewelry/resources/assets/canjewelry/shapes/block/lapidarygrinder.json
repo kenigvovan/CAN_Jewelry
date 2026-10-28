@@ -3,10 +3,11 @@
 	"textureWidth": 16,
 	"textureHeight": 16,
 	"textures": {
-		"legs": "game:block/wood/debarked/oak",
-		"frame": "game:block/wood/planks/oak4",
+		"legs": "game:block/wood/table/normal/legs",
+		"frame": "game:block/wood/table/normal/sides",
 		"pan": "game:block/metal/sheet/copper1",
-		"iron": "game:block/metal/sheet/iron1"
+		"iron": "game:block/metal/sheet/iron1",
+		"water": "game:block/liquid/waterportion"
 	},
 	"elements": [
 		{
@@ -42,34 +43,34 @@
 			}
 		},
 		{
-			"name": "ApronN", "from": [ 3, 8, 1.5 ], "to": [ 13, 11, 2.5 ],
+			"name": "ApronN", "from": [ 3, 9, 1.5 ], "to": [ 13, 11, 2.5 ],
 			"faces": {
-				"north": { "texture": "#frame", "uv": [ 0, 0, 10, 3 ] }, "east": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] },
-				"south": { "texture": "#frame", "uv": [ 0, 0, 10, 3 ] }, "west": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] },
+				"north": { "texture": "#frame", "uv": [ 0, 0, 10, 2 ] }, "east": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] },
+				"south": { "texture": "#frame", "uv": [ 0, 0, 10, 2 ] }, "west": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] },
 				"up": { "texture": "#frame", "uv": [ 0, 0, 10, 1 ] }, "down": { "texture": "#frame", "uv": [ 0, 0, 10, 1 ] }
 			}
 		},
 		{
-			"name": "ApronS", "from": [ 3, 8, 13.5 ], "to": [ 13, 11, 14.5 ],
+			"name": "ApronS", "from": [ 3, 9, 13.5 ], "to": [ 13, 11, 14.5 ],
 			"faces": {
-				"north": { "texture": "#frame", "uv": [ 3, 4, 13, 7 ] }, "east": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] },
-				"south": { "texture": "#frame", "uv": [ 3, 4, 13, 7 ] }, "west": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] },
+				"north": { "texture": "#frame", "uv": [ 3, 4, 13, 6 ] }, "east": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] },
+				"south": { "texture": "#frame", "uv": [ 3, 4, 13, 6 ] }, "west": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] },
 				"up": { "texture": "#frame", "uv": [ 0, 0, 10, 1 ] }, "down": { "texture": "#frame", "uv": [ 0, 0, 10, 1 ] }
 			}
 		},
 		{
-			"name": "ApronW", "from": [ 1.5, 8, 3 ], "to": [ 2.5, 11, 13 ],
+			"name": "ApronW", "from": [ 1.5, 9, 3 ], "to": [ 2.5, 11, 13 ],
 			"faces": {
-				"north": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] }, "east": { "texture": "#frame", "uv": [ 0, 8, 10, 11 ] },
-				"south": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] }, "west": { "texture": "#frame", "uv": [ 0, 8, 10, 11 ] },
+				"north": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] }, "east": { "texture": "#frame", "uv": [ 0, 8, 10, 10 ] },
+				"south": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] }, "west": { "texture": "#frame", "uv": [ 0, 8, 10, 10 ] },
 				"up": { "texture": "#frame", "uv": [ 0, 0, 1, 10 ] }, "down": { "texture": "#frame", "uv": [ 0, 0, 1, 10 ] }
 			}
 		},
 		{
-			"name": "ApronE", "from": [ 13.5, 8, 3 ], "to": [ 14.5, 11, 13 ],
+			"name": "ApronE", "from": [ 13.5, 9, 3 ], "to": [ 14.5, 11, 13 ],
 			"faces": {
-				"north": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] }, "east": { "texture": "#frame", "uv": [ 5, 12, 15, 15 ] },
-				"south": { "texture": "#frame", "uv": [ 0, 0, 1, 3 ] }, "west": { "texture": "#frame", "uv": [ 5, 12, 15, 15 ] },
+				"north": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] }, "east": { "texture": "#frame", "uv": [ 5, 12, 15, 14 ] },
+				"south": { "texture": "#frame", "uv": [ 0, 0, 1, 2 ] }, "west": { "texture": "#frame", "uv": [ 5, 12, 15, 14 ] },
 				"up": { "texture": "#frame", "uv": [ 0, 0, 1, 10 ] }, "down": { "texture": "#frame", "uv": [ 0, 0, 1, 10 ] }
 			}
 		},
@@ -170,15 +171,15 @@
 			}
 		},
 		{
-			"name": "DripPost", "from": [ 13.5, 11.5, 1.75 ], "to": [ 14.25, 20, 2.5 ],
+			"name": "DripPost", "from": [ 13.5, 11.5, 1.75 ], "to": [ 14.25, 18.75, 2.5 ],
 			"faces": {
-				"north": { "texture": "#frame", "uv": [ 0, 0, 0.75, 8.5 ] }, "east": { "texture": "#frame", "uv": [ 1, 0, 1.75, 8.5 ] },
-				"south": { "texture": "#frame", "uv": [ 2, 0, 2.75, 8.5 ] }, "west": { "texture": "#frame", "uv": [ 3, 0, 3.75, 8.5 ] },
+				"north": { "texture": "#frame", "uv": [ 0, 0, 0.75, 7.25 ] }, "east": { "texture": "#frame", "uv": [ 1, 0, 1.75, 7.25 ] },
+				"south": { "texture": "#frame", "uv": [ 2, 0, 2.75, 7.25 ] }, "west": { "texture": "#frame", "uv": [ 3, 0, 3.75, 7.25 ] },
 				"up": { "texture": "#frame", "uv": [ 0, 0, 0.75, 0.75 ] }, "down": { "texture": "#frame", "uv": [ 0, 0, 0.75, 0.75 ] }
 			}
 		},
 		{
-			"name": "DripArm", "from": [ 10.5, 19.25, 1.75 ], "to": [ 13.5, 20, 2.5 ],
+			"name": "DripArm", "from": [ 10.5, 18, 1.75 ], "to": [ 13.5, 18.75, 2.5 ],
 			"faces": {
 				"north": { "texture": "#frame", "uv": [ 0, 9, 3, 9.75 ] }, "east": { "texture": "#frame", "uv": [ 0, 0, 0.75, 0.75 ] },
 				"south": { "texture": "#frame", "uv": [ 0, 9, 3, 9.75 ] }, "west": { "texture": "#frame", "uv": [ 0, 0, 0.75, 0.75 ] },
@@ -186,27 +187,168 @@
 			}
 		},
 		{
-			"name": "DripArmOut", "from": [ 10.5, 19.25, 2.5 ], "to": [ 11.25, 20, 5 ],
+			"name": "DripArmOut", "from": [ 10.5, 18, 2.5 ], "to": [ 11.25, 18.75, 3.5 ],
 			"faces": {
-				"north": { "texture": "#frame", "uv": [ 0, 0, 0.75, 0.75 ] }, "east": { "texture": "#frame", "uv": [ 4, 9, 6.5, 9.75 ] },
-				"south": { "texture": "#frame", "uv": [ 0, 0, 0.75, 0.75 ] }, "west": { "texture": "#frame", "uv": [ 4, 9, 6.5, 9.75 ] },
-				"up": { "texture": "#frame", "uv": [ 4, 9, 4.75, 11.5 ] }, "down": { "texture": "#frame", "uv": [ 4, 9, 4.75, 11.5 ] }
+				"east": { "texture": "#frame", "uv": [ 4, 9, 5, 9.75 ] }, "west": { "texture": "#frame", "uv": [ 4, 9, 5, 9.75 ] },
+				"up": { "texture": "#frame", "uv": [ 4, 9, 4.75, 10 ] }, "down": { "texture": "#frame", "uv": [ 4, 9, 4.75, 10 ] }
 			}
 		},
 		{
-			"name": "DripPot", "from": [ 10, 16.5, 4.25 ], "to": [ 11.75, 19.25, 6 ],
+			"name": "PotBandN", "from": [ 9.25, 18, 3.5 ], "to": [ 12.5, 18.75, 3.75 ],
 			"faces": {
-				"north": { "texture": "#pan", "uv": [ 4, 4, 5.75, 6.75 ] }, "east": { "texture": "#pan", "uv": [ 6, 4, 7.75, 6.75 ] },
-				"south": { "texture": "#pan", "uv": [ 8, 4, 9.75, 6.75 ] }, "west": { "texture": "#pan", "uv": [ 10, 4, 11.75, 6.75 ] },
-				"up": { "texture": "#pan", "uv": [ 4, 8, 5.75, 9.75 ] }, "down": { "texture": "#pan", "uv": [ 6, 8, 7.75, 9.75 ] }
+				"north": { "texture": "#iron", "uv": [ 0, 4, 3.25, 4.75 ] }, "east": { "texture": "#iron", "uv": [ 0, 0, 0.25, 0.75 ] },
+				"south": { "texture": "#iron", "uv": [ 0, 4, 3.25, 4.75 ] }, "west": { "texture": "#iron", "uv": [ 0, 0, 0.25, 0.75 ] },
+				"up": { "texture": "#iron", "uv": [ 0, 4, 3.25, 4.25 ] }, "down": { "texture": "#iron", "uv": [ 0, 4, 3.25, 4.25 ] }
 			}
 		},
 		{
-			"name": "DripSpout", "from": [ 10.75, 15.5, 5 ], "to": [ 11, 16.5, 5.25 ],
+			"name": "PotBandS", "from": [ 9.25, 18, 6.5 ], "to": [ 12.5, 18.75, 6.75 ],
 			"faces": {
-				"north": { "texture": "#pan", "uv": [ 0, 0, 0.25, 1 ] }, "east": { "texture": "#pan", "uv": [ 0, 0, 0.25, 1 ] },
-				"south": { "texture": "#pan", "uv": [ 0, 0, 0.25, 1 ] }, "west": { "texture": "#pan", "uv": [ 0, 0, 0.25, 1 ] },
-				"up": { "texture": "#pan", "uv": [ 0, 0, 0.25, 0.25 ] }, "down": { "texture": "#pan", "uv": [ 0, 0, 0.25, 0.25 ] }
+				"north": { "texture": "#iron", "uv": [ 0, 5, 3.25, 5.75 ] }, "east": { "texture": "#iron", "uv": [ 0, 0, 0.25, 0.75 ] },
+				"south": { "texture": "#iron", "uv": [ 0, 5, 3.25, 5.75 ] }, "west": { "texture": "#iron", "uv": [ 0, 0, 0.25, 0.75 ] },
+				"up": { "texture": "#iron", "uv": [ 0, 5, 3.25, 5.25 ] }, "down": { "texture": "#iron", "uv": [ 0, 5, 3.25, 5.25 ] }
+			}
+		},
+		{
+			"name": "PotBandW", "from": [ 9.25, 18, 3.75 ], "to": [ 9.5, 18.75, 6.5 ],
+			"faces": {
+				"east": { "texture": "#iron", "uv": [ 0, 6, 2.75, 6.75 ] }, "west": { "texture": "#iron", "uv": [ 0, 6, 2.75, 6.75 ] },
+				"up": { "texture": "#iron", "uv": [ 0, 6, 0.25, 8.75 ] }, "down": { "texture": "#iron", "uv": [ 0, 6, 0.25, 8.75 ] }
+			}
+		},
+		{
+			"name": "PotBandE", "from": [ 12.25, 18, 3.75 ], "to": [ 12.5, 18.75, 6.5 ],
+			"faces": {
+				"east": { "texture": "#iron", "uv": [ 0, 7, 2.75, 7.75 ] }, "west": { "texture": "#iron", "uv": [ 0, 7, 2.75, 7.75 ] },
+				"up": { "texture": "#iron", "uv": [ 1, 6, 1.25, 8.75 ] }, "down": { "texture": "#iron", "uv": [ 1, 6, 1.25, 8.75 ] }
+			}
+		},
+		{
+			"name": "DripPotBottom", "from": [ 9.5, 16.5, 3.75 ], "to": [ 12.25, 16.75, 6.5 ],
+			"faces": {
+				"north": { "texture": "#pan", "uv": [ 4, 4, 6.75, 4.25 ] }, "east": { "texture": "#pan", "uv": [ 4, 4, 6.75, 4.25 ] },
+				"south": { "texture": "#pan", "uv": [ 4, 4, 6.75, 4.25 ] }, "west": { "texture": "#pan", "uv": [ 4, 4, 6.75, 4.25 ] },
+				"up": { "texture": "#pan", "uv": [ 4, 8, 6.75, 10.75 ] }, "down": { "texture": "#pan", "uv": [ 7, 8, 9.75, 10.75 ] }
+			}
+		},
+		{
+			"name": "DripPotWallN", "from": [ 9.5, 16.75, 3.75 ], "to": [ 12.25, 19.25, 4 ],
+			"faces": {
+				"north": { "texture": "#pan", "uv": [ 4, 4, 6.75, 6.5 ] }, "east": { "texture": "#pan", "uv": [ 0, 0, 0.25, 2.5 ] },
+				"south": { "texture": "#pan", "uv": [ 4, 4, 6.75, 6.5 ] }, "west": { "texture": "#pan", "uv": [ 0, 0, 0.25, 2.5 ] },
+				"up": { "texture": "#pan", "uv": [ 4, 0, 6.75, 0.25 ] }
+			}
+		},
+		{
+			"name": "DripPotWallS", "from": [ 9.5, 16.75, 6.25 ], "to": [ 12.25, 19.25, 6.5 ],
+			"faces": {
+				"north": { "texture": "#pan", "uv": [ 8, 4, 10.75, 6.5 ] }, "east": { "texture": "#pan", "uv": [ 0, 0, 0.25, 2.5 ] },
+				"south": { "texture": "#pan", "uv": [ 8, 4, 10.75, 6.5 ] }, "west": { "texture": "#pan", "uv": [ 0, 0, 0.25, 2.5 ] },
+				"up": { "texture": "#pan", "uv": [ 4, 0, 6.75, 0.25 ] }
+			}
+		},
+		{
+			"name": "DripPotWallW", "from": [ 9.5, 16.75, 4 ], "to": [ 9.75, 19.25, 6.25 ],
+			"faces": {
+				"east": { "texture": "#pan", "uv": [ 10, 4, 12.25, 6.5 ] }, "west": { "texture": "#pan", "uv": [ 10, 4, 12.25, 6.5 ] },
+				"up": { "texture": "#pan", "uv": [ 0, 4, 0.25, 6.25 ] }
+			}
+		},
+		{
+			"name": "DripPotWallE", "from": [ 12, 16.75, 4 ], "to": [ 12.25, 19.25, 6.25 ],
+			"faces": {
+				"east": { "texture": "#pan", "uv": [ 6, 4, 8.25, 6.5 ] }, "west": { "texture": "#pan", "uv": [ 6, 4, 8.25, 6.5 ] },
+				"up": { "texture": "#pan", "uv": [ 0, 4, 0.25, 6.25 ] }
+			}
+		},
+		{
+			"name": "DripWater", "from": [ 9.75, 16.75, 4 ], "to": [ 12, 18.75, 6.25 ],
+			"faces": {
+				"up": { "texture": "#water", "uv": [ 0, 0, 2.25, 2.25 ] }
+			}
+		},
+		{
+			"name": "DripValve", "from": [ 11.125, 15.875, 5 ], "to": [ 11.875, 16.125, 5.25 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 0, 0, 0.75, 0.25 ] }, "east": { "texture": "#iron", "uv": [ 0, 0, 0.25, 0.25 ] },
+				"south": { "texture": "#iron", "uv": [ 0, 0, 0.75, 0.25 ] }, "west": { "texture": "#iron", "uv": [ 0, 0, 0.25, 0.25 ] },
+				"up": { "texture": "#iron", "uv": [ 0, 0, 0.75, 0.25 ] }, "down": { "texture": "#iron", "uv": [ 0, 0, 0.75, 0.25 ] }
+			}
+		},
+		{
+			"name": "SpindleCollarN", "from": [ 5.5, 11.5, 5.5 ], "to": [ 10.5, 11.875, 6 ],
+			"faces": {
+				"north": { "texture": "#pan", "uv": [ 5.5, 0, 10.5, 0.375 ] }, "east": { "texture": "#pan", "uv": [ 0, 0, 0.5, 0.375 ] },
+				"south": { "texture": "#pan", "uv": [ 5.5, 0, 10.5, 0.375 ] }, "west": { "texture": "#pan", "uv": [ 0, 0, 0.5, 0.375 ] },
+				"up": { "texture": "#pan", "uv": [ 5.5, 5.5, 10.5, 6 ] }
+			}
+		},
+		{
+			"name": "SpindleCollarS", "from": [ 5.5, 11.5, 10 ], "to": [ 10.5, 11.875, 10.5 ],
+			"faces": {
+				"north": { "texture": "#pan", "uv": [ 5.5, 1, 10.5, 1.375 ] }, "east": { "texture": "#pan", "uv": [ 0, 0, 0.5, 0.375 ] },
+				"south": { "texture": "#pan", "uv": [ 5.5, 1, 10.5, 1.375 ] }, "west": { "texture": "#pan", "uv": [ 0, 0, 0.5, 0.375 ] },
+				"up": { "texture": "#pan", "uv": [ 5.5, 10, 10.5, 10.5 ] }
+			}
+		},
+		{
+			"name": "SpindleCollarW", "from": [ 5.5, 11.5, 6 ], "to": [ 6, 11.875, 10 ],
+			"faces": {
+				"east": { "texture": "#pan", "uv": [ 6, 2, 10, 2.375 ] }, "west": { "texture": "#pan", "uv": [ 6, 2, 10, 2.375 ] },
+				"up": { "texture": "#pan", "uv": [ 5.5, 6, 6, 10 ] }
+			}
+		},
+		{
+			"name": "SpindleCollarE", "from": [ 10, 11.5, 6 ], "to": [ 10.5, 11.875, 10 ],
+			"faces": {
+				"east": { "texture": "#pan", "uv": [ 6, 3, 10, 3.375 ] }, "west": { "texture": "#pan", "uv": [ 6, 3, 10, 3.375 ] },
+				"up": { "texture": "#pan", "uv": [ 10, 6, 10.5, 10 ] }
+			}
+		},
+		{
+			"name": "UpperBearing", "from": [ 6.5, 9.75, 6.5 ], "to": [ 9.5, 11, 9.5 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 4, 0, 7, 1.25 ] }, "east": { "texture": "#iron", "uv": [ 4, 0, 7, 1.25 ] },
+				"south": { "texture": "#iron", "uv": [ 4, 0, 7, 1.25 ] }, "west": { "texture": "#iron", "uv": [ 4, 0, 7, 1.25 ] },
+				"up": { "texture": "#iron", "uv": [ 4, 4, 7, 7 ] }, "down": { "texture": "#iron", "uv": [ 4, 4, 7, 7 ] }
+			}
+		},
+		{
+			"name": "GearBox", "from": [ 6, 4.5, 6 ], "to": [ 10, 9.75, 10 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 6, 5, 10, 10.25 ] }, "east": { "texture": "#iron", "uv": [ 6, 5, 10, 10.25 ] },
+				"south": { "texture": "#iron", "uv": [ 6, 5, 10, 10.25 ] }, "west": { "texture": "#iron", "uv": [ 6, 5, 10, 10.25 ] },
+				"up": { "texture": "#iron", "uv": [ 6, 6, 10, 10 ] }, "down": { "texture": "#iron", "uv": [ 6, 6, 10, 10 ] }
+			}
+		},
+		{
+			"name": "BearingRailW", "from": [ 2.5, 10, 7 ], "to": [ 6.5, 11, 9 ],
+			"faces": {
+				"north": { "texture": "#frame", "uv": [ 2, 10, 6, 11 ] }, "south": { "texture": "#frame", "uv": [ 2, 10, 6, 11 ] },
+				"down": { "texture": "#frame", "uv": [ 2, 7, 6, 9 ] }
+			}
+		},
+		{
+			"name": "BearingRailE", "from": [ 9.5, 10, 7 ], "to": [ 13.5, 11, 9 ],
+			"faces": {
+				"north": { "texture": "#frame", "uv": [ 9, 10, 13, 11 ] }, "south": { "texture": "#frame", "uv": [ 9, 10, 13, 11 ] },
+				"down": { "texture": "#frame", "uv": [ 9, 7, 13, 9 ] }
+			}
+		},
+		{
+			"name": "DrainSpout", "from": [ 0, 11.5, 11 ], "to": [ 1, 12.25, 11.75 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 8, 0, 9, 0.75 ] }, "south": { "texture": "#iron", "uv": [ 8, 0, 9, 0.75 ] },
+				"west": { "texture": "#iron", "uv": [ 8, 2, 8.75, 2.75 ] },
+				"up": { "texture": "#iron", "uv": [ 8, 1, 9, 1.75 ] }, "down": { "texture": "#iron", "uv": [ 8, 1, 9, 1.75 ] }
+			}
+		},
+		{
+			"name": "DripSpout", "from": [ 10.625, 15, 4.875 ], "to": [ 11.125, 16.5, 5.375 ],
+			"faces": {
+				"north": { "texture": "#pan", "uv": [ 0, 0, 0.5, 1.5 ] }, "east": { "texture": "#pan", "uv": [ 1, 0, 1.5, 1.5 ] },
+				"south": { "texture": "#pan", "uv": [ 2, 0, 2.5, 1.5 ] }, "west": { "texture": "#pan", "uv": [ 3, 0, 3.5, 1.5 ] },
+				"down": { "texture": "#iron", "uv": [ 0, 0, 0.5, 0.5 ] }
 			}
 		}
 	]

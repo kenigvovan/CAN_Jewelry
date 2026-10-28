@@ -25,8 +25,6 @@ namespace canjewelry.src.jewelry
 {
     public class BEJewelGrinder : BlockEntityContainer, ITexPositionSource
     {
-        private static SimpleParticleProperties FlourParticles = new SimpleParticleProperties(1f, 3f, ColorUtil.ToRgba(40, 220, 220, 220), new Vec3d(), new Vec3d(), new Vec3f(-0.25f, -0.25f, -0.25f), new Vec3f(0.25f, 0.25f, 0.25f), minSize: 0.1f, maxSize: 0.3f, model: EnumParticleModel.Quad);
-        private static SimpleParticleProperties FlourDustParticles;
         public static Dictionary<string, int> gemTypeToColor = new Dictionary<string, int>();
         private Dictionary<string, AssetLocation> tmpTextures = new Dictionary<string, AssetLocation>();
         private ILoadedSound ambientSound;
@@ -122,29 +120,6 @@ namespace canjewelry.src.jewelry
                     : this.blockTexSource[textureCode];
             }
         }
-        static BEJewelGrinder()
-        {
-            BEJewelGrinder.FlourParticles.AddPos.Set(17.0 / 16.0, 0.0, 17.0 / 16.0);
-            BEJewelGrinder.FlourParticles.AddQuantity = 20f;
-            BEJewelGrinder.FlourParticles.MinVelocity.Set(-0.25f, 0.0f, -0.25f);
-            BEJewelGrinder.FlourParticles.AddVelocity.Set(0.5f, 1f, 0.5f);
-            BEJewelGrinder.FlourParticles.WithTerrainCollision = true;
-            BEJewelGrinder.FlourParticles.ParticleModel = EnumParticleModel.Cube;
-            BEJewelGrinder.FlourParticles.LifeLength = 1.5f;
-            BEJewelGrinder.FlourParticles.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -0.4f);
-            BEJewelGrinder.FlourDustParticles = new SimpleParticleProperties(1f, 3f, ColorUtil.ToRgba(40, 220, 220, 220), new Vec3d(), new Vec3d(), new Vec3f(-0.25f, -0.25f, -0.25f), new Vec3f(0.25f, 0.25f, 0.25f), minSize: 0.1f, maxSize: 0.3f, model: EnumParticleModel.Quad);
-            BEJewelGrinder.FlourDustParticles.AddPos.Set(17.0 / 16.0, 0.0, 17.0 / 16.0);
-            BEJewelGrinder.FlourDustParticles.AddQuantity = 5f;
-            BEJewelGrinder.FlourDustParticles.MinVelocity.Set(-0.05f, 0.0f, -0.05f);
-            BEJewelGrinder.FlourDustParticles.AddVelocity.Set(0.1f, 0.2f, 0.1f);
-            BEJewelGrinder.FlourDustParticles.WithTerrainCollision = false;
-            BEJewelGrinder.FlourDustParticles.ParticleModel = EnumParticleModel.Quad;
-            BEJewelGrinder.FlourDustParticles.LifeLength = 1.5f;
-            BEJewelGrinder.FlourDustParticles.SelfPropelled = true;
-            BEJewelGrinder.FlourDustParticles.GravityEffect = 0.0f;
-            BEJewelGrinder.FlourDustParticles.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, 0.4f);
-            BEJewelGrinder.FlourDustParticles.OpacityEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -16f);
-        }
         public BEJewelGrinder()
         {
             this.inventory = new InventoryJewelGrinder((string)null, (ICoreAPI)null);
@@ -173,11 +148,10 @@ namespace canjewelry.src.jewelry
                 this.blockTexSource = (api as ICoreClientAPI).Tesselator.GetTextureSource(this.Block);
            this.renderer = new JewelGrinderTopRenderer(api as ICoreClientAPI, this.Pos, this.GenMesh("top"));
            this.renderer.mechPowerPart = this.mpc;
-           if (this.automated)
-            {
-                this.renderer.ShouldRender = true;
-                this.renderer.ShouldRotateAutomated = true;
-            }
+           this.renderer.shaftMeshref = (api as ICoreClientAPI).Render.UploadMesh(this.GenMesh("shaft"));
+           this.UpdateShaftFaces();
+           this.renderer.ShouldRender = true;
+           this.renderer.ShouldRotateAutomated = this.automated;
           (api as ICoreClientAPI).Event.RegisterRenderer((IRenderer)this.renderer, EnumRenderStage.Opaque, "jewelgrinder");
             if (this.quernBaseMesh == null)
                 this.quernBaseMesh = this.GenMesh();
@@ -206,7 +180,7 @@ namespace canjewelry.src.jewelry
                 this.automated = false;
                 if (this.renderer == null)
                     return;
-                this.renderer.ShouldRender = false;
+                // Disc stays visible, it just stops turning.
                 this.renderer.ShouldRotateAutomated = false;
             });
         }
@@ -329,6 +303,7 @@ namespace canjewelry.src.jewelry
                 {
                     return;
                 }
+                this.SpawnDrips();
                 if (this.ambientSound != null && (double)this.mpc.TrueSpeed != (double)this.prevSpeed)
                 {
                     this.prevSpeed = this.mpc.TrueSpeed;
@@ -374,6 +349,7 @@ namespace canjewelry.src.jewelry
         }
         private void Every500ms(float dt)
         {
+            if (this.Api.Side == EnumAppSide.Client) this.UpdateShaftFaces();
            // if (this.Api.Side == EnumAppSide.Server && ((double)this.GrindSpeed > 0.0 || (double)this.prevInputGrindTime != (double)this.inputGrindTime) && this.inventory[0].Itemstack?.Collectible.GrindingProps != null)
              //   this.MarkDirty();
            // this.prevInputGrindTime = this.inputGrindTime;
@@ -385,6 +361,126 @@ namespace canjewelry.src.jewelry
                     break;
                 }
             }*/
+        }
+        private float lastParticleSeconds;
+
+        /// <summary>True when this gem is at the stage the fitted grind layer works on.</summary>
+        internal bool IsGrindingGem(ItemStack gem)
+        {
+            if (gem?.Item is not CANCutGemItem || gem.StackSize != 1) return false;
+            ITreeAttribute info = gem.Attributes.GetTreeAttribute("cangrindlayerinfo");
+            return info != null && info.GetInt("grindtype") == this.getGrindLayerType();
+        }
+
+        /// <summary>Client side, while the player holds the gem to the spinning disc.</summary>
+        internal void SpawnGrindParticles(IPlayer player, float secondsUsed)
+        {
+            if (secondsUsed >= this.lastParticleSeconds && secondsUsed - this.lastParticleSeconds < 0.15f) return;
+            this.lastParticleSeconds = secondsUsed;
+            ItemStack gem = player.InventoryManager.ActiveHotbarSlot.Itemstack;
+            float speed = this.GrindSpeed;
+            if (!this.IsGrindingGem(gem) || speed < canjewelry.config.minGrinderProcessingSpeed) return;
+            this.Api.World.SpawnParticles(this.MakeContactParticles(player, gem, speed, 1f));
+
+            // The drip water flung back up off the disc along with the dust.
+            SimpleParticleProperties splash = this.MakeContactParticles(player, gem, speed, 0.5f);
+            splash.Color = WaterColor;
+            splash.ParticleModel = EnumParticleModel.Quad;
+            splash.LifeLength = 0.4f;
+            this.Api.World.SpawnParticles(splash);
+        }
+
+        // Just under the open end of "DripSpout" in lapidarygrinder.json.
+        private static readonly Vec3d SpoutTip = new Vec3d(10.875 / 16.0, 14.9 / 16.0, 5.125 / 16.0);
+        private static readonly int WaterColor = ColorUtil.ToRgba(200, 128, 178, 255);
+        private SimpleParticleProperties dripParticles;
+        private long nextDripMs;
+
+        /// <summary>Client side: water drips onto the disc while it turns. Purely visual.</summary>
+        private void SpawnDrips()
+        {
+            if (this.mpc.TrueSpeed <= 0f) return;
+            var capi = (ICoreClientAPI)this.Api;
+            var eye = capi.World.Player.Entity.Pos;
+            double dx = eye.X - this.Pos.X, dy = eye.Y - this.Pos.Y, dz = eye.Z - this.Pos.Z;
+            if (dx * dx + dy * dy + dz * dz > 24 * 24) return;
+            // One drop every 1.5-2.5 s.
+            long now = capi.World.ElapsedMilliseconds;
+            if (now < this.nextDripMs) return;
+            this.nextDripMs = now + 1500 + capi.World.Rand.Next(1000);
+
+            this.dripParticles ??= new SimpleParticleProperties
+            {
+                MinQuantity = 1f,
+                AddQuantity = 0f,
+                Color = WaterColor,
+                MinPos = new Vec3d(),
+                MinVelocity = new Vec3f(0f, -0.1f, 0f),
+                LifeLength = 0.6f,
+                GravityEffect = 1f,
+                MinSize = 0.1f,
+                MaxSize = 0.12f,
+                ParticleModel = EnumParticleModel.Quad,
+                // Lands on the disc: the block's upper collision box tops out at the disc surface.
+                WithTerrainCollision = true
+            };
+            this.dripParticles.MinPos.Set(this.Pos.X + SpoutTip.X, this.Pos.Y + SpoutTip.Y, this.Pos.Z + SpoutTip.Z);
+            capi.World.SpawnParticles(this.dripParticles);
+        }
+
+        // Chips thrown off the disc where the gem touches it: on the rim facing the player, along the spin.
+        private SimpleParticleProperties MakeContactParticles(IPlayer player, ItemStack gem, float speed, float amount)
+        {
+            gemTypeToColor.TryGetValue(gem.Collectible.Variant["gemtype"] ?? "", out int color);
+            if (color == 0) color = -421266951;
+
+            double dx = player.Entity.Pos.X - (this.Pos.X + 0.5);
+            double dz = player.Entity.Pos.Z - (this.Pos.Z + 0.5);
+            double len = Math.Sqrt(dx * dx + dz * dz);
+            if (len < 1e-3) { dx = 0; dz = 1; len = 1; }
+            dx /= len;
+            dz /= len;
+            const double contactRadius = 4.0 / 16.0;
+            const double discTop = 13.6 / 16.0;
+            // The disc turns counterclockwise seen from above, so the rim at (dx, dz) moves along (dz, -dx).
+            float flingX = (float)dz * (0.6f + speed);
+            float flingZ = (float)-dx * (0.6f + speed);
+
+            return new SimpleParticleProperties
+            {
+                MinQuantity = 2f * amount,
+                AddQuantity = 4f * amount * Math.Min(speed, 1f),
+                Color = color,
+                MinPos = new Vec3d(this.Pos.X + 0.5 + dx * contactRadius - 0.03, this.Pos.Y + discTop, this.Pos.Z + 0.5 + dz * contactRadius - 0.03),
+                AddPos = new Vec3d(0.06, 0.02, 0.06),
+                MinVelocity = new Vec3f(flingX - 0.15f, 0.2f, flingZ - 0.15f),
+                AddVelocity = new Vec3f(0.3f, 0.5f, 0.3f),
+                LifeLength = 0.6f,
+                GravityEffect = 0.8f,
+                MinSize = 0.1f,
+                MaxSize = 0.25f,
+                ParticleModel = EnumParticleModel.Cube,
+                WithTerrainCollision = true,
+                SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.LINEAR, -0.1f)
+            };
+        }
+
+        private void UpdateShaftFaces()
+        {
+            if (this.renderer == null) return;
+            List<BlockFacing> faces = null;
+            foreach (BlockFacing face in BlockFacing.HORIZONTALS)
+            {
+                BlockPos neibPos = this.Pos.AddCopy(face);
+                Block neib = this.Api.World.BlockAccessor.GetBlock(neibPos);
+                // Another grinder answers true on every side but drives nothing.
+                if (neib is IMechanicalPowerBlock mpb && !(neib is blocks.BlockJewelGrinder)
+                    && mpb.HasMechPowerConnectorAt(this.Api.World, neibPos, face.Opposite, this.Block as BlockMPBase))
+                {
+                    (faces ??= new List<BlockFacing>(1)).Add(face);
+                }
+            }
+            this.renderer.ShaftFaces = faces?.ToArray() ?? Array.Empty<BlockFacing>();
         }
         public void SetPlayerGrinding(IPlayer player, bool playerGrinding)
         {
@@ -436,6 +532,9 @@ namespace canjewelry.src.jewelry
                 return;
             this.renderer.ShouldRender = this.quantityPlayersGrinding > 0 || this.automated;
         }
+        private static readonly string[] EmptyTopElements =
+            { "Spindle", "PlatenWide", "PlatenDeep", "PlatenDiagonal" };
+
         internal MeshData GenMesh(string type = "base")
         {
             //this.targetAtlas = targetAtlas;
@@ -452,10 +551,16 @@ namespace canjewelry.src.jewelry
             if (type.Equals("base")){
                 ((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canjewelry:shapes/block/lapidarygrinder.json"), out modeldata);
             }
+            else if (type.Equals("shaft"))
+            {
+                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape("jewelgrinder-shaft", Shape.TryGet(this.Api, "canjewelry:shapes/block/lapidarygrinder-shaft.json"), out modeldata, (ITexPositionSource)this);
+            }
             else if (type.Equals("top"))
             {
                 //((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canmods:shapes/block/jewelgrinder-top.json"), out modeldata);
-                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape("jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/lapidarygrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f));
+                // Without a grind layer only the bare platen is drawn.
+                string[] elements = InputSlot.Empty ? EmptyTopElements : null;
+                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape("jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/lapidarygrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f), 0, 0, 0, null, elements);
                // ((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canmods:shapes/block/jewelgrinder-top.json"), out modeldata);
             }
             return modeldata;
@@ -555,26 +660,8 @@ namespace canjewelry.src.jewelry
                 if (itree.GetInt("grindtype") == this.getGrindLayerType())
                 {
                     this.InputStack.Collectible.DamageItem(canjewelry.sapi.World, player.Entity, this.InputSlot);
-                    float grindSpeed = this.GrindSpeed;
-                    float num1 = 2f * grindSpeed;
-                    float num2 = 10f * grindSpeed;
-                    float num3 = 2f * grindSpeed;
-                    float num4 = 35f * grindSpeed;
-                    gemTypeToColor.TryGetValue(activeItemStack.Collectible.Variant["gemtype"], out int colorParticles);
-                    if (colorParticles == 0) colorParticles = -421266951;
-
-                    BEJewelGrinder.FlourDustParticles.Color = colorParticles;
-                    BEJewelGrinder.FlourParticles.Color = colorParticles;
-                    BEJewelGrinder.FlourDustParticles.MinQuantity = num1;
-                    BEJewelGrinder.FlourDustParticles.AddQuantity = num2;
-                    BEJewelGrinder.FlourDustParticles.MinPos.Set((double)this.Pos.X - 1.0 / 32.0, (double)this.Pos.Y + 11.0 / 16.0, (double)this.Pos.Z - 1.0 / 32.0);
-                    BEJewelGrinder.FlourDustParticles.MinVelocity.Set(-0.1f, 0.0f, -0.1f);
-                    BEJewelGrinder.FlourDustParticles.AddVelocity.Set(0.2f, 0.2f, 0.2f);
-                    BEJewelGrinder.FlourParticles.MinPos.Set((double)this.Pos.X - 1.0 / 32.0, (double)this.Pos.Y + 11.0 / 16.0, (double)this.Pos.Z - 1.0 / 32.0);
-                    BEJewelGrinder.FlourParticles.AddQuantity = num4;
-                    BEJewelGrinder.FlourParticles.MinQuantity = num3;
-                    this.Api.World.SpawnParticles((IParticlePropertiesProvider)BEJewelGrinder.FlourParticles);
-                    this.Api.World.SpawnParticles((IParticlePropertiesProvider)BEJewelGrinder.FlourDustParticles);
+                    // For everyone else nearby; the grinding player spawns a steadier stream client-side.
+                    this.Api.World.SpawnParticles(this.MakeContactParticles(player, activeItemStack, this.GrindSpeed, 4f), player);
                     if (itree.GetInt("grindcounter") <= 1)
                     {
                         cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);

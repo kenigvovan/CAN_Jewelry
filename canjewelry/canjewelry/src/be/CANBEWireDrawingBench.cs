@@ -363,9 +363,8 @@ namespace canjewelry.src.be
             this.defaultMesh = getMesh(canjewelry.capi.Tesselator, "head", this.animRot);
 
             string key = string.Concat("head-", block.LastCodePart(0), "-", GetWireType(), "-", woodType);
-            animUtil?.InitializeAnimator("wiring2" + key,
-                Vintagestory.API.Common.Shape.TryGet(canjewelry.capi, "canjewelry:shapes/block/wiretable.json"),
-                TexSource(), this.animRot);
+            
+
         }
         private BlockFacing facing;
 }

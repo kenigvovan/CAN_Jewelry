@@ -3,7 +3,7 @@
 	"textureWidth": 16,
 	"textureHeight": 16,
 	"textures": {
-		"layer": "game:block/wood/planks/generic",
+		"layer": "canjewelry:item/grindlayer/rough",
 		"iron": "game:block/metal/sheet/iron1"
 	},
 	"elements": [
@@ -16,32 +16,65 @@
 			}
 		},
 		{
-			"name": "DiscWide", "from": [ 3, 12, 5 ], "to": [ 13, 13.5, 11 ],
+			"name": "PlatenWide", "from": [ 2.5, 12, 4.75 ], "to": [ 13.5, 12.5, 11.25 ],
 			"faces": {
-				"north": { "texture": "#iron", "uv": [ 3, 0, 13, 1.5 ] }, "east": { "texture": "#iron", "uv": [ 5, 0, 11, 1.5 ] },
-				"south": { "texture": "#iron", "uv": [ 3, 0, 13, 1.5 ] }, "west": { "texture": "#iron", "uv": [ 5, 0, 11, 1.5 ] },
-				"up": { "texture": "#layer", "uv": [ 3, 5, 13, 11 ] }, "down": { "texture": "#iron", "uv": [ 3, 5, 13, 11 ] }
+				"north": { "texture": "#iron", "uv": [ 2.5, 0, 13.5, 0.5 ] }, "east": { "texture": "#iron", "uv": [ 4.75, 0, 11.25, 0.5 ] },
+				"south": { "texture": "#iron", "uv": [ 2.5, 0, 13.5, 0.5 ] }, "west": { "texture": "#iron", "uv": [ 4.75, 0, 11.25, 0.5 ] },
+				"up": { "texture": "#iron", "uv": [ 2.5, 4.75, 13.5, 11.25 ] }, "down": { "texture": "#iron", "uv": [ 2.5, 4.75, 13.5, 11.25 ] }
 			}
 		},
 		{
-			"name": "DiscDeep", "from": [ 5, 12, 3 ], "to": [ 11, 13.5, 13 ],
+			"name": "PlatenDeep", "from": [ 4.75, 12, 2.5 ], "to": [ 11.25, 12.5, 13.5 ],
 			"faces": {
-				"north": { "texture": "#iron", "uv": [ 5, 2, 11, 3.5 ] }, "east": { "texture": "#iron", "uv": [ 3, 2, 13, 3.5 ] },
-				"south": { "texture": "#iron", "uv": [ 5, 2, 11, 3.5 ] }, "west": { "texture": "#iron", "uv": [ 3, 2, 13, 3.5 ] },
-				"up": { "texture": "#layer", "uv": [ 5, 3, 11, 13 ] }, "down": { "texture": "#iron", "uv": [ 5, 3, 11, 13 ] }
+				"north": { "texture": "#iron", "uv": [ 4.75, 1, 11.25, 1.5 ] }, "east": { "texture": "#iron", "uv": [ 2.5, 1, 13.5, 1.5 ] },
+				"south": { "texture": "#iron", "uv": [ 4.75, 1, 11.25, 1.5 ] }, "west": { "texture": "#iron", "uv": [ 2.5, 1, 13.5, 1.5 ] },
+				"up": { "texture": "#iron", "uv": [ 4.75, 2.5, 11.25, 13.5 ] }, "down": { "texture": "#iron", "uv": [ 4.75, 2.5, 11.25, 13.5 ] }
 			}
 		},
 		{
-			"name": "DiscDiagonal", "from": [ 4.5, 12.02, 4.5 ], "to": [ 11.5, 13.45, 11.5 ],
+			"name": "PlatenDiagonal", "from": [ 4, 12.01, 4 ], "to": [ 12, 12.49, 12 ],
 			"rotationOrigin": [ 8, 12, 8 ], "rotationY": 45,
 			"faces": {
-				"north": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] }, "east": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] },
-				"south": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] }, "west": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] },
-				"up": { "texture": "#layer", "uv": [ 4.5, 4.5, 11.5, 11.5 ] }, "down": { "texture": "#iron", "uv": [ 4.5, 4.5, 11.5, 11.5 ] }
+				"north": { "texture": "#iron", "uv": [ 4, 2, 12, 2.5 ] }, "east": { "texture": "#iron", "uv": [ 4, 2, 12, 2.5 ] },
+				"south": { "texture": "#iron", "uv": [ 4, 2, 12, 2.5 ] }, "west": { "texture": "#iron", "uv": [ 4, 2, 12, 2.5 ] },
+				"up": { "texture": "#iron", "uv": [ 4, 4, 12, 12 ] }, "down": { "texture": "#iron", "uv": [ 4, 4, 12, 12 ] }
 			}
 		},
 		{
-			"name": "Nut", "from": [ 7.5, 13.5, 7.5 ], "to": [ 8.5, 14, 8.5 ],
+			"name": "LayerWide", "from": [ 3, 12.5, 5 ], "to": [ 13, 13.5, 11 ],
+			"faces": {
+				"north": { "texture": "#layer", "uv": [ 3, 0, 13, 1 ] }, "east": { "texture": "#layer", "uv": [ 5, 0, 11, 1 ] },
+				"south": { "texture": "#layer", "uv": [ 3, 0, 13, 1 ] }, "west": { "texture": "#layer", "uv": [ 5, 0, 11, 1 ] },
+				"up": { "texture": "#layer", "uv": [ 3, 5, 13, 11 ] }
+			}
+		},
+		{
+			"name": "LayerDeep", "from": [ 5, 12.5, 3 ], "to": [ 11, 13.5, 13 ],
+			"faces": {
+				"north": { "texture": "#layer", "uv": [ 5, 0, 11, 1 ] }, "east": { "texture": "#layer", "uv": [ 3, 0, 13, 1 ] },
+				"south": { "texture": "#layer", "uv": [ 5, 0, 11, 1 ] }, "west": { "texture": "#layer", "uv": [ 3, 0, 13, 1 ] },
+				"up": { "texture": "#layer", "uv": [ 5, 3, 11, 13 ] }
+			}
+		},
+		{
+			"name": "LayerDiagonal", "from": [ 4.5, 12.52, 4.5 ], "to": [ 11.5, 13.48, 11.5 ],
+			"rotationOrigin": [ 8, 12.5, 8 ], "rotationY": 45,
+			"faces": {
+				"north": { "texture": "#layer", "uv": [ 4.5, 0, 11.5, 1 ] }, "east": { "texture": "#layer", "uv": [ 4.5, 0, 11.5, 1 ] },
+				"south": { "texture": "#layer", "uv": [ 4.5, 0, 11.5, 1 ] }, "west": { "texture": "#layer", "uv": [ 4.5, 0, 11.5, 1 ] },
+				"up": { "texture": "#layer", "uv": [ 4.5, 4.5, 11.5, 11.5 ] }
+			}
+		},
+		{
+			"name": "Washer", "from": [ 6.5, 13.5, 6.5 ], "to": [ 9.5, 13.75, 9.5 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 6.5, 3, 9.5, 3.25 ] }, "east": { "texture": "#iron", "uv": [ 6.5, 3, 9.5, 3.25 ] },
+				"south": { "texture": "#iron", "uv": [ 6.5, 3, 9.5, 3.25 ] }, "west": { "texture": "#iron", "uv": [ 6.5, 3, 9.5, 3.25 ] },
+				"up": { "texture": "#iron", "uv": [ 6.5, 6.5, 9.5, 9.5 ] }, "down": { "texture": "#iron", "uv": [ 6.5, 6.5, 9.5, 9.5 ] }
+			}
+		},
+		{
+			"name": "Nut", "from": [ 7.5, 13.75, 7.5 ], "to": [ 8.5, 14.25, 8.5 ],
 			"faces": {
 				"north": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] }, "east": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] },
 				"south": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] }, "west": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] },

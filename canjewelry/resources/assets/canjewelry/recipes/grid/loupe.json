@@ -1,31 +1,31 @@
 [
 	{
-		"ingredientPattern": "NGN",
+		"ingredientPattern": "WG",
 		"ingredients": {
 			"G": { "type": "block", "code": "game:glass-plain" },
-			"N": {
+			"W": {
 				"type": "item",
-				"code": "game:metalbit-*",
-				"allowedVariants": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "brass", "silver", "gold", "iron" ],
+				"code": "canjewelry:canwirehank-*",
+				"allowedVariants": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "silver", "gold", "iron" ],
 				"name": "metal"
 			}
 		},
-		"width": 3,
+		"width": 2,
 		"height": 1,
 		"output": { "type": "item", "code": "canjewelry:canloupe-simple" }
 	},
 	{
-		"ingredientPattern": "NGN",
+		"ingredientPattern": "WG",
 		"ingredients": {
 			"G": { "type": "block", "code": "game:glass-quartz" },
-			"N": {
+			"W": {
 				"type": "item",
-				"code": "game:metalbit-*",
+				"code": "canjewelry:canwirehank-*",
 				"allowedVariants": [ "silver", "gold" ],
 				"name": "metal"
 			}
 		},
-		"width": 3,
+		"width": 2,
 		"height": 1,
 		"output": { "type": "item", "code": "canjewelry:canloupe-fine" }
 	}

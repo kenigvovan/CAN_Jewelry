@@ -1,0 +1,18 @@
+{
+	"editor": { "allAngles": false, "entityTextureMode": false },
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"axle": "game:block/wood/planks/generic"
+	},
+	"elements": [
+		{
+			"name": "Shaft", "from": [ 10, 7.25, 7.25 ], "to": [ 16, 8.75, 8.75 ],
+			"faces": {
+				"east": { "texture": "#axle", "uv": [ 0, 0, 1.5, 1.5 ] }, "north": { "texture": "#axle", "uv": [ 0, 6, 6, 7.5 ] },
+				"south": { "texture": "#axle", "uv": [ 0, 8, 6, 9.5 ] },
+				"up": { "texture": "#axle", "uv": [ 0, 10, 6, 11.5 ] }, "down": { "texture": "#axle", "uv": [ 0, 12, 6, 13.5 ] }
+			}
+		}
+	]
+}

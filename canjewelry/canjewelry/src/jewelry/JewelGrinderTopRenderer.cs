@@ -23,6 +23,11 @@ namespace canjewelry.src.jewelry
 
         public MeshRef meshref;
 
+        public MeshRef shaftMeshref;
+
+        // Sides with a connected axle; set by the block entity.
+        public BlockFacing[] ShaftFaces = Array.Empty<BlockFacing>();
+
         public Matrixf ModelMat = new Matrixf();
 
         public float AngleRad;
@@ -67,6 +72,20 @@ namespace canjewelry.src.jewelry
                 standardShaderProgram.ViewMatrix = render.CameraMatrixOriginf;
                 standardShaderProgram.ProjectionMatrix = render.CurrentProjectionMatrix;
                 render.RenderMesh(meshref);
+
+                // Input shaft per connected side: modelled along +X, turned to the side, spun about its own axis.
+                if (shaftMeshref != null)
+                {
+                    foreach (BlockFacing face in ShaftFaces)
+                    {
+                        standardShaderProgram.ModelMatrix = ModelMat.Identity().Translate((double)pos.X - cameraPos.X, (double)pos.Y - cameraPos.Y, (double)pos.Z - cameraPos.Z).Translate(0.5f, 0.5f, 0.5f)
+                            .RotateY(face.HorizontalAngleIndex * GameMath.PIHALF)
+                            .RotateX(AngleRad)
+                            .Translate(-0.5f, -0.5f, -0.5f)
+                            .Values;
+                        render.RenderMesh(shaftMeshref);
+                    }
+                }
                 standardShaderProgram.Stop();
                /* if (ShouldRotateManual)
                 {
@@ -85,6 +104,7 @@ namespace canjewelry.src.jewelry
         {
             api.Event.UnregisterRenderer(this, EnumRenderStage.Opaque);
             meshref.Dispose();
+            shaftMeshref?.Dispose();
         }
     }
 }

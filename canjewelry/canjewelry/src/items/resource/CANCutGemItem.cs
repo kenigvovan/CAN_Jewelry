@@ -52,6 +52,18 @@ namespace canjewelry.src.items.resource
             }
         }
 
+        // Holding the gem to the jewel grinder plays the vanilla grinding-wheel pose.
+        public override string GetHeldTpUseAnimation(ItemSlot activeHotbarSlot, Vintagestory.API.Common.Entities.Entity forEntity)
+        {
+            BlockSelection sel = (forEntity as EntityPlayer)?.BlockSelection;
+            if (sel != null && sel.SelectionBoxIndex == 1
+                && forEntity.World.BlockAccessor.GetBlockEntity(sel.Position) is jewelry.BEJewelGrinder)
+            {
+                return "bladegrinding";
+            }
+            return base.GetHeldTpUseAnimation(activeHotbarSlot, forEntity);
+        }
+
         public override void OnUnloaded(ICoreAPI api)
         {
             // Gpu meshes, so they have to be handed back. Nothing did that before and the dictionary

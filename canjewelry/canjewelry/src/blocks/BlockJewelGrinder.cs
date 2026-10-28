@@ -21,7 +21,10 @@ namespace canjewelry.src.blocks
             int num = base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode) ? 1 : 0;
             if (num == 0)
                 return num != 0;
-            tryConnect(world, byPlayer, blockSel.Position, BlockFacing.DOWN);
+            foreach (BlockFacing face in PowerInputFaces)
+            {
+                if (tryConnect(world, byPlayer, blockSel.Position, face)) break;
+            }
             return num != 0;
         }
         public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
@@ -80,6 +83,7 @@ namespace canjewelry.src.blocks
             {
                 blockEntity.StartGrindSound();
                 byPlayer.InventoryManager.ActiveHotbarSlot.TryFlipWith(byPlayer.InventoryManager.ActiveHotbarSlot);
+                blockEntity.SpawnGrindParticles(byPlayer, secondsUsed);
             }
             return true;
         }
@@ -153,13 +157,14 @@ namespace canjewelry.src.blocks
         public override void DidConnectAt(IWorldAccessor world, BlockPos pos, BlockFacing face)
         {
         }
+        // A bevel gear under the pan turns a horizontal axle into the vertical spindle, so any side works.
+        private static readonly BlockFacing[] PowerInputFaces =
+            { BlockFacing.DOWN, BlockFacing.NORTH, BlockFacing.EAST, BlockFacing.SOUTH, BlockFacing.WEST };
+
         public override bool HasMechPowerConnectorAt(IWorldAccessor world, BlockPos pos, BlockFacing face, BlockMPBase forBlock)
         {
-            return face == BlockFacing.DOWN;
+            // A grinder passes no power on, so two grinders side by side must not link up.
+            return face != BlockFacing.UP && !(forBlock is BlockJewelGrinder);
         }
-        /*public override bool HasMechPowerConnectorAt(IWorldAccessor world, BlockPos pos, BlockFacing face, BlockMPBase forBlock)
-        {
-            return face == BlockFacing.DOWN;
-        }*/
     }
 }

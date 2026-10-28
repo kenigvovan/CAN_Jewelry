@@ -36,8 +36,8 @@
 	"tpHandTransform": {
 		"translation": { "x": -0.6, "y": -0.1, "z": -0.6 },
 		"rotation": { "x": 0, "y": 0, "z": -90 },
-		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
-		"scale": 0.6
+		"origin": { "x": 0.1, "y": 0.2, "z": 0.3 },
+		"scale": 0.43
 	},
 	"tpOffHandTransform": {
 		"translation": { "x": -0.6, "y": -0.1, "z": -0.4 },

@@ -25,18 +25,24 @@
   },
   "__comment": "Old model: canjewelry:block/jewelgrinder and jewelgrinder-top.",
   "shape": { "base": "canjewelry:block/lapidarygrinder" },
+  "shapeInventory": {
+    "base": "canjewelry:block/lapidarygrinder",
+    "overlays": [ { "base": "canjewelry:block/lapidarygrinder-top" } ]
+  },
   "textures": {
     "layer": {
-      "base": "game:block/wood/planks/generic"
+      "base": "canjewelry:item/grindlayer/rough"
     },
     "grindlayer": {
       "base": "game:block/wood/planks/generic"
     },
     "generic": { "base": "game:block/wood/planks/generic" },
-    "legs": { "base": "game:block/wood/debarked/oak" },
-    "frame": { "base": "game:block/wood/planks/oak4" },
+    "legs": { "base": "game:block/wood/table/normal/legs" },
+    "frame": { "base": "game:block/wood/table/normal/sides" },
+    "axle": { "base": "game:block/wood/planks/generic" },
     "pan": { "base": "game:block/metal/sheet/copper1" },
-    "iron": { "base": "game:block/metal/sheet/iron1" }
+    "iron": { "base": "game:block/metal/sheet/iron1" },
+    "water": { "base": "game:block/liquid/waterportion" }
   },
   "blockmaterial": "Stone",
   "sidesolid": {
