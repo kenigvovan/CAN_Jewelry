@@ -449,7 +449,7 @@ namespace canjewelry.src.blocks
             CANPanningDrop[] drops = null;
             foreach (string val in this.dropsBySourceMat.Keys)
             {
-                if (WildcardUtil.Match(val, fromBlockCode))
+                if (MatchesSourceMat(val, fromBlockCode))
                 {
                     drops = this.dropsBySourceMat[val];
                 }
@@ -517,7 +517,7 @@ namespace canjewelry.src.blocks
         {
             foreach (string val in this.dropsBySourceMat.Keys)
             {
-                if (!WildcardUtil.Match(val, itemCode)) continue;
+                if (!MatchesSourceMat(val, itemCode)) continue;
                 foreach (var drop in this.dropsBySourceMat[val])
                 {
                     if (IsDropAllowed(drop, player)) return true;
@@ -556,6 +556,16 @@ namespace canjewelry.src.blocks
             };
             canjewelry.Instance.FireCanPanDrop(ev);
             return ev.Allowed;
+        }
+
+        // Stone items go into the pan as their rock block (the pan needs a block to draw), but the
+        // drop table is keyed by the stone item ("game:stone-suevite"), so match that form too.
+        private static bool MatchesSourceMat(string key, string materialCode)
+        {
+            if (WildcardUtil.Match(key, materialCode)) return true;
+            const string rockPrefix = "game:rock-";
+            return materialCode.StartsWith(rockPrefix)
+                && WildcardUtil.Match(key, "game:stone-" + materialCode.Substring(rockPrefix.Length));
         }
 
         public virtual bool IsPannableMaterial(Block block)
@@ -608,7 +618,7 @@ namespace canjewelry.src.blocks
                     bool dropFound = false;
                     foreach (string val in this.dropsBySourceMat.Keys)
                     {
-                        if (WildcardUtil.Match(val, itemCode))
+                        if (MatchesSourceMat(val, itemCode))
                         {
                             dropFound = true;
                             break;
