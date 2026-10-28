@@ -19,6 +19,23 @@ namespace canjewelry.src.api
         private static readonly Dictionary<string, HashSet<string>> extraItemGroupMembers
             = new Dictionary<string, HashSet<string>>();
         private static readonly List<string> materialAttributeKeys = new List<string>();
+        private static readonly Dictionary<string, float> extraCaratBudgets = new Dictionary<string, float>();
+
+        internal static IReadOnlyDictionary<string, float> ExtraCaratBudgets => extraCaratBudgets;
+
+        /// <summary>
+        /// How many carats of gems all sockets of matching items may hold together, e.g.
+        /// <c>RegisterDefaultCaratBudget("canjewelryadornments:ring-trinity-*", 3.75f)</c>: three
+        /// sockets that fit 1.5 ct each, but not three such gems at once. The config's
+        /// GemCarats.CaratBudgets and an item's "cancaratbudget" attribute win over this; the
+        /// config's CaratBudgetEnabled turns budgets off altogether. Read at encrusting time, so
+        /// registering late is fine.
+        /// </summary>
+        public static void RegisterDefaultCaratBudget(string itemCodeWildcard, float carats)
+        {
+            if (string.IsNullOrEmpty(itemCodeWildcard) || carats <= 0) return;
+            extraCaratBudgets[itemCodeWildcard] = carats;
+        }
 
         /// <summary>
         /// Set once the core has consumed the registry; only controls warnings. Cleared by the

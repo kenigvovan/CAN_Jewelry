@@ -1,0 +1,52 @@
+{
+	"editor": { "allAngles": false, "entityTextureMode": false },
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": {
+		"layer": "game:block/wood/planks/generic",
+		"iron": "game:block/metal/sheet/iron1"
+	},
+	"elements": [
+		{
+			"name": "Spindle", "from": [ 7.25, 0, 7.25 ], "to": [ 8.75, 12, 8.75 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 0, 0, 1.5, 12 ] }, "east": { "texture": "#iron", "uv": [ 2, 0, 3.5, 12 ] },
+				"south": { "texture": "#iron", "uv": [ 4, 0, 5.5, 12 ] }, "west": { "texture": "#iron", "uv": [ 6, 0, 7.5, 12 ] },
+				"up": { "texture": "#iron", "uv": [ 0, 0, 1.5, 1.5 ] }, "down": { "texture": "#iron", "uv": [ 0, 0, 1.5, 1.5 ] }
+			}
+		},
+		{
+			"name": "DiscWide", "from": [ 3, 12, 5 ], "to": [ 13, 13.5, 11 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 3, 0, 13, 1.5 ] }, "east": { "texture": "#iron", "uv": [ 5, 0, 11, 1.5 ] },
+				"south": { "texture": "#iron", "uv": [ 3, 0, 13, 1.5 ] }, "west": { "texture": "#iron", "uv": [ 5, 0, 11, 1.5 ] },
+				"up": { "texture": "#layer", "uv": [ 3, 5, 13, 11 ] }, "down": { "texture": "#iron", "uv": [ 3, 5, 13, 11 ] }
+			}
+		},
+		{
+			"name": "DiscDeep", "from": [ 5, 12, 3 ], "to": [ 11, 13.5, 13 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 5, 2, 11, 3.5 ] }, "east": { "texture": "#iron", "uv": [ 3, 2, 13, 3.5 ] },
+				"south": { "texture": "#iron", "uv": [ 5, 2, 11, 3.5 ] }, "west": { "texture": "#iron", "uv": [ 3, 2, 13, 3.5 ] },
+				"up": { "texture": "#layer", "uv": [ 5, 3, 11, 13 ] }, "down": { "texture": "#iron", "uv": [ 5, 3, 11, 13 ] }
+			}
+		},
+		{
+			"name": "DiscDiagonal", "from": [ 4.5, 12.02, 4.5 ], "to": [ 11.5, 13.45, 11.5 ],
+			"rotationOrigin": [ 8, 12, 8 ], "rotationY": 45,
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] }, "east": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] },
+				"south": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] }, "west": { "texture": "#iron", "uv": [ 4.5, 4, 11.5, 5.43 ] },
+				"up": { "texture": "#layer", "uv": [ 4.5, 4.5, 11.5, 11.5 ] }, "down": { "texture": "#iron", "uv": [ 4.5, 4.5, 11.5, 11.5 ] }
+			}
+		},
+		{
+			"name": "Nut", "from": [ 7.5, 13.5, 7.5 ], "to": [ 8.5, 14, 8.5 ],
+			"faces": {
+				"north": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] }, "east": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] },
+				"south": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] }, "west": { "texture": "#iron", "uv": [ 0, 0, 1, 0.5 ] },
+				"up": { "texture": "#iron", "uv": [ 0, 0, 1, 1 ] }, "down": { "texture": "#iron", "uv": [ 0, 0, 1, 1 ] }
+			}
+		}
+	]
+}

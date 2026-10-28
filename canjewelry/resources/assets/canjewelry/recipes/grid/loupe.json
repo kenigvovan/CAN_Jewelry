@@ -1,0 +1,32 @@
+[
+	{
+		"ingredientPattern": "NGN",
+		"ingredients": {
+			"G": { "type": "block", "code": "game:glass-plain" },
+			"N": {
+				"type": "item",
+				"code": "game:metalbit-*",
+				"allowedVariants": [ "copper", "tinbronze", "bismuthbronze", "blackbronze", "brass", "silver", "gold", "iron" ],
+				"name": "metal"
+			}
+		},
+		"width": 3,
+		"height": 1,
+		"output": { "type": "item", "code": "canjewelry:canloupe-simple" }
+	},
+	{
+		"ingredientPattern": "NGN",
+		"ingredients": {
+			"G": { "type": "block", "code": "game:glass-quartz" },
+			"N": {
+				"type": "item",
+				"code": "game:metalbit-*",
+				"allowedVariants": [ "silver", "gold" ],
+				"name": "metal"
+			}
+		},
+		"width": 3,
+		"height": 1,
+		"output": { "type": "item", "code": "canjewelry:canloupe-fine" }
+	}
+]

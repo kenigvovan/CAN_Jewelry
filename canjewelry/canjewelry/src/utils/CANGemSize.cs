@@ -64,6 +64,28 @@ namespace canjewelry.src.utils
             }
         }
 
+        /// <summary>
+        /// Rough quality of a rough gem stack: a vanilla gem's "potential" first, then our own
+        /// quality variant. Vanilla gems without potential count as flawed.
+        /// </summary>
+        public static string RoughQualityOf(ItemStack stack)
+        {
+            if (stack == null) return null;
+            string quality = stack.Attributes.HasAttribute("potential")
+                ? RoughQualityOfPotential(stack.Attributes.GetString("potential"))
+                : null;
+            quality ??= stack.Collectible?.Variant["quality"];
+            return RoughSizeOf(quality) > 0 ? quality : RoughFlawed;
+        }
+
+        /// <summary>Gem type of a rough gem stack, ours or vanilla.</summary>
+        public static string RoughGemTypeOf(ItemStack stack)
+            => stack?.Collectible?.Variant[CANJWConstants.GEM_TYPE_IN_SOCKET] ?? stack?.Collectible?.Variant["ore"];
+
+        /// <summary>Weight of a cut gem tree or a socket; the legacy weight of its size when it has none.</summary>
+        public static float GetCutCarats(ITreeAttribute tree, int size, Config.GemCaratsConfig cfg)
+            => CANGemAppraisal.HasCarats(tree) ? CANGemAppraisal.GetCarats(tree) : CANGemAppraisal.LegacyCutCarats(cfg, size);
+
         /// <summary>Gem type from the last part of an item code: gem-cut-normal-ruby → ruby.</summary>
         public static string GemTypeOf(AssetLocation code)
         {
@@ -103,6 +125,12 @@ namespace canjewelry.src.utils
             }
 
             cutGemTree.SetBool(CANJWConstants.GEM_FULL_PROCESSED, socket.GetBool(CANJWConstants.WAS_GROUND_BEFORE, true));
+
+            // Sockets from before carats have none; the gem then reads the legacy weight of its size.
+            if (CANGemAppraisal.HasCarats(socket))
+            {
+                CANGemAppraisal.SetWeight(cutGemTree, CANGemAppraisal.GetCarats(socket), CANGemAppraisal.GetTraits(socket));
+            }
             return cutGemTree;
         }
 

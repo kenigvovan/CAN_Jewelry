@@ -7,8 +7,10 @@ using canjewelry.src.blocks;
 using canjewelry.src.cb;
 using canjewelry.src.CB;
 using canjewelry.src.items;
+using canjewelry.src.items.resource;
 using canjewelry.src.jewelry;
 using canjewelry.src.render;
+using canjewelry.src.utils;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -146,6 +148,9 @@ namespace canjewelry.src.be
             base.Initialize(api);
 
             workItemStack?.ResolveBlockOrItem(api.World);
+            // Read from the tree before Initialize, like the work item: unresolved, its collectible
+            // is null, and handing it out took the client down.
+            returnOnCancelStack?.ResolveBlockOrItem(api.World);
 
             if (api is ICoreClientAPI capi)
             {
@@ -206,6 +211,73 @@ namespace canjewelry.src.be
 
         }
 
+        // ---- cleaving a rough gem, before it is cut ----
+
+        // Cleaving is a recipe like any cut: its pattern is the rough block with a groove chiselled
+        // through it, and its output an icon item, cancleave-{preset}. Finishing it parts the gem.
+
+        private const string CleavePrefix = "cancleave-";
+
+        /// <summary>The preset of a cleave recipe (halves, thirds...), null for a cut.</summary>
+        private static string CleavePresetOf(GemCuttingRecipe recipe)
+        {
+            string path = recipe?.Output?.ResolvedItemstack?.Collectible?.Code?.Path;
+            return path != null && path.StartsWith(CleavePrefix) ? path.Substring(CleavePrefix.Length) : null;
+        }
+
+        /// <summary>
+        /// The rough pieces a finished cleave gives, or null when the gem stays whole (a piece too
+        /// light, or a subscriber said no). Mistakes cost weight, as in a cut.
+        /// </summary>
+        private List<ItemStack> CleavePieces(IPlayer byPlayer, ItemStack workItem, string preset, float mistakeMult)
+        {
+            var cfg = canjewelry.config.GemCarats;
+            if (!cfg.Split.Presets.TryGetValue(preset, out float[] ratios)) return null;
+
+            ITreeAttribute tree = workItem.Attributes;
+            float carats = CANGemAppraisal.GetCarats(tree) * mistakeMult;
+            string[] traits = CANGemAppraisal.GetTraits(tree);
+            string[] known = CANGemAppraisal.GetKnownTraits(tree);
+
+            var ev = new integration.SplitEvent
+            {
+                Player = byPlayer, Gem = workItem, Preset = preset,
+                LossFraction = CANGemSplitter.CleaveLoss(cfg, traits, known)
+            };
+            canjewelry.Instance?.FireSplit(ev);
+            if (!ev.Allowed) return null;
+
+            List<CANGemSplitter.CleavedPiece> pieces = CANGemSplitter.Cleave(cfg, carats, traits, known, ratios, ev.LossFraction, Config.rand);
+            if (pieces == null)
+            {
+                (byPlayer as IServerPlayer)?.SendIngameError("canjewelry-split",
+                    Lang.Get("canjewelry:split-too-small", CANGemAppraisalCB.FormatCarats(cfg.Split.MinPieceCarats)));
+                return null;
+            }
+
+            string gemType = tree.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET);
+            int appraisal = CANGemAppraisal.GetAppraisal(tree);
+            float[] range = CANGemAppraisal.GetCaratsRange(tree);
+            var made = new List<ItemStack>();
+            foreach (var piece in pieces)
+            {
+                ItemStack stack = CANGemSplitter.RoughStackFor(Api.World, cfg, gemType, piece.Carats);
+                if (stack == null) return null;
+                CANGemAppraisal.SetWeight(stack.Attributes, piece.Carats, piece.Traits);
+                // A piece is a new stone: its own shape and clicks come with its first inspection.
+                // What was seen of the whole carries over, the range scaled to the piece.
+                if (appraisal >= CANGemAppraisal.Loupe)
+                {
+                    float ratio = carats > 0 ? piece.Carats / carats : 1f;
+                    float[] pieceRange = range == null ? null : CANGemAppraisal.ScaleRange(range, ratio, cfg.Step);
+                    CANGemAppraisal.SetKnowledge(stack.Attributes, CANGemAppraisal.Loupe, pieceRange, piece.Known);
+                }
+                made.Add(stack);
+            }
+            canjewelry.Instance?.FireXp(new integration.CANXpEvent { Player = byPlayer, Action = "split", Xp = 0f });
+            return made;
+        }
+
         private bool RotateWorkItem(bool ccw)
         {
             byte[,,] rotVoxels = new byte[16, 14, 16];
@@ -242,6 +314,9 @@ namespace canjewelry.src.be
         {
             if (workItemStack == null) return false;
 
+            // The server hands the gem back and syncs the table; the client giving it too only
+            // put a phantom stack in the inventory, or crashed on one it could not resolve.
+            if (world.Side == EnumAppSide.Client) return true;
             ditchWorkItemStack(byPlayer);
 
             return true;
@@ -330,6 +405,16 @@ namespace canjewelry.src.be
 
                 returnOnCancelStack = slot.TakeOut(1);
                 slot.MarkDirty();
+
+                // A gem put on unappraised gets its weight and traits here, unseen. Server only:
+                // the client gets the work item with the next sync. The gem returned on cancel
+                // carries the same truth, so taking it back off does not reroll it.
+                if (Api.Side == EnumAppSide.Server && newWorkItemStack == workItemStack
+                    && stack.Collectible is not CANItemGemCuttingWorkItem)
+                {
+                    CANGemAppraisalCB.ApplyTable(byPlayer, workItemStack);
+                    CANGemAppraisal.CopyRoughKeys(workItemStack.Attributes, returnOnCancelStack.Attributes);
+                }
 
                 if (Api.Side == EnumAppSide.Server)
                 {
@@ -809,31 +894,182 @@ namespace canjewelry.src.be
         {
             Voxels = new byte[16, 14, 16];
             ItemStack outstack = SelectedRecipe.Output.ResolvedItemstack.Clone();
-            EncrustableCB.ApplyCuttingBuff(outstack);
-            if (mistakes > 0)
+            // A work item from before carats gets its truth only now.
+            CANGemAppraisalCB.ApplyTable(byPlayer, workItemStack);
+            float roughCarats = CANGemAppraisal.GetCarats(workItemStack.Attributes);
+            float mistakeMult = mistakes > 0
+                ? Math.Max(0, 1 - (float)(canjewelry.config.minFineForMistake + Config.rand.NextDouble() * (canjewelry.config.maxFineForMistake - canjewelry.config.minFineForMistake)) * mistakes)
+                : 1f;
+            var handOut = new List<ItemStack>();
+            string cleave = CleavePresetOf(SelectedRecipe);
+            if (cleave != null)
             {
-                float mistakeValueMult = Math.Max(0, 1 - (float)(canjewelry.config.minFineForMistake + Config.rand.NextDouble() * (canjewelry.config.maxFineForMistake - canjewelry.config.minFineForMistake)) * mistakes);
-                EncrustableCB.ReduceBuffValueBecauseOfMistakes(outstack, mistakeValueMult);
+                // A cleave gives rough pieces; if it cannot part the gem, the gem comes back whole.
+                handOut = CleavePieces(byPlayer, workItemStack, cleave, mistakeMult)
+                    ?? new List<ItemStack> { returnOnCancelStack ?? CANGemCuttableCB.RoughGemOfWorkItem(Api.World, workItemStack) };
             }
-            EncrustableCB.FireCutCompletionEvents(byPlayer, workItemStack, outstack);
+            else
+            {
+                // By carats a mistake costs weight, and the weight decides the buff; by tiers it costs buff.
+                bool byCarats = canjewelry.config.GemCarats.ScalesByCarats;
+                outstack = SetCutWeight(byPlayer, outstack, workItemStack, byCarats ? mistakeMult : 1f, out float cutCarats);
+                EncrustableCB.ApplyCuttingBuff(outstack);
+                if (!byCarats && mistakes > 0)
+                {
+                    EncrustableCB.ReduceBuffValueBecauseOfMistakes(outstack, mistakeMult);
+                }
+                EncrustableCB.FireCutCompletionEvents(byPlayer, workItemStack, outstack, roughCarats, cutCarats);
+                handOut.Add(outstack);
+            }
             workItemStack = null;
             returnOnCancelStack = null;
 
             SelectedRecipeId = -1;
 
-            if (byPlayer?.InventoryManager.TryGiveItemstack(outstack) == true)
+            foreach (ItemStack stack in handOut)
             {
-                Api.World.PlaySoundFor(new AssetLocation("game:sounds/player/collect"), byPlayer, false, 24);
-            }
-            else
-            {
-                Api.World.SpawnItemEntity(outstack, Pos.ToVec3d().Add(0.5, 0.626, 0.5));
+                if (byPlayer?.InventoryManager.TryGiveItemstack(stack) == true)
+                {
+                    Api.World.PlaySoundFor(new AssetLocation("game:sounds/player/collect"), byPlayer, false, 24);
+                }
+                else
+                {
+                    Api.World.SpawnItemEntity(stack, Pos.ToVec3d().Add(0.5, 0.626, 0.5));
+                }
             }
 
             RegenMeshAndSelectionBoxes();
             MarkDirty(true);
             Api.World.BlockAccessor.MarkBlockDirty(Pos);
             rotation = 0;
+        }
+
+        /// <summary>
+        /// While a gem is being worked: how many voxels the pattern needs are already chiselled off
+        /// and what that costs, and - for a gem the loupe has seen - the weight the cut is heading
+        /// for. Only from what the player knows: the range shown, the flaws found.
+        /// </summary>
+        private void AppendCutForecast(StringBuilder dsc)
+        {
+            GemCuttingRecipe recipe = SelectedRecipe;
+            var cfg = canjewelry.config?.GemCarats;
+            if (workItemStack == null || recipe == null || cfg == null) return;
+
+            bool[,,] needed = recipeVoxels;
+            int ymax = Math.Min(14, recipe.QuantityLayers);
+            int mistakes = 0;
+            for (int x = 0; x < 16; x++)
+                for (int y = 0; y < ymax; y++)
+                    for (int z = 0; z < 16; z++)
+                        if (needed[x, y, z] && Voxels[x, y, z] == (byte)EnumVoxelMaterial.Empty) mistakes++;
+
+            float fine = (canjewelry.config.minFineForMistake + canjewelry.config.maxFineForMistake) / 2;
+            float kept = Math.Max(0f, 1f - fine * mistakes);
+            if (mistakes > 0)
+            {
+                dsc.AppendLine(Lang.Get("canjewelry:cut-forecast-mistakes", mistakes, (int)Math.Round((1 - kept) * 100)));
+            }
+
+            AppendRecipeForecast(dsc, recipe, workItemStack.Attributes, workItemStack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET), kept);
+        }
+
+        /// <summary>
+        /// Weight, known flaws and buffs a cut recipe gives this gem, from what the loupe showed.
+        /// Nothing for a cleave or a gem not appraised yet.
+        /// </summary>
+        private static void AppendRecipeForecast(StringBuilder dsc, GemCuttingRecipe recipe, ITreeAttribute work, string gemType, float kept)
+        {
+            var cfg = canjewelry.config?.GemCarats;
+            float[] shown = CANGemAppraisal.GetAppraisal(work) >= CANGemAppraisal.Loupe ? CANGemAppraisal.GetCaratsRange(work) : null;
+            if (cfg == null || shown == null || CleavePresetOf(recipe) != null)
+            {
+                return;
+            }
+
+            string cuttingType = recipe.Output.ResolvedItemstack?.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE)?.GetString(CANJWConstants.CUTTING_TYPE);
+            float[] cut = CANGemForecast.CutWeight(cfg, shown, cuttingType, gemType, work, kept);
+            dsc.AppendLine(Lang.Get("canjewelry:cut-forecast-weight", CANGemAppraisalCB.FormatCaratsRange(cut[0], cut[1])));
+
+            float flawLoss = CANGemForecast.KnownFlawLoss(cfg, work);
+            if (flawLoss > 0.001f)
+            {
+                dsc.AppendLine(Lang.Get("canjewelry:cut-forecast-flaws", (int)Math.Round(flawLoss * 100)));
+            }
+
+            // The main stats this cut can give before polishing.
+            float[] grinding = canjewelry.config.CuttingAttributesDict.TryGetValue(cuttingType ?? "", out var cutting)
+                ? cutting?.GrindingBuffIncreaseMultipliers : null;
+            if (canjewelry.config.TurnOffBuffs || grinding == null || grinding.Length == 0 || gemType == null
+                || !canjewelry.config.PossibleGemBuffs.TryGetValue(gemType, out var possibleBuffs))
+            {
+                return;
+            }
+            float mult = grinding[0] * CANGemForecast.KnownBuffMult(cfg, work, gemType);
+            foreach (string buffName in possibleBuffs)
+            {
+                canjewelry.config.BuffAttributesDict.TryGetValue(buffName, out var attrs);
+                float[] buff = CANGemForecast.MainBuff(cfg, attrs, cut, mult);
+                if (buff != null) dsc.Append(CANBuffText.Name(buffName)).Append(' ').AppendLine(CANBuffText.Range(buffName, buff));
+            }
+        }
+
+        /// <summary>
+        /// Writes the cut gem's weight and traits into its tree. By carats the weight picks the
+        /// gem's size, which may swap the item for another size; by tiers, or with KeepRecipeBucket,
+        /// the recipe's size stays and the weight is moved into its range. Returns the gem to hand out.
+        /// </summary>
+        private ItemStack SetCutWeight(IPlayer byPlayer, ItemStack outstack, ItemStack workItem, float mistakeMult, out float carats)
+        {
+            var cfg = canjewelry.config.GemCarats;
+            ITreeAttribute cutGemTree = outstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+            if (cutGemTree == null)
+            {
+                cutGemTree = new TreeAttribute();
+                outstack.Attributes[CANJWConstants.CUT_GEM_TREE] = cutGemTree;
+            }
+
+            string gemType = CANGemSize.GemTypeOf(outstack.Collectible);
+            string[] traits = CANGemAppraisal.GetTraits(workItem.Attributes);
+            string cuttingType = cutGemTree.GetString(CANJWConstants.CUTTING_TYPE);
+            float rough = CANGemAppraisal.GetCarats(workItem.Attributes);
+
+            // The share the cut keeps, open to a subscriber; the traits apply on top of it.
+            var ev = new integration.CutYieldEvent
+            {
+                Player = byPlayer, WorkItem = workItem, CuttingType = cuttingType, RoughCarats = rough,
+                Yield = CANGemAppraisal.CutYield(cfg, cuttingType, gemType)
+            };
+            canjewelry.Instance?.FireCutYield(ev);
+            carats = Math.Max(cfg.Step, CANGemAppraisal.RoundCarats(
+                rough * Math.Clamp(ev.Yield, 0f, 1f) * CANGemAppraisal.TraitYieldMult(cfg, traits), cfg.Step));
+            int size = outstack.Collectible.Attributes?["canGemType"].AsInt(1) ?? 1;
+
+            if (cfg.ScalesByCarats && !cfg.KeepRecipeBucket)
+            {
+                carats = Math.Max(cfg.Step, CANGemAppraisal.RoundCarats(carats * mistakeMult, cfg.Step));
+                carats = Math.Min(carats, cfg.MaxCutCarats);
+                int bucket = CANGemAppraisal.BucketForCarats(cfg, carats);
+                Item resized = bucket == size ? null : Api.World.GetItem(CANGemSize.CutGemCode(CANGemSize.CutQualityClamped(bucket), gemType));
+                if (resized != null)
+                {
+                    var swapped = new ItemStack(resized);
+                    swapped.Attributes = outstack.Attributes.Clone();
+                    outstack = swapped;
+                    cutGemTree = outstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+                }
+            }
+            else
+            {
+                // The largest size has no upper bound, so the cap keeps it within a socket.
+                carats = Math.Min(CANGemAppraisal.ClampToBucket(cfg, CANGemAppraisal.RoundCarats(carats * mistakeMult, cfg.Step), size),
+                    Math.Max(cfg.MaxCutCarats, cfg.Step));
+            }
+
+            CANGemAppraisal.SetWeight(cutGemTree, carats, traits);
+            // A gem never inspected gets its pieces rolled now; where they lie no longer matters.
+            string[] pieces = CANGemDefects.Ensure(workItem.Attributes, cfg, Config.rand).Select(d => d.Trait).ToArray();
+            cutGemTree[CANJWConstants.FLAW_PIECES] = new StringArrayAttribute(pieces);
+            return outstack;
         }
 
         public void ditchWorkItemStack(IPlayer byPlayer = null)
@@ -1464,18 +1700,27 @@ namespace canjewelry.src.be
         {
             List<GemCuttingRecipe> recipes = ingredient.Collectible.GetBehavior<CANGemCuttableCB>().GetMatchingRecipes(ingredient);
 
+            // A cleave's icon is drawn in the colour of the gem being cleaved.
+            string gemType = CANGemSize.RoughGemTypeOf(ingredient);
             List<ItemStack> stacks = recipes
-                .Select(r => r.Output.ResolvedItemstack)
+                .Select(r =>
+                {
+                    ItemStack icon = r.Output.ResolvedItemstack;
+                    if (icon?.Collectible is not CANCleaveIcon || gemType == null) return icon;
+                    icon = icon.Clone();
+                    icon.Attributes.SetString(CANCleaveIcon.GemTypeKey, gemType);
+                    return icon;
+                })
                 .ToList()
             ;
 
-            IClientWorldAccessor clientWorld = (IClientWorldAccessor)Api.World;
             ICoreClientAPI capi = Api as ICoreClientAPI;
+            string[] descriptions = recipes.Select(r => RecipeDescription(r, ingredient, gemType)).ToArray();
 
             dlg?.Dispose();
-            dlg = new GuiDialogBlockEntityRecipeSelector(
-                Lang.Get("Select smithing recipe"),
+            dlg = new gui.GuiDialogGemRecipeSelector(
                 stacks.ToArray(),
+                descriptions,
                 (selectedIndex) => {
                     SelectedRecipeId = recipes[selectedIndex].RecipeId;
                     capi.Network.SendBlockEntityPacket(Pos, (int)EnumAnvilPacket.SelectRecipe, SerializerUtil.Serialize(recipes[selectedIndex].RecipeId));
@@ -1489,8 +1734,21 @@ namespace canjewelry.src.be
 
             dlg.TryOpen();
         }
+
+        // What the selector shows on hover: the forecast for this gem, or a hint to appraise it first.
+        private static string RecipeDescription(GemCuttingRecipe recipe, ItemStack ingredient, string gemType)
+        {
+            if (CleavePresetOf(recipe) != null)
+            {
+                return Lang.Get("canjewelry:recipe-cleave-desc", (int)Math.Round((canjewelry.config.GemCarats?.Split?.Loss ?? 0f) * 100));
+            }
+            var sb = new StringBuilder();
+            AppendRecipeForecast(sb, recipe, ingredient.Attributes, gemType, 1f);
+            return sb.Length > 0 ? sb.ToString().TrimEnd() : Lang.Get("canjewelry:cut-forecast-need-loupe");
+        }
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
+            AppendCutForecast(dsc);
             /*dsc.AppendLine(Lang.Get("Tier {0} anvil", OwnMetalTier));
 
             if (workItemStack == null || SelectedRecipe == null)

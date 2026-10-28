@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using canjewelry.src.be;
 using canjewelry.src.jewelry;
+using canjewelry.src.utils;
+using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
@@ -46,6 +48,17 @@ namespace canjewelry.src.items.resource
                 {
                     if (canjewelry.config.BuffAttributesDict.TryGetValue(buffName, out BuffAttributes buffAttributes))
                     {
+                        float[] forecast = ForecastRange(itemStack, gemType, buffAttributes);
+                        if (forecast != null)
+                        {
+                            if (!mainStatHeaderAdded)
+                            {
+                                dsc.AppendLine(Lang.Get("canjewelry:rough-gem-possible-stats-header"));
+                                mainStatHeaderAdded = true;
+                            }
+                            dsc.Append(CANBuffText.Name(buffName)).Append(' ').AppendLine(CANBuffText.Range(buffName, forecast));
+                            continue;
+                        }
                         // A tier the config does not list is skipped instead of throwing in the tooltip.
                         if (buffAttributes.MainStatValueRange == null
                             || !buffAttributes.MainStatValueRange.TryGetValue(gemTier, out float[] range)
@@ -106,6 +119,29 @@ namespace canjewelry.src.items.resource
             }
             dsc.AppendLine();
             dsc.Append(Lang.Get("canjewelry:need_to_be_processed"));
+        }
+
+        /// <summary>
+        /// The base main stat this gem can end up with when weight drives buffs, over every cut,
+        /// before the cut's and polishing's multipliers. Null when buffs go by tiers.
+        /// </summary>
+        private static float[] ForecastRange(ItemStack stack, string gemType, BuffAttributes buffAttributes)
+        {
+            var cfg = canjewelry.config.GemCarats;
+            if (cfg == null) return null;
+            ITreeAttribute tree = stack.Attributes;
+            float[] rough = CANGemForecast.KnownRoughRange(cfg, tree, CANGemSize.RoughQualityOf(stack), gemType);
+            float[] cut = rough == null ? null : CANGemForecast.CutWeightAnyCut(cfg, rough, gemType, tree);
+            return CANGemForecast.MainBuff(cfg, buffAttributes, cut, CANGemForecast.KnownBuffMult(cfg, tree, gemType));
+        }
+
+        public override void OnBeforeRender(Vintagestory.API.Client.ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref Vintagestory.API.Client.ItemRenderInfo renderinfo)
+        {
+            base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+            // The inspection works out where flaws land from the unscaled transform.
+            if (itemstack.Attributes.GetBool(render.CANGemInspectMesh.ViewKey)) return;
+            render.CANGemDrawScale.Apply(ref renderinfo, utils.CANGemAppraisal.RoughDrawScale(canjewelry.config?.GemCarats,
+                itemstack.Attributes, utils.CANGemSize.RoughQualityOf(itemstack), utils.CANGemSize.RoughGemTypeOf(itemstack)));
         }
 
         public List<GemCuttingRecipe> GetMatchingRecipes(ItemStack stack)

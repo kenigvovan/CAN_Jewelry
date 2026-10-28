@@ -458,6 +458,48 @@ namespace canjewelry.src.CB
             inventory.TakeLocked = false;
             return false;
         }
+        /// <summary>Tells the player why a gem would not go in, instead of it just staying put.</summary>
+        private static void Refuse(IPlayer player, string reason)
+            => (player as IServerPlayer)?.SendIngameError("canjewelry-encrust", reason);
+
+        /// <summary>
+        /// Why the gem may not go into the socket of this tier at socketIndex, in the words shown to
+        /// the player; null when it may. The server refuses with it and the Jeweler's Set shows it
+        /// ahead: the socket's capacity (or tier), the item's carat budget, the gem types it takes.
+        /// </summary>
+        public static string EncrustRefusal(ItemStack gem, ItemStack jewelry, int socketTier, int socketIndex)
+        {
+            ITreeAttribute cutGemTree = gem?.Attributes?.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+            if (jewelry == null || cutGemTree == null || !(gem.Collectible.Attributes?["canGemType"].Exists ?? false))
+            {
+                return Lang.Get("canjewelry:jewelerset-not-cut-gem");
+            }
+            var caratsCfg = canjewelry.config.GemCarats;
+            int size = gem.Collectible.Attributes["canGemType"].AsInt();
+            float carats = CANGemSize.GetCutCarats(cutGemTree, size, caratsCfg);
+            if (!CANGemAppraisal.FitsSocket(caratsCfg, socketTier, size, cutGemTree))
+            {
+                return caratsCfg != null && caratsCfg.CapacityByCarats
+                    ? Lang.Get("canjewelry:encrust-too-heavy", CANGemAppraisalCB.FormatCarats(carats), socketTier,
+                        CANGemAppraisalCB.FormatCarats(CANGemAppraisal.SocketCapacity(caratsCfg, socketTier)))
+                    : Lang.Get("canjewelry:encrust-tier-too-low", socketTier);
+            }
+            // All the item's gems together, the one replaced here left out.
+            float? budget = CANGemAppraisal.BudgetOf(caratsCfg, jewelry);
+            if (budget != null)
+            {
+                float others = CANGemAppraisal.CaratsInSockets(caratsCfg, jewelry, socketIndex);
+                if (others + carats > budget.Value + 0.001f)
+                {
+                    return Lang.Get("canjewelry:encrust-over-budget", CANGemAppraisalCB.FormatCarats(others),
+                        CANGemAppraisalCB.FormatCarats(others + carats), CANGemAppraisalCB.FormatCarats(budget.Value));
+                }
+            }
+            return canItemContainThisGem(CANGemSize.GemTypeOf(gem.Collectible), jewelry)
+                ? null
+                : Lang.Get("canjewelry:encrust-wrong-item", gem.GetName());
+        }
+
         public static bool TryToEncrustGemsIntoSockets(InventoryBase inventory, ItemSlot encrustable, ItemSlot gem_slot, int socket_number, IPlayer player = null)
         {
             inventory.TakeLocked = true;
@@ -478,15 +520,13 @@ namespace canjewelry.src.CB
                 if (tree.HasAttribute("slot" + socket_number))
                 {
                     ITreeAttribute treeSocket = tree.GetTreeAttribute("slot" + socket_number);
-                    //socket level is lower than gem type
-                    if (treeSocket.GetInt(CANJWConstants.ADDED_SOCKET_TYPE) < gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt())
+                    float gemCarats = CANGemSize.GetCutCarats(cutGemTree,
+                        gem_slot.Itemstack.Collectible.Attributes["canGemType"].AsInt(), canjewelry.config.GemCarats);
+                    int socketTier = treeSocket.GetInt(CANJWConstants.ADDED_SOCKET_TYPE);
+                    string refusal = EncrustRefusal(gem_slot.Itemstack, encrustable.Itemstack, socketTier, socket_number);
+                    if (refusal != null)
                     {
-                        inventory.TakeLocked = false;
-                        return false;
-                    }
-                    //item cannot have this gem encrusted
-                    if (!canItemContainThisGem(CANGemSize.GemTypeOf(gem_slot.Itemstack.Collectible), encrustable.Itemstack))
-                    {
+                        Refuse(player, refusal);
                         inventory.TakeLocked = false;
                         return false;
                     }
@@ -505,11 +545,13 @@ namespace canjewelry.src.CB
                         {
                             if ((newBuffNames?.Contains("candurability") ?? false))
                             {
+                                Refuse(player, Lang.Get("canjewelry:encrust-no-durability"));
                                 inventory.TakeLocked = false;
                                 return false;
                             }
                             else if ((currentBuffNames?.Contains("candurability") ?? false))
                             {
+                                Refuse(player, Lang.Get("canjewelry:encrust-no-durability"));
                                 inventory.TakeLocked = false;
                                 return false;
                             }
@@ -577,7 +619,6 @@ namespace canjewelry.src.CB
                         // (e.g. Lapidary "Steady Hand" perk → +X% to main stats).
                         if (canjewelry.Instance != null)
                         {
-                            int socketTier = treeSocket.GetInt(CANJWConstants.ADDED_SOCKET_TYPE);
                             for (int bi = 0; bi < newBuffValues.Length && bi < newBuffNames.Length; bi++)
                             {
                                 var ev = new src.integration.EncrustEvent
@@ -588,7 +629,8 @@ namespace canjewelry.src.CB
                                     SocketTier  = socketTier,
                                     SocketIndex = socket_number,
                                     BuffName    = newBuffNames[bi],
-                                    Value       = newBuffValues[bi]
+                                    Value       = newBuffValues[bi],
+                                    Carats      = gemCarats
                                 };
                                 canjewelry.Instance.FireEncrust(ev);
                                 newBuffValues[bi] = ev.Value;
@@ -612,6 +654,9 @@ namespace canjewelry.src.CB
                     treeSocket.SetString("gemtype", gemType);
 
                     treeSocket.SetString(CANJWConstants.CUTTING_TYPE, cutGemTree.GetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND));
+
+                    // A gem from before carats gets the legacy weight of its size written here.
+                    CANGemAppraisal.SetWeight(treeSocket, gemCarats, CANGemAppraisal.GetTraits(cutGemTree));
 
                     // Persist wasExtracted across the encrust→extract cycle so anti-farming
                     // survives a round-trip; otherwise every other extract would earn XP.
@@ -697,6 +742,8 @@ namespace canjewelry.src.CB
                     JewelryBreakChance = canjewelry.config.jewelryBreakOnExtractionChance,
                     SocketIndex = socket_number,
                     BuffName = (buffNames != null && buffNames.Length > 0) ? buffNames[0] : null,
+                    Carats = CANGemSize.GetCutCarats(treeSocket, sizeInt, canjewelry.config.GemCarats),
+                    DowngradeCaratLoss = canjewelry.config.GemCarats.ExtractionDowngradeLoss,
                 };
                 canjewelry.Instance?.FireExtract(ev);
 
@@ -738,6 +785,7 @@ namespace canjewelry.src.CB
                 treeSocket.RemoveAttribute(CANJWConstants.WAS_GROUND_BEFORE);
                 treeSocket.RemoveAttribute("savedGrindLayerInfo");
                 treeSocket.RemoveAttribute("wasExtracted");
+                CANGemAppraisal.RemoveWeight(treeSocket);
                 treeSocket.SetString(CANJWConstants.GEM_TYPE_IN_SOCKET, "");
 
                 CANGemVisual.ClearGemVisual(encrustable.Itemstack, socket_number);
@@ -788,7 +836,7 @@ namespace canjewelry.src.CB
                     ItemStack outGem = ev.Gem;
                     if (ev.GemOutcome == src.integration.GemOutcome.ReturnedDowngraded)
                     {
-                        outGem = TryDowngradeCutGem(world, gemStack, sizeInt, gemType, cutGemTree) ?? ev.Gem;
+                        outGem = TryDowngradeCutGem(world, gemStack, sizeInt, gemType, cutGemTree, ev.DowngradeCaratLoss) ?? ev.Gem;
                     }
                     outGem.Attributes.SetBool("wasExtracted", true);
                     if (gemOutSlot != null && gemOutSlot.Empty)
@@ -913,8 +961,12 @@ namespace canjewelry.src.CB
         // smaller tier from BuffAttributesDict (same buff names + same cut style, fresh values),
         // and GEM_FULL_PROCESSED is cleared so the player can grind it again from scratch.
         // Returns null if already the smallest size or if the smaller item code can't be resolved.
-        private static ItemStack TryDowngradeCutGem(IWorldAccessor world, ItemStack source, int currentSizeInt, string gemType, ITreeAttribute cutGemTree)
+        private static ItemStack TryDowngradeCutGem(IWorldAccessor world, ItemStack source, int currentSizeInt, string gemType, ITreeAttribute cutGemTree, float caratLoss)
         {
+            if (canjewelry.config.GemCarats.ScalesByCarats)
+            {
+                return TryDowngradeByCarats(world, source, currentSizeInt, cutGemTree, caratLoss);
+            }
             int smallerTier = currentSizeInt - 1;
             string smallerSizeStr = currentSizeInt <= 3 ? CANGemSize.CutQualityOrNull(smallerTier) : null;
             if (smallerSizeStr == null) return null;
@@ -956,9 +1008,30 @@ namespace canjewelry.src.CB
                 newTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] = new FloatArrayAttribute((float[])originalValues.Clone());
             }
 
+            // Until buffs follow the weight (phase 2) the smaller gem takes its size's legacy weight.
+            CANGemAppraisal.SetWeight(newTree, CANGemAppraisal.LegacyCutCarats(canjewelry.config.GemCarats, smallerTier),
+                CANGemAppraisal.GetTraits(cutGemTree));
+
             ItemStack smaller = new ItemStack(smallerItem);
             smaller.Attributes[CANJWConstants.CUT_GEM_TREE] = newTree;
             return smaller;
+        }
+
+        /// <summary>
+        /// The downgrade by weight: the gem loses ExtractionDowngradeLoss of its weight, at least
+        /// enough to drop one size, and its buffs follow the weight down the curve instead of being
+        /// rerolled. Cut, traits, grinding and flags stay. Null for the smallest size.
+        /// </summary>
+        private static ItemStack TryDowngradeByCarats(IWorldAccessor world, ItemStack source, int currentSizeInt, ITreeAttribute cutGemTree, float caratLoss)
+        {
+            var cfg = canjewelry.config.GemCarats;
+            if (currentSizeInt <= 1 || !cfg.BucketBounds.TryGetValue(currentSizeInt - 1, out float smallerBound)) return null;
+
+            float from = CANGemSize.GetCutCarats(cutGemTree, currentSizeInt, cfg);
+            float to = Math.Min(from * (1 - Math.Clamp(caratLoss, 0f, 1f)), smallerBound);
+            to = Math.Max(cfg.Step, CANGemAppraisal.RoundCarats(to, cfg.Step));
+
+            return CANGemSplitter.Resized(world, source, from, to, canjewelry.config, removeSplitTraits: false);
         }
 
         public static bool canItemContainThisGem(string gemType, ItemStack targetItemStack)
@@ -1151,14 +1224,26 @@ namespace canjewelry.src.CB
         /// as secondary, not from the main stat's entry - the units belong to the stat that owns them.
         /// Returns 0 when the config has no range for it, which callers read as "no secondary buff".
         /// </summary>
-        private static float RollSecondaryValue(string secondaryBuffName, int gemTier, CuttingAttributes cuttingAttributes)
+        private static float RollSecondaryValue(string secondaryBuffName, int gemTier, CuttingAttributes cuttingAttributes, float? carats = null)
         {
             if (!canjewelry.config.BuffAttributesDict.TryGetValue(secondaryBuffName, out BuffAttributes secondaryAttributes))
             {
                 return 0f;
             }
-            return (float)Math.Round(secondaryAttributes.GetRandomSecondaryValue(gemTier), 3)
-                   * cuttingAttributes.GrindingBuffIncreaseMultipliers[0];
+            BuffCurve curve = carats != null ? secondaryAttributes.SecondaryCurve(canjewelry.config.GemCarats) : null;
+            float baseValue = curve != null
+                ? CANGemBuffMath.Roll(curve, carats.Value, Config.rand)
+                : (float)Math.Round(secondaryAttributes.GetRandomSecondaryValue(gemTier), 3);
+            return baseValue * cuttingAttributes.GrindingBuffIncreaseMultipliers[0];
+        }
+
+        /// <summary>The main stat's base value: by the gem's weight, or by its size when it has none.</summary>
+        private static float RollMainValue(BuffAttributes buffAttributes, int gemTier, float? carats)
+        {
+            BuffCurve curve = carats != null ? buffAttributes.MainCurve(canjewelry.config.GemCarats) : null;
+            return curve != null
+                ? CANGemBuffMath.Roll(curve, carats.Value, Config.rand)
+                : (float)Math.Round(buffAttributes.GetRandomMainValue(gemTier), 3);
         }
 
         public static void ApplyCuttingBuff(ItemStack outstack)
@@ -1171,6 +1256,20 @@ namespace canjewelry.src.CB
                 string cuttingType = isTree.GetString(CANJWConstants.CUTTING_TYPE);
                 ITreeAttribute tree = new TreeAttribute();
                 tree.SetString(CANJWConstants.CUTTING_TYPE, cuttingType);
+                string[] traits = CANGemAppraisal.GetTraits(isTree);
+                if (CANGemAppraisal.HasCarats(isTree))
+                {
+                    CANGemAppraisal.SetWeight(tree, CANGemAppraisal.GetCarats(isTree), traits);
+                }
+                var caratsCfg = canjewelry.config.GemCarats;
+                float traitMult = caratsCfg != null && caratsCfg.TraitsAffectBuffs
+                    ? CANGemAppraisal.TraitBuffMult(caratsCfg, traits) * CANGemAppraisal.PieceBuffMult(caratsCfg, CANGemAppraisal.GetFlawPieces(isTree))
+                    : 1f;
+                // By weight only for a gem that has one; gems given by commands keep the old ranges.
+                float? carats = caratsCfg != null && caratsCfg.ScalesByCarats && CANGemAppraisal.HasCarats(isTree)
+                    ? CANGemAppraisal.GetCarats(isTree)
+                    : (float?)null;
+                float gemMult = traitMult * (carats != null ? caratsCfg.BuffMultOf(gemType) : 1f);
                 // Anything the config cannot answer for ends as a gem without stat buffs rather
                 // than as an exception during cutting: an admin who removes a buff or a cutting
                 // type should not be able to crash the bench.
@@ -1200,8 +1299,8 @@ namespace canjewelry.src.CB
                 int gemTier = outstack.Collectible.Attributes["canGemType"].AsInt();
 
                 //Main stat buff
-                float buffValue = (float)Math.Round(buffAttributes.GetRandomMainValue(gemTier), 3)
-                                  * cuttingAttributes.GrindingBuffIncreaseMultipliers[0];
+                float buffValue = RollMainValue(buffAttributes, gemTier, carats)
+                                  * cuttingAttributes.GrindingBuffIncreaseMultipliers[0] * gemMult;
 
                 List<string> buffNames = new List<string> { selectedBuffName };
                 List<float> buffValues = new List<float> { buffValue };
@@ -1213,7 +1312,7 @@ namespace canjewelry.src.CB
                     && buffAttributes.PossibleSecondaryStats.Count > 0)
                 {
                     string secondaryBuffName = PickRandom(buffAttributes.PossibleSecondaryStats);
-                    float secondaryBuffValue = RollSecondaryValue(secondaryBuffName, gemTier, cuttingAttributes);
+                    float secondaryBuffValue = RollSecondaryValue(secondaryBuffName, gemTier, cuttingAttributes, carats) * gemMult;
                     if (secondaryBuffValue != 0)
                     {
                         buffNames.Add(secondaryBuffName);
@@ -1230,7 +1329,7 @@ namespace canjewelry.src.CB
         // rough gem to the player; the rough has already been spent at TryPut time,
         // so we hand a fresh stack of the same rough variant back here.
         // XP is intentionally not fired from here — companions own their own XP economy.
-        public static void FireCutCompletionEvents(IPlayer byPlayer, ItemStack workItemStack, ItemStack outstack)
+        public static void FireCutCompletionEvents(IPlayer byPlayer, ItemStack workItemStack, ItemStack outstack, float roughCarats = 0f, float cutCarats = 0f)
         {
             if (canjewelry.Instance == null || byPlayer == null || workItemStack == null) return;
 
@@ -1245,12 +1344,28 @@ namespace canjewelry.src.CB
                 CuttingType = cuttingType,
                 GemSize = gemSize,
                 ConsumeRough = true,
+                RoughCarats = roughCarats,
+                CutCarats = cutCarats,
             };
             canjewelry.Instance.FireCut(ev);
 
-            if (!ev.ConsumeRough && roughGem != null)
+            // The subscriber's gem, not the original: a perk hands back a smaller offcut through
+            // ev.RoughGem, and this used to ignore it. Whatever comes back is a fresh stone, none
+            // of the cut gem's weight, flaws, shape or inspection - else it was the very gem again.
+            ItemStack refundSource = ev.RoughGem ?? roughGem;
+            if (!ev.ConsumeRough && refundSource != null)
             {
-                ItemStack refund = roughGem.Clone();
+                ItemStack refund = refundSource.Clone();
+                foreach (string key in new[]
+                {
+                    CANJWConstants.CARATS, CANJWConstants.GEM_TRAITS, CANJWConstants.GEM_TRAITS_KNOWN,
+                    CANJWConstants.APPRAISAL, CANJWConstants.CARATS_RANGE, CANGemRoughShape.SeedKey,
+                    CANGemDefects.TraitsKey, CANGemDefects.PosKey, CANGemDefects.NormalKey,
+                    CANGemInspectionServer.ClicksLeftKey, CANGemAppraisal.WetUntilKey
+                })
+                {
+                    refund.Attributes.RemoveAttribute(key);
+                }
                 if (!byPlayer.InventoryManager.TryGiveItemstack(refund))
                 {
                     byPlayer.Entity.World.SpawnItemEntity(refund, byPlayer.Entity.Pos.XYZ);

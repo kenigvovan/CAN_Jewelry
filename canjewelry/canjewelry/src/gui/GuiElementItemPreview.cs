@@ -79,9 +79,9 @@ namespace canjewelry.src.gui
             }
             else
             {
-                // Horizontal drag spins the piece, vertical tilts it.
-                preview.RotationY -= dx * 0.5f;
-                preview.RotationX -= dy * 0.5f;
+                // Horizontal drag spins the piece, vertical tilts it; the piece follows the cursor.
+                preview.RotationY += dx * 0.5f;
+                preview.RotationX += dy * 0.5f;
             }
 
             lastMouseX = args.X;

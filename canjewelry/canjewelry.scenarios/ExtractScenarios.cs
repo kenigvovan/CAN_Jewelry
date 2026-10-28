@@ -2,10 +2,12 @@ using Atlas.Api;
 using Atlas.XUnit;
 using canjewelry.scenarios.Infrastructure;
 using canjewelry.src;
+using canjewelry.src.utils;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Encrustable = global::canjewelry.src.CB.EncrustableCB;
 using Hooks = global::canjewelry.src.integration;
+using Mod = global::canjewelry.src.canjewelry;
 
 namespace canjewelry.scenarios;
 
@@ -107,6 +109,107 @@ public class ExtractScenarios : SocketScenarioBase
         Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), jewelry, new DummySlot(CutGem(ground: false)), 0));
 
         Assert.False(SocketOf(jewelry.Itemstack, 0).HasAttribute("savedGrindLayerInfo"));
+        await World.Ticks(1);
+    }
+
+    // ---- weight ----
+
+    private ItemStack WeighedGem(string quality, float carats, params string[] traits)
+    {
+        ItemStack gem = CutGem(quality);
+        CANGemAppraisal.SetWeight(gem.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE), carats, traits);
+        return gem;
+    }
+
+    [AtlasScenario]
+    public async Task WeightAndTraits_Should_GoIntoTheSocket_AndComeBackOut()
+    {
+        SureReturn();
+        DummySlot jewelry = KnifeWithGems(1, WeighedGem("flawless", 2.2f, "cloudy"));
+
+        ITreeAttribute socket = SocketOf(jewelry.Itemstack, 0);
+        Assert.Equal(2.2f, CANGemAppraisal.GetCarats(socket), 3);
+        Assert.Equal(new[] { "cloudy" }, CANGemAppraisal.GetTraits(socket));
+
+        var outSlot = new DummySlot(null);
+        Assert.True(Extract(jewelry, outSlot, 0));
+
+        Assert.False(CANGemAppraisal.HasCarats(SocketOf(jewelry.Itemstack, 0)));
+        Assert.Empty(CANGemAppraisal.GetTraits(SocketOf(jewelry.Itemstack, 0)));
+        ITreeAttribute back = outSlot.Itemstack!.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+        Assert.Equal(2.2f, CANGemAppraisal.GetCarats(back), 3);
+        Assert.Equal(new[] { "cloudy" }, CANGemAppraisal.GetTraits(back));
+        await World.Ticks(1);
+    }
+
+    // Gems from before carats get the weight of their size written once they go in.
+    [AtlasScenario]
+    public async Task LegacyGem_Should_GetTheLegacyWeightOfItsSize()
+    {
+        SureReturn();
+        var legacy = Mod.config.GemCarats.LegacyCutCarats;
+        DummySlot jewelry = KnifeWithGems(3, CutGem("normal"), CutGem("flawless"), CutGem("exquisite"));
+
+        for (int i = 0; i < 3; i++)
+        {
+            Assert.Equal(legacy[i + 1], CANGemAppraisal.GetCarats(SocketOf(jewelry.Itemstack, i)), 3);
+        }
+        await World.Ticks(1);
+    }
+
+    // A tier 2 socket holds 2.5 ct: a heavier flawless gem needs a bigger socket, unless by tiers.
+    [AtlasScenario]
+    public async Task Encrust_Should_RefuseGemTooHeavyForTheSocket()
+    {
+        var knife = new DummySlot(WithSockets(Stack(JewelryCode), 1, IronSocket));
+        Assert.Equal(2, SocketOf(knife.Itemstack, 0).GetInt(CANJWConstants.ADDED_SOCKET_TYPE));
+
+        Assert.False(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), knife, new DummySlot(WeighedGem("flawless", 2.6f)), 0));
+        Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), knife, new DummySlot(WeighedGem("flawless", 2.5f)), 0));
+
+        var byTiers = new DummySlot(WithSockets(Stack(JewelryCode), 1, IronSocket));
+        SetConfig(c => c.GemCarats.CapacityMode, (c, v) => c.GemCarats.CapacityMode = v, "tiers");
+        Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), byTiers, new DummySlot(WeighedGem("flawless", 2.6f)), 0));
+        await World.Ticks(1);
+    }
+
+    // A budget limits all the item's gems together; switched off in the config, it limits nothing.
+    [AtlasScenario]
+    public async Task CaratBudget_Should_LimitTheGemsTogether_UnlessTurnedOff()
+    {
+        SetConfig(c => c.GemCarats.CaratBudgets, (c, v) => c.GemCarats.CaratBudgets = v,
+            new Dictionary<string, float> { { JewelryCode, 3.0f } });
+
+        var knife = new DummySlot(SocketedKnife(2));
+        Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), knife, new DummySlot(WeighedGem("flawless", 2.0f)), 0));
+        Assert.False(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), knife, new DummySlot(WeighedGem("normal", 1.5f)), 1),
+            "2.0 + 1.5 is over a budget of 3.0");
+        Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), knife, new DummySlot(WeighedGem("normal", 1.0f)), 1));
+
+        // Replacing a gem frees its share: 1.0 + 2.0 fits in place of the first 2.0.
+        Assert.Equal(3.0f, CANGemAppraisal.CaratsInSockets(Mod.config.GemCarats, knife.Itemstack, -1), 3);
+        Assert.Equal(1.0f, CANGemAppraisal.CaratsInSockets(Mod.config.GemCarats, knife.Itemstack, 0), 3);
+
+        SetConfig(c => c.GemCarats.CaratBudgetEnabled, (c, v) => c.GemCarats.CaratBudgetEnabled = v, false);
+        var free = new DummySlot(SocketedKnife(2));
+        Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), free, new DummySlot(WeighedGem("flawless", 2.0f)), 0));
+        Assert.True(Encrustable.TryToEncrustGemsIntoSockets(ScratchInventory(), free, new DummySlot(WeighedGem("normal", 1.5f)), 1));
+        await World.Ticks(1);
+    }
+
+    [AtlasScenario]
+    public async Task EncrustAndExtractEvents_Should_CarryTheWeight()
+    {
+        SureReturn();
+        float encrusted = 0, extracted = 0;
+        OnEncrust(e => encrusted = e.Carats);
+        OnExtract(e => extracted = e.Carats);
+
+        DummySlot jewelry = KnifeWithGems(1, WeighedGem("flawless", 1.9f));
+        Assert.True(Extract(jewelry, new DummySlot(null), 0));
+
+        Assert.Equal(1.9f, encrusted, 3);
+        Assert.Equal(1.9f, extracted, 3);
         await World.Ticks(1);
     }
 
@@ -408,14 +511,39 @@ public class ExtractScenarios : SocketScenarioBase
         var outSlot = new DummySlot(null);
         Assert.True(Extract(jewelry, outSlot, 0));
 
+        // A legacy flawless gem weighs 2.0 ct; it loses weight down into the normal size and its
+        // buff follows the weight, grinding kept.
+        var cfg = Mod.config.GemCarats;
+        float from = cfg.LegacyCutCarats[2];
+        float to = CANGemAppraisal.RoundCarats(Math.Min(from * (1 - cfg.ExtractionDowngradeLoss), cfg.BucketBounds[1]), cfg.Step);
         Assert.Equal($"canjewelry:gem-cut-normal-{GemType}", outSlot.Itemstack?.Collectible.Code.ToString());
         ITreeAttribute tree = outSlot.Itemstack!.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
         Assert.Equal(CANJWConstants.CUTTING_ROUND, tree.GetString(CANJWConstants.CUTTING_TYPE));
         Assert.Equal(new[] { "walkspeed" }, BuffNames(tree));
-        float value = BuffValues(tree)![0];
-        Assert.InRange(value, 0.01f, 0.03f);
-        Assert.False(tree.GetBool(CANJWConstants.GEM_FULL_PROCESSED));
+        Assert.Equal(to, CANGemAppraisal.GetCarats(tree), 3);
+        Assert.Equal(CANGemBuffMath.Scale(0.05f, from, to, cfg.BuffExponent), BuffValues(tree)![0], 5);
+        Assert.True(tree.GetBool(CANJWConstants.GEM_FULL_PROCESSED));
         Assert.True(outSlot.Itemstack.Attributes.GetBool("wasExtracted"));
+        await World.Ticks(1);
+    }
+
+    // By tiers the smaller gem rerolls its buff in the smaller range and has to be ground again.
+    [AtlasScenario]
+    public async Task DowngradeByTiers_Should_RerollInTheSmallerRange()
+    {
+        SetConfig(c => c.GemCarats.BuffScaling, (c, v) => c.GemCarats.BuffScaling = v, "tiers");
+        SetConfig(c => c.gemExtractionReturnChance, (c, v) => c.gemExtractionReturnChance = v, 0f);
+        SetConfig(c => c.jewelryBreakOnExtractionChance, (c, v) => c.jewelryBreakOnExtractionChance = v, 0f);
+        OnExtract(e => e.DowngradeChance = 1f);
+        DummySlot jewelry = KnifeWithGems(1, CutGem("flawless", names: new[] { "walkspeed" }, values: new[] { 0.05f }));
+
+        var outSlot = new DummySlot(null);
+        Assert.True(Extract(jewelry, outSlot, 0));
+
+        ITreeAttribute tree = outSlot.Itemstack!.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+        Assert.Equal($"canjewelry:gem-cut-normal-{GemType}", outSlot.Itemstack.Collectible.Code.ToString());
+        Assert.InRange(BuffValues(tree)![0], 0.01f, 0.03f);
+        Assert.False(tree.GetBool(CANJWConstants.GEM_FULL_PROCESSED));
         await World.Ticks(1);
     }
 

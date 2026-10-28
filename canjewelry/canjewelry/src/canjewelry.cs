@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
@@ -62,6 +63,15 @@ namespace canjewelry.src
         public event Action<src.integration.WireDrawEvent>  OnWireDrawn;
         public event Action<src.integration.CanInscribeEvent> OnCanInscribe;
         public event Action<src.integration.CANXpEvent>    OnXpAwarded;
+        public event Action<src.integration.AppraiseEvent> OnAppraiseGem;
+
+        public void FireAppraise(src.integration.AppraiseEvent e) => OnAppraiseGem?.Invoke(e);
+        public event Action<src.integration.CutYieldEvent> OnCutYield;
+        public void FireCutYield(src.integration.CutYieldEvent e) => OnCutYield?.Invoke(e);
+        public event Action<src.integration.DefectRemovedEvent> OnDefectRemoved;
+        public void FireDefectRemoved(src.integration.DefectRemovedEvent e) => OnDefectRemoved?.Invoke(e);
+        public event Action<src.integration.SplitEvent> OnSplitGem;
+        public void FireSplit(src.integration.SplitEvent e) => OnSplitGem?.Invoke(e);
 
         public void FireEncrust(src.integration.EncrustEvent e)   => OnEncrustBuff?.Invoke(e);
         public void FireCut    (src.integration.CutEvent     e)   => OnCutGem?.Invoke(e);
@@ -140,6 +150,7 @@ namespace canjewelry.src
         /// Client network channel for config synchronization.
         /// </summary>
         internal static IClientNetworkChannel clientChannel;
+        private static GuiDialogGemInspect gemInspectDialog;
 
         /// <summary>
         /// Global mod configuration.
@@ -337,6 +348,14 @@ namespace canjewelry.src
 
             api.RegisterCollectibleBehaviorClass("Encrustable", typeof(EncrustableCB));
             api.RegisterCollectibleBehaviorClass("GemCuttableCB", typeof(CANGemCuttableCB));
+            api.RegisterCollectibleBehaviorClass("GemAppraisalCB", typeof(CANGemAppraisalCB));
+            // Being wet passes, like being warm: it must not keep a dried gem from stacking.
+            if (!GlobalConstants.IgnoredStackAttributes.Contains(CANGemAppraisal.WetUntilKey))
+            {
+                GlobalConstants.IgnoredStackAttributes = GlobalConstants.IgnoredStackAttributes.Append(CANGemAppraisal.WetUntilKey).ToArray();
+            }
+            api.RegisterItemClass("CANItemLoupe", typeof(CANItemLoupe));
+            api.RegisterItemClass("CANCleaveIcon", typeof(CANCleaveIcon));
 
             api.RegisterBlockBehaviorClass("CANTemporalGraspBB", typeof(CANTemporalGraspBB));
 
@@ -450,6 +469,23 @@ namespace canjewelry.src
             clientChannel.RegisterMessageType(typeof(SyncCANJewelryPacket));
             clientChannel.RegisterMessageType(typeof(GemVisualsPacket));
             clientChannel.RegisterMessageType(typeof(CuttingSettingsPacket));
+            // Same order as on the server: message ids are given by registration order.
+            clientChannel.RegisterMessageType(typeof(GemInspectStatePacket));
+            clientChannel.RegisterMessageType(typeof(GemInspectClickPacket));
+            clientChannel.RegisterMessageType(typeof(GemInspectClosePacket));
+            clientChannel.SetMessageHandler<GemInspectStatePacket>((packet) =>
+            {
+                if (packet == null) return;
+                if (gemInspectDialog != null && gemInspectDialog.IsOpened() && gemInspectDialog.SessionId == packet.SessionId)
+                {
+                    gemInspectDialog.Update(packet);
+                    return;
+                }
+                if (packet.Finished) return;
+                gemInspectDialog?.Dispose();
+                gemInspectDialog = new GuiDialogGemInspect(capi, packet);
+                gemInspectDialog.TryOpen();
+            });
             clientChannel.SetMessageHandler<GemVisualsPacket>((packet) =>
             {
                 if (packet == null) return;
@@ -764,6 +800,13 @@ namespace canjewelry.src
             api.Event.PlayerDisconnect += onPlayerDisconnect;
 
             serverChannel.RegisterMessageType(typeof(CuttingSettingsPacket));
+            serverChannel.RegisterMessageType(typeof(GemInspectStatePacket));
+            serverChannel.RegisterMessageType(typeof(GemInspectClickPacket));
+            serverChannel.RegisterMessageType(typeof(GemInspectClosePacket));
+            serverChannel.SetMessageHandler<GemInspectClickPacket>((player, packet) => CANGemInspectionServer.Click(player, packet));
+            serverChannel.SetMessageHandler<GemInspectClosePacket>((player, packet) => CANGemInspectionServer.Close(player, packet?.SessionId));
+            // A player who leaves mid-inspection gets the gem back rather than losing it.
+            api.Event.PlayerDisconnect += CANGemInspectionServer.Finish;
             serverChannel.SetMessageHandler<CuttingSettingsPacket>((player, packet) =>
             {
                 // A packet is a packet whoever sends it, so the privilege is checked here and not
@@ -1424,6 +1467,10 @@ namespace canjewelry.src
                 // anything reads buffNameToPossibleItem, and after the whole file is loaded so
                 // that admin edited item_groups are already in place.
                 config.ExpandItemGroups();
+
+                // An explicit null in the file would otherwise reach every gem tooltip.
+                config.GemCarats ??= new Config.GemCaratsConfig();
+                config.GemCarats.Validate(api.Logger);
 
                 api.StoreModConfig<Config>(config, this.Mod.Info.ModID + ".json");
                 if (config.debugMode)

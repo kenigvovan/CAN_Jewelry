@@ -292,11 +292,13 @@ namespace canjewelry.src.gui
             Body(sb, G("cut-pear-desc"));
 
             Header(sb, G("section-gem-size-reminder"));
+            var carats = canjewelry.config?.GemCarats;
             for (int tier = 1; tier <= 3; tier++)
             {
-                Line(sb, TierSize(tier) + " - " + TierMetals(tier) + " - " + G("col-tier-" + tier),
+                Line(sb, TierSize(tier) + " - " + TierMetals(tier) + " - " + G("col-tier-" + tier) + CaratsOfSize(carats, tier),
                     tier == 3 ? ColTier3 : (tier == 2 ? ColTier2 : ColTier1));
             }
+            if (carats != null) Body(sb, G("carats-hint"));
             return sb.ToString();
         }
 
@@ -448,6 +450,16 @@ namespace canjewelry.src.gui
             if (ranges == null || !ranges.TryGetValue(tier, out float[] range) || range.Length == 0) return "-";
             if (range.Length == 1) return Math.Round(range[0], 3).ToString();
             return Math.Round(range[0], 3) + ".." + Math.Round(range[1], 3);
+        }
+
+        /// <summary>" · 1.6–2.5 ct, socket holds 2.5 ct": the weights of a cut size and what its socket tier holds.</summary>
+        private static string CaratsOfSize(Config.GemCaratsConfig cfg, int size)
+        {
+            if (cfg == null) return "";
+            float lo = cfg.BucketBounds.TryGetValue(size - 1, out float below) ? below + cfg.Step : cfg.Step;
+            float hi = cfg.BucketBounds.TryGetValue(size, out float above) ? above : cfg.MaxCutCarats;
+            return Lang.Get("canjewelry:guide-carats-range", cb.CANGemAppraisalCB.FormatCarats(lo), cb.CANGemAppraisalCB.FormatCarats(hi),
+                cb.CANGemAppraisalCB.FormatCarats(utils.CANGemAppraisal.SocketCapacity(cfg, size)));
         }
 
         private string TierMetals(int tier) => tierMetals.TryGetValue(tier, out string s) ? s : "?";

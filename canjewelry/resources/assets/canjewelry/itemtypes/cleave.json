@@ -1,0 +1,17 @@
+{
+	"code": "cancleave",
+	"class": "CANCleaveIcon",
+	"__comment": "Only the icon of the cleave recipes on the cutting table; never handed out. Drawn in the colour of the gem on the table.",
+	"variantgroups": [
+		{ "code": "preset", "states": [ "halves", "thirds", "seventythirty" ] }
+	],
+	"shape": { "base": "canjewelry:item/cleave/{preset}" },
+	"textures": {
+		"gem": { "base": "canjewelry:item/gem/quartz" }
+	},
+	"guiTransform": {
+		"rotation": { "x": -30, "y": 30, "z": 0 },
+		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+		"scale": 2.6
+	}
+}

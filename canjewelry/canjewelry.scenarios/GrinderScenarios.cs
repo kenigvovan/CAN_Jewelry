@@ -4,6 +4,7 @@ using canjewelry.scenarios.Infrastructure;
 using canjewelry.src;
 using canjewelry.src.integration;
 using canjewelry.src.jewelry;
+using canjewelry.src.utils;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
@@ -261,6 +262,30 @@ public class GrinderScenarios : WorkstationScenarioBase
         {
             player.Entity.ServerControls.CtrlKey = false;
         }
+    }
+
+    // ---- a rough gem on the grinder ----
+
+    private const string Rough = "canjewelry:gem-rough-normal-" + GemType;
+
+    // The grinder only polishes cut gems: a rough one keeps its weight and wears no layer.
+    [AtlasScenario]
+    public async Task RoughGem_Should_BeLeftAlone()
+    {
+        var (player, grinder, _) = await Grinder();
+        ItemStack rough = Stack(Rough);
+        CANGemAppraisal.SetWeight(rough.Attributes, 5.0f, new[] { "crack" });
+        CANGemAppraisal.SetKnowledge(rough.Attributes, CANGemAppraisal.Loupe, new[] { 4.0f, 6.0f }, new string[0]);
+        Hold(player, rough);
+        int durability = Durability(grinder.InputStack);
+
+        Grind(grinder, player);
+        Grind(grinder, player);
+
+        ITreeAttribute gem = Hand(player).Itemstack.Attributes;
+        Assert.Equal(5.0f, CANGemAppraisal.GetCarats(gem), 3);
+        Assert.Equal(CANGemAppraisal.Loupe, CANGemAppraisal.GetAppraisal(gem));
+        Assert.Equal(durability, Durability(grinder.InputStack));
     }
 
     [AtlasScenario]

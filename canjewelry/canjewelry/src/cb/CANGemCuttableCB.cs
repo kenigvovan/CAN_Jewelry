@@ -49,6 +49,10 @@ namespace canjewelry.src.cb
             {
                 if (!gem.HasBehavior<CANGemCuttableCB>())
                     gem.CollectibleBehaviors = gem.CollectibleBehaviors.Append(new CANGemCuttableCB(gem));
+                if (!gem.HasBehavior<CANGemAppraisalCB>())
+                    gem.CollectibleBehaviors = gem.CollectibleBehaviors.Append(new CANGemAppraisalCB(gem));
+                // So a right click with a rough gem can reach water, to wet it for the inspection.
+                gem.LiquidSelectable = true;
             }
         }
 
@@ -110,7 +114,28 @@ namespace canjewelry.src.cb
                 }
             }
 
-            return result.OrderBy(r => r.Output.ResolvedItemstack.Collectible.Code).ToList();
+            return result.OrderBy(ListOrder).ThenBy(r => r.Output.ResolvedItemstack.Collectible.Code.ToString()).ToList();
+        }
+
+        private static readonly string[] CutOrder = { CANJWConstants.CUTTING_ROUND, CANJWConstants.CUTTING_PEAR, CANJWConstants.CUTTING_BAGUETTE };
+        private static readonly string[] CleaveOrder = { "halves", "thirds", "seventythirty" };
+
+        /// <summary>
+        /// Where a recipe goes in the table's list: the cuts first (round, pear, baguette), then
+        /// the cleaves (halves, thirds, 70/30), anything else in between.
+        /// </summary>
+        private static int ListOrder(GemCuttingRecipe recipe)
+        {
+            ItemStack output = recipe.Output.ResolvedItemstack;
+            string path = output.Collectible.Code.Path;
+            if (path.StartsWith("cancleave-"))
+            {
+                int cleave = Array.IndexOf(CleaveOrder, path.Substring("cancleave-".Length));
+                return 200 + (cleave < 0 ? 99 : cleave);
+            }
+            string cut = output.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE)?.GetString(CANJWConstants.CUTTING_TYPE);
+            int index = Array.IndexOf(CutOrder, cut);
+            return index < 0 ? 100 : index;
         }
 
         /// <summary>
@@ -179,6 +204,8 @@ namespace canjewelry.src.cb
                 qualityName = CANGemSize.RoughQualityOfPotential(stack.Attributes.GetString("potential")) ?? qualityName;
             }
             gemItemAttribute.SetString(CANJWConstants.ENCRUSTED_GEM_SIZE, qualityName);
+            // An appraised gem keeps its weight and traits through the cut and back on cancel.
+            CANGemAppraisal.CopyRoughKeys(stack.Attributes, gemItemAttribute);
             workItemStack.Attributes = gemItemAttribute;
             //workItemStack.Collectible.SetTemperature(beGemCuttingTable.Api.World, workItemStack, stack.Collectible.GetTemperature(beGemCuttingTable.Api.World, stack), true);
             if (beGemCuttingTable.WorkItemStack == null)
@@ -211,7 +238,12 @@ namespace canjewelry.src.cb
             string gemType = workItem.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET);
 
             Item item = world.GetItem(CANGemSize.RoughGemCode(quality, gemType));
-            if (item != null) return new ItemStack(item);
+            if (item != null)
+            {
+                var own = new ItemStack(item);
+                CANGemAppraisal.CopyRoughKeys(workItem.Attributes, own.Attributes);
+                return own;
+            }
 
             item = world.GetItem(CANGemSize.VanillaRoughGemCode(gemType));
             if (item == null)
@@ -223,6 +255,7 @@ namespace canjewelry.src.cb
             var vanilla = new ItemStack(item);
             string potential = CANGemSize.PotentialOfRoughQuality(quality);
             if (potential != null) vanilla.Attributes.SetString("potential", potential);
+            CANGemAppraisal.CopyRoughKeys(workItem.Attributes, vanilla.Attributes);
             return vanilla;
         }
     }

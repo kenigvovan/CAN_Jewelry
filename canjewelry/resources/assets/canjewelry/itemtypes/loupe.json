@@ -1,0 +1,52 @@
+{
+	"code": "canloupe",
+	"class": "CANItemLoupe",
+	"maxstacksize": 1,
+	"__comment": "storageFlags 257 = general + offhand: the loupe is held in the left hand while appraising.",
+	"storageFlags": 257,
+	"variantgroups": [
+		{ "code": "quality", "states": [ "simple", "fine" ] }
+	],
+	"attributesByType": {
+		"*-simple": { "inspectAttemptsBonus": 0, "inspectHitRadiusMult": 1.0, "weighHalfWidth": 0.3 },
+		"*-fine": { "inspectAttemptsBonus": 2, "inspectHitRadiusMult": 1.3, "weighHalfWidth": 0 }
+	},
+	"shape": { "base": "canjewelry:item/loupe" },
+	"texturesByType": {
+		"*-simple": { "metal": { "base": "game:block/metal/sheet/brass1" }, "glass": { "base": "game:block/glass/plain" } },
+		"*-fine": { "metal": { "base": "game:block/metal/sheet/gold1" }, "glass": { "base": "game:block/glass/quartz" } }
+	},
+	"creativeinventory": {
+		"general": [ "*" ],
+		"items": [ "*" ],
+		"tools": [ "*" ],
+		"canjewelry": [ "*" ]
+	},
+	"guiTransform": {
+		"rotation": { "x": -30, "y": 45, "z": 0 },
+		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+		"scale": 3
+	},
+	"fpHandTransform": {
+		"translation": { "x": 0, "y": 0.1, "z": 0 },
+		"rotation": { "x": 60, "y": 0, "z": 0 },
+		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+		"scale": 2
+	},
+	"tpHandTransform": {
+		"translation": { "x": -0.6, "y": -0.1, "z": -0.6 },
+		"rotation": { "x": 0, "y": 0, "z": -90 },
+		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+		"scale": 0.6
+	},
+	"tpOffHandTransform": {
+		"translation": { "x": -0.6, "y": -0.1, "z": -0.4 },
+		"rotation": { "x": 0, "y": 0, "z": -90 },
+		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
+		"scale": 0.6
+	},
+	"groundTransform": {
+		"origin": { "x": 0.5, "y": 0, "z": 0.5 },
+		"scale": 3
+	}
+}

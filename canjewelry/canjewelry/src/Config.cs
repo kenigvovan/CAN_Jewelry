@@ -44,6 +44,9 @@ namespace canjewelry.src
         public Dictionary<string, HashSet<string>> PossibleGemBuffs = new Dictionary<string, HashSet<string>>();
         public Dictionary<string, BuffAttributes> BuffAttributesDict = new Dictionary<string, BuffAttributes>();
         public Dictionary<string, CuttingAttributes> CuttingAttributesDict = new Dictionary<string, CuttingAttributes>();
+        // Gem weight, appraisal and traits. Defaults live in the classes, so a config written
+        // before this section existed reads them without an edit.
+        public GemCaratsConfig GemCarats = new GemCaratsConfig();
         /// <summary>
         /// The source of randomness for buff rolls, cuts and drop chances. Random.Shared is
         /// thread safe, while the shared instance this used to be was not: buff values are rolled
@@ -1805,8 +1808,9 @@ namespace canjewelry.src
         /// </summary>
         private void FillMiscDefaults()
         {
-            if (socketTiersColorsWords.Length == 0) socketTiersColorsWords = new string[] { "green", "blue", "purple" };
-            if (socketTiersColors.Length == 0)      socketTiersColors      = new string[] { "2FE147", "2B3FF7", "9214C9" };
+            // Light shades: the tooltip is dark, and plain blue on it could not be read.
+            if (socketTiersColorsWords.Length == 0) socketTiersColorsWords = new string[] { "lightgreen", "lightskyblue", "plum" };
+            if (socketTiersColors.Length == 0)      socketTiersColors      = new string[] { "90EE90", "87CEFA", "DDA0DD" };
 
             if (TemporalGraspBlockList.Count == 0)
                 TemporalGraspBlockList = new HashSet<string> { "game:soil-*", "game:rawclay-blue-*", "game:forestfloor-*",
@@ -1964,6 +1968,26 @@ namespace canjewelry.src
             [JsonConverter(typeof(utils.CompactStringSetConverter))]
             public HashSet<string> PossibleSecondaryStats;
 
+            // By carats. Left out, each is fitted from the tier ranges above, so an existing
+            // config needs no edit; set them to shape the curve by hand.
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? MainStatPerCarat;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? MainStatSpread;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? MaxValue;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? SecondaryStatPerCarat;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? SecondaryStatSpread;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? SecondaryMaxValue;
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)] public float? CaratExponent;
+
+            public utils.BuffCurve MainCurve(GemCaratsConfig cfg)
+                => utils.CANGemBuffMath.Fit(MainStatValueRange, MainStatPerCarat, MainStatSpread, MaxValue,
+                    CaratExponent ?? cfg.BuffExponent, size => utils.CANGemAppraisal.LegacyCutCarats(cfg, size),
+                    cfg.BuffSpread, cfg.CapByWeight ? cfg.MaxCutCarats : (float?)null);
+
+            public utils.BuffCurve SecondaryCurve(GemCaratsConfig cfg)
+                => utils.CANGemBuffMath.Fit(SecondaryStatValueRange, SecondaryStatPerCarat, SecondaryStatSpread, SecondaryMaxValue,
+                    CaratExponent ?? cfg.BuffExponent, size => utils.CANGemAppraisal.LegacyCutCarats(cfg, size),
+                    cfg.BuffSpread, cfg.CapByWeight ? cfg.MaxCutCarats : (float?)null);
+
             // See CustomVariantSocketsTiers: without a default constructor the field converters
             // are skipped on read and the compact "0.01,0.03" ranges fail to parse.
             [JsonConstructor]
@@ -2020,6 +2044,255 @@ namespace canjewelry.src
                 GrindingBuffIncreaseMultipliers = grindingBuffIncreaseMultipliers;
             }
         }
+        // Dictionaries below are replaced on read, not merged: merged, an entry the admin deleted
+        // would come back from the defaults on every start.
+        public class GemCaratsConfig
+        {
+            public float Step = 0.1f;
+            // Rough weight by rough quality (chipped / flawed / normal), [min, max].
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace, ItemConverterType = typeof(utils.CompactFloatArrayConverter))]
+            public Dictionary<string, float[]> RoughRanges = new Dictionary<string, float[]>
+            {
+                { "chipped", new[] { 1.6f, 2.8f } },
+                { "flawed", new[] { 3.0f, 4.8f } },
+                { "normal", new[] { 5.0f, 7.0f } }
+            };
+            // Share of the rough weight a cut keeps.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, float> CutYield = new Dictionary<string, float>
+            {
+                { "round", 0.5f }, { "pear", 0.55f }, { "baguette", 0.6f }
+            };
+            // Upper weight of cut size 1 and 2; size 3 has no upper bound yet.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<int, float> BucketBounds = new Dictionary<int, float> { { 1, 1.5f }, { 2, 2.5f } };
+            // Weight read for cut gems and sockets from before carats, by cut size.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<int, float> LegacyCutCarats = new Dictionary<int, float> { { 1, 1.0f }, { 2, 2.0f }, { 3, 3.3f } };
+            public bool TraitsAffectBuffs = true;
+            // "carats": a buff follows the gem's weight, mid·ct^BuffExponent. "tiers": the old fixed
+            // ranges per cut size, as before carats.
+            public string BuffScaling = "carats";
+            public float BuffExponent = 1.6f;
+            // Random share around the curve; null fits it from the width of the old tier ranges.
+            public float? BuffSpread = 0.05f;
+            // Cap a buff at what the heaviest cut gem gets instead of the old top tier's bound.
+            public bool CapByWeight = true;
+            // Heaviest cut gem; anything above is lost as dust.
+            public float MaxCutCarats = 3.5f;
+            // Keep the cut size the recipe names instead of the one the weight falls into.
+            public bool KeepRecipeBucket = false;
+            // Weight a gem loses when an extraction downgrades it.
+            public float ExtractionDowngradeLoss = 0.3f;
+            // "carats": a gem fits a socket whose capacity holds its weight. "tiers": the socket
+            // tier has to be at least the gem's size, as before carats.
+            public string CapacityMode = "carats";
+            // Carats a socket of each tier holds; tiers above the last continue its last step.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<int, float> SocketCapacity = new Dictionary<int, float> { { 1, 1.5f }, { 2, 2.5f }, { 3, 3.5f } };
+
+            // A limit on the carats all sockets of an item hold together. Off here turns every
+            // budget off - the config's, an item's own and what content mods registered.
+            public bool CaratBudgetEnabled = true;
+            // Item code (wildcards allowed) -> carats, e.g. "canjewelryadornments:ring-trinity-*": 3.75.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, float> CaratBudgets = new Dictionary<string, float>();
+
+            [JsonIgnore]
+            public bool CapacityByCarats => !"tiers".Equals(CapacityMode, StringComparison.OrdinalIgnoreCase);
+            public AppraisalConfig Appraisal = new AppraisalConfig();
+            public SplitConfig Split = new SplitConfig();
+            public InspectionConfig Inspection = new InspectionConfig();
+
+            [JsonIgnore]
+            public bool ScalesByCarats => !"tiers".Equals(BuffScaling, StringComparison.OrdinalIgnoreCase);
+
+            public float BuffMultOf(string gemType)
+                => gemType != null && GemOverrides.TryGetValue(gemType, out var over) && over?.BuffMult != null ? over.BuffMult.Value : 1f;
+            // Rolled in this order; a trait listed in Excludes of one already taken is skipped.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, GemTraitConfig> Traits = new Dictionary<string, GemTraitConfig>
+            {
+                { "crack", new GemTraitConfig(new[] { 0.25f, 0.15f, 0.08f }, 0.8f, 1f, true) { Local = true, RemoveCost = 0.12f } },
+                { "inclusions", new GemTraitConfig(new[] { 0.30f, 0.20f, 0.12f }, 1f, 1f, false) { Local = true, RemoveCost = 0.025f, Pieces = new[] { 1, 3 }, PieceBuffPenalty = 0.05f } }
+            };
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, GemCaratsOverride> GemOverrides = new Dictionary<string, GemCaratsOverride>();
+
+            /// <summary>Logs what would make the numbers inconsistent. Nothing is changed.</summary>
+            public void Validate(ILogger logger)
+            {
+                if (Step <= 0) logger?.Warning("[canjewelry] GemCarats.Step must be above 0, {0} given", Step);
+                if (CapacityByCarats && SocketCapacity.Count > 0 && MaxCutCarats > SocketCapacity.Values.Max() + 0.001f)
+                {
+                    logger?.Warning("[canjewelry] GemCarats.MaxCutCarats = {0} is above the largest SocketCapacity {1}: the heaviest cut gems would fit no socket",
+                        MaxCutCarats, SocketCapacity.Values.Max());
+                }
+                foreach (var pair in LegacyCutCarats)
+                {
+                    if (BucketBounds.TryGetValue(pair.Key, out float bound) && pair.Value > bound + 0.001f)
+                    {
+                        logger?.Warning("[canjewelry] GemCarats.LegacyCutCarats[{0}] = {1} is above BucketBounds[{0}] = {2}: old gems would change size",
+                            pair.Key, pair.Value, bound);
+                    }
+                }
+                foreach (var pair in LegacyCutCarats)
+                {
+                    if (SocketCapacity.TryGetValue(pair.Key, out float capacity) && pair.Value > capacity + 0.001f)
+                    {
+                        logger?.Warning("[canjewelry] GemCarats.LegacyCutCarats[{0}] = {1} is above SocketCapacity[{0}] = {2}: old gems would no longer fit their sockets",
+                            pair.Key, pair.Value, capacity);
+                    }
+                }
+                foreach (var pair in RoughRanges)
+                {
+                    if (pair.Value == null || pair.Value.Length < 2 || pair.Value[0] > pair.Value[1])
+                        logger?.Warning("[canjewelry] GemCarats.RoughRanges[{0}] must be [min, max]", pair.Key);
+                }
+                foreach (var pair in GemOverrides)
+                {
+                    foreach (string trait in pair.Value?.TraitWeights?.Keys ?? Enumerable.Empty<string>())
+                    {
+                        if (!Traits.ContainsKey(trait))
+                            logger?.Warning("[canjewelry] GemCarats.GemOverrides[{0}] names unknown trait {1}", pair.Key, trait);
+                    }
+                }
+            }
+        }
+        public class AppraisalConfig
+        {
+            public float LoupeSeconds = 2f;
+            // Width of the loupe's range as a share of the rough quality's whole range.
+            public float LoupeRangeFraction = 0.4f;
+            public int MaxTraits = 2;
+        }
+        /// <summary>The loupe's inspection: turning the gem in a preview and clicking its defects out.</summary>
+        public class InspectionConfig
+        {
+            // Off falls back to the plain two second loupe.
+            public bool Enabled = true;
+            public int Attempts = 5;
+            // Weight a click that finds nothing costs.
+            public float MissCost = 0.01f;
+            // How close to a defect a click has to land, in preview pixels (the preview is FboSize wide).
+            public float HitRadius = 18f;
+            public float MinVisibility = 0.35f;
+            // Game hours a rough gem stays wet after a right click on water with it.
+            public double WetHours = 1.0;
+            // Side of the preview, in pixels; also the size it is rendered at, so it stays sharp.
+            public int FboSize = 400;
+            // How the gem is lit, decided by where the player stands and whether the gem is wet, not
+            // chosen: every mode whose conditions hold is on, and their shares add up as separate
+            // chances to spot a flaw. No single place shows everything.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, InspectModeConfig> Modes = new Dictionary<string, InspectModeConfig>
+            {
+                // Each mode shows one kind of flaw and nothing else, two modes for each kind: cracks
+                // in the shade or on a wet gem, inclusions in bright light or in the dark.
+                { "immersion", new InspectModeConfig { MinLight = 0, MaxLight = 32, RequiresWater = true,
+                    Visibility = new Dictionary<string, float> { { "crack", 1f } } } },
+                { "darkfield", new InspectModeConfig { MinLight = 0, MaxLight = 5,
+                    Visibility = new Dictionary<string, float> { { "inclusions", 1f } } } },
+                { "reflected", new InspectModeConfig { MinLight = 6, MaxLight = 10,
+                    Visibility = new Dictionary<string, float> { { "crack", 1f } } } },
+                { "transmitted", new InspectModeConfig { MinLight = 11, MaxLight = 32,
+                    Visibility = new Dictionary<string, float> { { "inclusions", 1f } } } }
+            };
+            // Where the gem's surface is, as a share of its half size (box from its shape): defects
+            // lie on it.
+            public float Spread = 0.85f;
+            // Off (0) by default: the flaws are cubes on the gem's model, which the gem's own body
+            // hides on its far side. Judged from the middle instead (1 or -1, by which way the
+            // preview's z faces the viewer) it went wrong on lumpy gems, refusing visible flaws.
+            public float FrontZ = 0f;
+            // Half the length of a crack's drawn line, in the same shares.
+            public float CrackHalfLength = 0.35f;
+            // Mirror the marks vertically, should they come out upside down against the gem.
+            public bool FlipY = false;
+        }
+        public class InspectModeConfig
+        {
+            // Light level at the player this mode works in, inclusive.
+            public int MinLight;
+            public int MaxLight = 32;
+            // Only while the gem is wet (dipped in water); such a mode goes first in the list to win then.
+            public bool RequiresWater;
+            // Trait -> how plainly it shows; a trait left out does not show at all.
+            public Dictionary<string, float> Visibility = new Dictionary<string, float>();
+
+            public bool Allows(int lightLevel, bool inWater = false)
+                => lightLevel >= MinLight && lightLevel <= MaxLight && (!RequiresWater || inWater);
+
+            public float VisibilityOf(string trait) => trait != null && Visibility != null && Visibility.TryGetValue(trait, out float v) ? v : 0f;
+        }
+        public class SplitConfig
+        {
+            // Cleaving a rough gem on the cutting table, before it is cut.
+            public bool Enabled = true;
+            // Share of the weight lost as dust in a cleave.
+            public float Loss = 0.1f;
+            // Lost instead when cleaving along a crack the inspection found: the gem parts where
+            // it was weak, and the crack is gone.
+            public float CrackLoss = 0.03f;
+            // Lightest rough piece a cleave may give.
+            public float MinPieceCarats = 1.0f;
+            // Name -> shares of the pieces; the chisel cycles through them in this order.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace, ItemConverterType = typeof(utils.CompactFloatArrayConverter))]
+            public Dictionary<string, float[]> Presets = new Dictionary<string, float[]>
+            {
+                { "halves", new[] { 0.5f, 0.5f } },
+                { "thirds", new[] { 1f, 1f, 1f } },
+                { "seventythirty", new[] { 0.7f, 0.3f } }
+            };
+        }
+        public class GemTraitConfig
+        {
+            // Chance by rough quality: chipped, flawed, normal.
+            [JsonConverter(typeof(utils.CompactFloatArrayConverter))]
+            public float[] Chance;
+            public float YieldMult = 1f;
+            public float BuffMult = 1f;
+            public bool RemovableBySplit;
+            [JsonConverter(typeof(utils.CompactStringArrayConverter))]
+            public string[] Excludes = new string[0];
+            // Sits at one place inside the gem, so the inspection can find it and grind it out
+            // at RemoveCost of the gem's weight. A trait that is not local is the whole stone's: the
+            // inspection shows it at once, and every cleaved piece keeps it.
+            public bool Local;
+            // Weight one piece of the flaw costs to grind out.
+            public float RemoveCost;
+            // How many pieces a local flaw lies in, [min, max]: inclusions are a scatter of specks.
+            // The trait is gone once the last piece is ground out.
+            [JsonConverter(typeof(utils.CompactIntArrayConverter))]
+            public int[] Pieces = { 1, 1 };
+            // Buff share each piece still in the gem at cutting takes away, on top of BuffMult.
+            public float PieceBuffPenalty;
+
+            [JsonConstructor]
+            public GemTraitConfig() { }
+
+            public GemTraitConfig(float[] chance, float yieldMult, float buffMult, bool removableBySplit, string[] excludes = null)
+            {
+                Chance = chance;
+                YieldMult = yieldMult;
+                BuffMult = buffMult;
+                RemovableBySplit = removableBySplit;
+                Excludes = excludes ?? new string[0];
+            }
+        }
+        /// <summary>Per gem type; anything left out falls back to the shared values.</summary>
+        public class GemCaratsOverride
+        {
+            [JsonProperty(ItemConverterType = typeof(utils.CompactFloatArrayConverter))]
+            public Dictionary<string, float[]> RoughRanges;
+            public Dictionary<string, float> CutYield;
+            // Multiplies a trait's chance for this gem.
+            public Dictionary<string, float> TraitWeights;
+            // Strength of this gem on top of its buff's curve, e.g. to tell apart two gems that
+            // share a buff.
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public float? BuffMult;
+        }
         /// <summary>
         /// Turns the colour words of the config into the hex strings the tooltip writes into a VTML
         /// font tag. Only words that name a colour are taken: an unknown one used to become white
@@ -2033,6 +2306,13 @@ namespace canjewelry.src
         public void InitColors(ILogger logger = null)
         {
             if (socketTiersColorsWords == null || socketTiersColorsWords.Length == 0) return;
+
+            // The old defaults, left in configs written before: dark blue and purple were unreadable
+            // on the tooltip. Colours an admin chose are anything else and stay.
+            if (socketTiersColorsWords.SequenceEqual(new[] { "green", "blue", "purple" }))
+            {
+                socketTiersColorsWords = new[] { "lightgreen", "lightskyblue", "plum" };
+            }
 
             List<string> tmpList = new List<string>();
             foreach (var it in socketTiersColorsWords)

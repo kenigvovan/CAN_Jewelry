@@ -182,6 +182,17 @@ public abstract class WorkstationScenarioBase : JewelryScenarioBase
             new Dictionary<int, float[]> { { 1, new[] { value } }, { 2, new[] { value } }, { 3, new[] { value } } },
             null, null);
         SetConfig(c => c.BuffAttributesDict[buff], (c, v) => c.BuffAttributesDict[buff] = v, fixedValue);
+        NoGemTraits();
+        ByTiers();
         return buff;
     }
+
+    /// <summary>Buffs by the old fixed ranges per cut size, not by the gem's weight.</summary>
+    protected void ByTiers() =>
+        SetConfig(c => c.GemCarats.BuffScaling, (c, v) => c.GemCarats.BuffScaling = v, "tiers");
+
+    /// <summary>Gems roll no traits, so a cut's buffs are not multiplied by a random one.</summary>
+    protected void NoGemTraits() =>
+        SetConfig(c => c.GemCarats.Traits, (c, v) => c.GemCarats.Traits = v,
+            new Dictionary<string, global::canjewelry.src.Config.GemTraitConfig>());
 }

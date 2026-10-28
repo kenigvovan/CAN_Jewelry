@@ -603,6 +603,8 @@ public class GemCuttingTableScenarios : WorkstationScenarioBase
     [AtlasScenario]
     public async Task ExactMatch_Should_GiveCutGem_WithBuffRolledFromConfig()
     {
+        NoGemTraits();
+        ByTiers();
         var (player, table, _) = await TableWithGem();
         table.Voxels = RecipeGrid(table);
 
@@ -647,8 +649,9 @@ public class GemCuttingTableScenarios : WorkstationScenarioBase
     [AtlasScenario]
     public async Task Hammer_WithMissingRecipeVoxels_Should_FinishWithLoweredBuff()
     {
-        var (player, table, pos) = await TableWithGem();
+        // Before the gem goes on the table: its traits are rolled there.
         FixGemBuff(GemType, 0.05f);
+        var (player, table, pos) = await TableWithGem();
         SetConfig(c => c.minFineForMistake, (c, v) => c.minFineForMistake = v, 0.1f);
         SetConfig(c => c.maxFineForMistake, (c, v) => c.maxFineForMistake = v, 0.1f);
         byte[,,] grid = RecipeGrid(table);

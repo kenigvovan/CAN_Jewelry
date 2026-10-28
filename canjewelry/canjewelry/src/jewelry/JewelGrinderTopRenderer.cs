@@ -75,7 +75,8 @@ namespace canjewelry.src.jewelry
 
                 if (ShouldRotateAutomated)
                 {
-                    AngleRad = mechPowerPart.AngleRad * 3f;
+                    // Spindle and disc are one rigid part on the input shaft, so they turn with the gear below (as vanilla quern).
+                    AngleRad = mechPowerPart.AngleRad;
                 }
             }
         }

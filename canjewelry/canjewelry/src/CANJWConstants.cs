@@ -26,6 +26,16 @@ namespace canjewelry.src
         public const string WAS_GROUND_BEFORE = "wasGroundBefore";
         public const string SOCKET_ITEM_CODE = "socketitemcode";
 
+        // Gem weight and traits. On a rough gem and a work item they are the hidden truth; what the
+        // player has learned of it is APPRAISAL, CARATS_RANGE and GEM_TRAITS_KNOWN.
+        public const string CARATS = "carats";
+        public const string GEM_TRAITS = "gemtraits";
+        public const string GEM_TRAITS_KNOWN = "gemtraitsknown";
+        public const string APPRAISAL = "appraisal";
+        public const string CARATS_RANGE = "caratsrange";
+        // On a cut gem tree: the flaw pieces still in the stone when it was cut, one entry each.
+        public const string FLAW_PIECES = "gemflawpieces";
+
         public const string TEMPORALGRASP = "temporalgrasp";
         public const string CUTTING_ROUND = "round";
         public const string CUTTING_BAGUETTE = "baguette";

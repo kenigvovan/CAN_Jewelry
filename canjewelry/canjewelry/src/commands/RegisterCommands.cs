@@ -2,6 +2,7 @@
 using canjewelry.src.CB;
 using canjewelry.src.eb;
 using canjewelry.src.items;
+using canjewelry.src.utils;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -45,6 +46,18 @@ namespace canjewelry.src.commands
                                         .WithAlias("sgb")
                                         .WithArgs(parsers.WordRange("cutting", CANJWConstants.CUTTING_ROUND, CANJWConstants.CUTTING_BAGUETTE, CANJWConstants.CUTTING_PEAR), parsers.OptionalAll("buffNamesAndValues"))
                                         .HandleWith(SetGemParams)
+                                    .EndSub()
+                                    .BeginSub("gem")
+                                        .RequiresPlayer()
+                                        .BeginSub("info")
+                                            .WithDesc("weight, traits and what the player knows of the gem in hand, hidden truth included")
+                                            .HandleWith(ShowGemInfo)
+                                        .EndSub()
+                                        .BeginSub("carats")
+                                            .WithDesc("set the weight and traits of the gem in hand; a cut gem rerolls its buffs and takes the size of its weight (creative)")
+                                            .WithArgs(parsers.Float("carats"), parsers.OptionalAll("traits"))
+                                            .HandleWith(SetGemCarats)
+                                        .EndSub()
                                     .EndSub()
                                     .BeginSub("cutting")
                                         .WithDesc("show the gem cutting table settings")
@@ -310,6 +323,92 @@ namespace canjewelry.src.commands
         {
             ensureCuttingLists();
             return toggleListEntry(canjewelry.config.cuttingBlacklist, "blacklist", args);
+        }
+
+        public static TextCommandResult ShowGemInfo(TextCommandCallingArgs args)
+        {
+            ItemStack stack = (args.Caller.Player as IServerPlayer)?.InventoryManager.ActiveHotbarSlot.Itemstack;
+            if (stack == null) return TextCommandResult.Error("Hold a gem.");
+
+            var cfg = canjewelry.config.GemCarats;
+            var sb = new StringBuilder();
+            sb.AppendLine(stack.Collectible.Code.ToString());
+            ITreeAttribute cutGemTree = stack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+            if (cutGemTree != null)
+            {
+                int size = stack.Collectible.Attributes?["canGemType"].AsInt(1) ?? 1;
+                bool legacy = !CANGemAppraisal.HasCarats(cutGemTree);
+                sb.AppendLine($"carats: {CANGemSize.GetCutCarats(cutGemTree, size, cfg)}{(legacy ? " (legacy, not stored)" : "")}, bucket {CANGemAppraisal.BucketForCarats(cfg, CANGemSize.GetCutCarats(cutGemTree, size, cfg))}");
+                sb.AppendLine("traits: " + string.Join(", ", CANGemAppraisal.GetTraits(cutGemTree)));
+                string[] names = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_NAMES] as StringArrayAttribute)?.value ?? new string[0];
+                float[] values = (cutGemTree[CANJWConstants.ENCRUSTABLE_BUFFS_VALUES] as FloatArrayAttribute)?.value ?? new float[0];
+                for (int i = 0; i < names.Length && i < values.Length; i++)
+                {
+                    BuffCurve curve = canjewelry.config.BuffAttributesDict.TryGetValue(names[i], out var attrs) ? attrs.MainCurve(cfg) : null;
+                    sb.AppendLine($"{names[i]}: {values[i]}" + (curve == null ? "" : $" (curve mid {curve.Mid:0.####}/ct, spread {curve.Spread:0.##}, k {curve.K}, cap {curve.Max})"));
+                }
+            }
+            else if (stack.Collectible.HasBehavior<cb.CANGemAppraisalCB>())
+            {
+                ITreeAttribute tree = stack.Attributes;
+                float[] range = CANGemAppraisal.GetCaratsRange(tree);
+                sb.AppendLine($"quality: {CANGemSize.RoughQualityOf(stack)}, appraisal: {CANGemAppraisal.GetAppraisal(tree)}"
+                    + (range == null ? "" : $", shown {range[0]}-{range[1]} ct"));
+                sb.AppendLine(CANGemAppraisal.HasCarats(tree)
+                    ? $"truth: {CANGemAppraisal.GetCarats(tree)} ct, traits {string.Join(", ", CANGemAppraisal.GetTraits(tree))}; known: {string.Join(", ", CANGemAppraisal.GetKnownTraits(tree))}"
+                    : "truth: not rolled yet");
+            }
+            else
+            {
+                return TextCommandResult.Error("Not a gem.");
+            }
+            return TextCommandResult.Success(sb.ToString());
+        }
+
+        public static TextCommandResult SetGemCarats(TextCommandCallingArgs args)
+        {
+            var player = args.Caller.Player as IServerPlayer;
+            if (player.WorldData.CurrentGameMode != EnumGameMode.Creative) return TextCommandResult.Error("Creative only.");
+            ItemSlot slot = player.InventoryManager.ActiveHotbarSlot;
+            ItemStack stack = slot.Itemstack;
+            if (stack == null) return TextCommandResult.Error("Hold a gem.");
+
+            var cfg = canjewelry.config.GemCarats;
+            float carats = Math.Max(cfg.Step, CANGemAppraisal.RoundCarats((float)args.Parsers[0].GetValue(), cfg.Step));
+            string traitsArg = args.Parsers[1].GetValue() as string;
+            string[] traits = string.IsNullOrWhiteSpace(traitsArg) ? new string[0] : traitsArg.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            string[] unknown = traits.Where(t => !cfg.Traits.ContainsKey(t)).ToArray();
+            if (unknown.Length > 0) return TextCommandResult.Error("Unknown traits: " + string.Join(", ", unknown) + ". Known: " + string.Join(", ", cfg.Traits.Keys));
+
+            ITreeAttribute cutGemTree = stack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+            if (cutGemTree != null)
+            {
+                string gemType = CANGemSize.GemTypeOf(stack.Collectible);
+                Item sized = cfg.ScalesByCarats
+                    ? player.Entity.World.GetItem(CANGemSize.CutGemCode(CANGemSize.CutQualityClamped(CANGemAppraisal.BucketForCarats(cfg, carats)), gemType))
+                    : null;
+                if (sized != null && sized != stack.Item)
+                {
+                    var swapped = new ItemStack(sized, stack.StackSize);
+                    swapped.Attributes = stack.Attributes.Clone();
+                    stack = swapped;
+                    cutGemTree = stack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
+                }
+                if (!cutGemTree.HasAttribute(CANJWConstants.CUTTING_TYPE)) cutGemTree.SetString(CANJWConstants.CUTTING_TYPE, CANJWConstants.CUTTING_ROUND);
+                CANGemAppraisal.SetWeight(cutGemTree, carats, traits);
+                EncrustableCB.ApplyCuttingBuff(stack);
+                slot.Itemstack = stack;
+            }
+            else if (stack.Collectible.HasBehavior<cb.CANGemAppraisalCB>())
+            {
+                CANGemAppraisal.SetWeight(stack.Attributes, carats, traits);
+            }
+            else
+            {
+                return TextCommandResult.Error("Not a gem.");
+            }
+            slot.MarkDirty();
+            return TextCommandResult.Success($"{stack.Collectible.Code}: {carats} ct" + (traits.Length > 0 ? ", " + string.Join(", ", traits) : ""));
         }
 
         public static TextCommandResult SetGemParams(TextCommandCallingArgs args)

@@ -152,8 +152,11 @@ namespace canjewelry.src.gui
                 // The item is drawn from its centre, so the size is what its longest side gets.
                 // Bulky pieces (armor, coronets) reach past that box once rotated, which clipped
                 // their edges against the framebuffer - hence the margin rather than 0.75.
+                // Deep enough that a rotated item never reaches the ortho near plane (0.4): at
+                // z 100 anything over ~200px clipped its near side. CANGemInspectionServer.ViewFor
+                // uses the same depth.
                 _itemRenderer.RenderItemstackToGui(_dummySlot,
-                    _fboSize / 2.0 + PanX, _fboSize / 2.0 + PanY, 100,
+                    _fboSize / 2.0 + PanX, _fboSize / 2.0 + PanY, 100 + _fboSize,
                     _fboSize * 0.55f * Zoom, -1,
                     showStackSize: false);
 

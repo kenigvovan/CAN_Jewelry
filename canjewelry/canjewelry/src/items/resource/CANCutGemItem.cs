@@ -99,6 +99,8 @@ namespace canjewelry.src.items.resource
 
             renderinfo.ModelRef = modelref;
             base.OnBeforeRender(capi, itemstack, target, ref renderinfo);
+            render.CANGemDrawScale.Apply(ref renderinfo, utils.CANGemAppraisal.CutDrawScale(canjewelry.config?.GemCarats,
+                itemstack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE), Attributes?["canGemType"].AsInt(1) ?? 1));
         }
         /// <summary>
         /// The gem as its cut shapes it, textured with its own colour. This and the slot overload
@@ -140,6 +142,7 @@ namespace canjewelry.src.items.resource
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
+            cb.CANGemAppraisalCB.AppendCutInfo(dsc, inSlot.Itemstack?.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE));
             if (!canjewelry.config.TurnOffBuffs)
             {
                 if (inSlot.Itemstack.Attributes.HasAttribute(CANJWConstants.CUT_GEM_TREE))

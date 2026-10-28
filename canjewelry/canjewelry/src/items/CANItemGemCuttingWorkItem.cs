@@ -185,6 +185,9 @@ namespace canjewelry.src.items
             {
                 recipe.Output.ResolvedItemstack.GetName()
             }));
+            var attrs = inSlot.Itemstack.Attributes;
+            cb.CANGemAppraisalCB.AppendRoughInfo(dsc, attrs,
+                attrs.GetString(CANJWConstants.ENCRUSTED_GEM_SIZE), attrs.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET));
         }
         public List<GemCuttingRecipe> GetMatchingRecipes(ItemStack stack)
         {

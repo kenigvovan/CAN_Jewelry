@@ -217,6 +217,13 @@ namespace canjewelry.src.harmony
                 {
                     dsc.Append(Lang.Get("canjewelry:item-can-have-n-sockets", canHaveNsocketsMore)).Append("\n");
                 }
+                float? budget = CANGemAppraisal.BudgetOf(canjewelry.config.GemCarats, itemstack);
+                if (budget != null)
+                {
+                    dsc.Append(Lang.Get("canjewelry:item-carat-budget",
+                        CANGemAppraisalCB.FormatCarats(CANGemAppraisal.CaratsInSockets(canjewelry.config.GemCarats, itemstack, -1)),
+                        CANGemAppraisalCB.FormatCarats(budget.Value))).Append("\n");
+                }
                 if (!canjewelry.config.TurnOffBuffs)
                 {
                     for (int i = 0; i < maxSocketsNumber; i++)
@@ -236,12 +243,25 @@ namespace canjewelry.src.harmony
                             ? tierColors[GameMath.Clamp(socketTier - 1, 0, tierColors.Length - 1)]
                             : null;
                         string tierText = Lang.Get("canjewelry:item-socket-tier", socketTier);
+                        // The capacity goes after the coloured tier, in the tooltip's own colour:
+                        // in a dark tier colour it could not be read.
+                        string capacityText = "";
+                        var caratsCfg = canjewelry.config.GemCarats;
+                        if (caratsCfg != null && caratsCfg.CapacityByCarats)
+                        {
+                            string capacity = CANGemAppraisalCB.FormatCarats(CANGemAppraisal.SocketCapacity(caratsCfg, socketTier));
+                            capacityText = treeSlot.GetString("gemtype", "") != ""
+                                ? Lang.Get("canjewelry:socket-capacity-filled", CANGemAppraisalCB.FormatCarats(
+                                    CANGemSize.GetCutCarats(treeSlot, treeSlot.GetInt(CANJWConstants.ENCRUSTED_GEM_SIZE), caratsCfg)), capacity)
+                                : Lang.Get("canjewelry:socket-capacity", capacity);
+                        }
 
                         if (tierColor == null) dsc.Append(tierText);
                         else dsc.Append("<font color=\"#").Append(tierColor).Append("\">").Append(tierText).Append("</font>");
-                        dsc.Append("\n");
+                        dsc.Append(capacityText).Append("\n");
                         if (treeSlot.GetString("gemtype") != "")
                         {
+                            CANGemAppraisalCB.AppendCutInfo(dsc, treeSlot);
                             if (treeSlot.HasAttribute(CANJWConstants.GEM_ATTRIBUTE_BUFF))
                             {
                                 if (treeSlot.GetString(CANJWConstants.GEM_ATTRIBUTE_BUFF).Equals("maxhealthExtraPoints"))

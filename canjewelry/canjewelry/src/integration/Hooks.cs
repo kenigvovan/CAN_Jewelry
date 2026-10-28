@@ -16,6 +16,7 @@ namespace canjewelry.src.integration
         public int SocketIndex;   // 0-based slot index being filled (for cross-socket logic)
         public string BuffName;
         public float Value;       // mutable — final value written into the socket tree
+        public float Carats;      // weight of the gem going in
     }
 
     public class CutEvent
@@ -25,6 +26,55 @@ namespace canjewelry.src.integration
         public string CuttingType;   // round / pear / baguette
         public string GemSize;       // chipped / flawed / normal
         public bool ConsumeRough = true;
+        public float RoughCarats;    // weight of the rough gem the cut was made from
+        public float CutCarats;      // weight the cut gem came out with
+    }
+
+    // Fires when a cut finishes, before the cut gem's weight is worked out: Yield is the share of
+    // the rough weight the cut keeps (traits such as a crack apply on top). A perk raises it.
+    public class CutYieldEvent
+    {
+        public IPlayer Player;
+        public ItemStack WorkItem;
+        public string CuttingType;
+        public float RoughCarats;
+        public float Yield;          // mutable
+    }
+
+    // Fires when a rough gem is appraised: through the loupe (Stage Loupe, or Inspect for the
+    // inspection) or silently on the cutting table (Stage Table, nothing revealed). Carats and
+    // Traits are the gem's truth and may be changed; RevealCount is how many traits the player
+    // learns (the table ignores it).
+    public class AppraiseEvent
+    {
+        public IPlayer Player;
+        public ItemStack Gem;
+        public utils.AppraiseStage Stage;
+        public float Carats;         // mutable
+        public string[] Traits;      // mutable
+        public int RevealCount = 1;  // mutable, loupe only
+        public int Attempts;         // mutable, inspection only: clicks the player gets
+    }
+
+    // Fires when the inspection grinds a flaw out of a rough gem. CaratCost is the share of the
+    // gem's weight it costs; a perk lowers it.
+    public class DefectRemovedEvent
+    {
+        public IPlayer Player;
+        public ItemStack Gem;
+        public string Trait;
+        public float CaratCost;      // mutable
+    }
+
+    // Fires before a cut gem is split on the cutting table. A subscriber lowers the share of the
+    // weight lost as dust (a skill perk), or cancels the split.
+    public class SplitEvent
+    {
+        public IPlayer Player;
+        public ItemStack Gem;
+        public string Preset;
+        public float LossFraction;   // mutable
+        public bool Allowed = true;  // mutable
     }
 
     public class GrindEvent
@@ -132,6 +182,7 @@ namespace canjewelry.src.integration
         public int SocketTier;
         public int SocketIndex;         // 0-based slot index the gem came from
         public string BuffName;
+        public float Carats;            // weight of the gem in the socket
 
         public GemOutcome     GemOutcome     = GemOutcome.Returned;
         public JewelryOutcome JewelryOutcome = JewelryOutcome.Intact;
@@ -146,6 +197,10 @@ namespace canjewelry.src.integration
         // fallback: on success the outcome becomes ReturnedDowngraded instead. Companion mods
         // set this to give players a consolation prize (e.g. a DelicateTouch-style perk).
         public float DowngradeChance = 0f;
+
+        // Share of its weight a downgraded gem loses (by carats). Starts at the config value; a
+        // perk lowers it. The gem still drops at least one size.
+        public float DowngradeCaratLoss;
 
         // Built-in chance (from config) that the jewelry is destroyed when a gem is pulled.
         // Companion mods can raise or lower it. Core promotes JewelryOutcome.Intact → Destroyed

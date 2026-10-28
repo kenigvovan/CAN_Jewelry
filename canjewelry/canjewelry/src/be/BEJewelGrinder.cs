@@ -5,7 +5,9 @@ using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Threading.Tasks;
 using canjewelry.src.CB;
+using canjewelry.src.cb;
 using canjewelry.src.inventories;
+using canjewelry.src.utils;
 using canjewelry.src.items.resource;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -448,12 +450,12 @@ namespace canjewelry.src.jewelry
                 return (MeshData)null;
             MeshData modeldata = null;
             if (type.Equals("base")){
-                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canjewelry:shapes/block/jewelgrinder.json"), out modeldata);
+                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canjewelry:shapes/block/lapidarygrinder.json"), out modeldata);
             }
             else if (type.Equals("top"))
             {
                 //((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canmods:shapes/block/jewelgrinder-top.json"), out modeldata);
-                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape("jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/jewelgrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f));
+                ((ICoreClientAPI)this.Api).Tesselator.TesselateShape("jewelgrinder-top", Shape.TryGet(this.Api, "canjewelry:shapes/block/lapidarygrinder-top.json"), out modeldata, (ITexPositionSource)this, new Vec3f(0.0f, block.Shape.rotateY, 0.0f));
                // ((ICoreClientAPI)this.Api).Tesselator.TesselateShape((CollectibleObject)block, Shape.TryGet(this.Api, "canmods:shapes/block/jewelgrinder-top.json"), out modeldata);
             }
             return modeldata;

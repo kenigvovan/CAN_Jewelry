@@ -1,6 +1,7 @@
 ﻿[
   {
     "ingredientPattern": "D",
+    "copyAttributesFrom": "D",
     "ingredients": {
       "D": {
         "type": "item",
@@ -40,6 +41,7 @@
   },
   {
     "ingredientPattern": "D",
+    "copyAttributesFrom": "D",
     "ingredients": {
       "D": {
         "type": "item",
@@ -79,6 +81,7 @@
   },
   {
     "ingredientPattern": "D",
+    "copyAttributesFrom": "D",
     "ingredients": {
       "D": {
         "type": "item",

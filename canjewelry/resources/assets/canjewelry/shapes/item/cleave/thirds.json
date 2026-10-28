@@ -1,0 +1,13 @@
+{
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textures": { "gem": "canjewelry:item/gem/quartz" },
+	"elements": [
+		{ "name": "PieceA", "from": [ 2.5, 0, 5 ], "to": [ 5.3, 3.5, 11 ],
+		  "faces": { "north": { "texture": "#gem", "uv": [ 0, 0, 3, 3.5 ] }, "east": { "texture": "#gem", "uv": [ 0, 0, 6, 3.5 ] }, "south": { "texture": "#gem", "uv": [ 0, 0, 3, 3.5 ] }, "west": { "texture": "#gem", "uv": [ 0, 0, 6, 3.5 ] }, "up": { "texture": "#gem", "uv": [ 0, 0, 3, 6 ] }, "down": { "texture": "#gem", "uv": [ 0, 0, 3, 6 ] } } },
+		{ "name": "PieceB", "from": [ 6.6, 0, 5 ], "to": [ 9.4, 3.5, 11 ],
+		  "faces": { "north": { "texture": "#gem", "uv": [ 4, 0, 7, 3.5 ] }, "east": { "texture": "#gem", "uv": [ 4, 0, 10, 3.5 ] }, "south": { "texture": "#gem", "uv": [ 4, 0, 7, 3.5 ] }, "west": { "texture": "#gem", "uv": [ 4, 0, 10, 3.5 ] }, "up": { "texture": "#gem", "uv": [ 4, 0, 7, 6 ] }, "down": { "texture": "#gem", "uv": [ 4, 0, 7, 6 ] } } },
+		{ "name": "PieceC", "from": [ 10.7, 0, 5 ], "to": [ 13.5, 3.5, 11 ],
+		  "faces": { "north": { "texture": "#gem", "uv": [ 8, 0, 11, 3.5 ] }, "east": { "texture": "#gem", "uv": [ 8, 0, 14, 3.5 ] }, "south": { "texture": "#gem", "uv": [ 8, 0, 11, 3.5 ] }, "west": { "texture": "#gem", "uv": [ 8, 0, 14, 3.5 ] }, "up": { "texture": "#gem", "uv": [ 8, 0, 11, 6 ] }, "down": { "texture": "#gem", "uv": [ 8, 0, 11, 6 ] } } }
+	]
+}
