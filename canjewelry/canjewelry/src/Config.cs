@@ -187,6 +187,13 @@ namespace canjewelry.src
             "hussar-head", "hussar-body", "hussar-legs",
             "gothic-head", "gothic-body", "gothic-legs",
             "dynasties-head", "dynasties-body", "dynasties-legs",
+            "starfall-head", "starfall-body", "starfall-legs",
+            "synthetic-head", "synthetic-body", "synthetic-legs",
+            "ghal-head", "ghal-body", "ghal-legs",
+            "reikland-head", "reikland-body", "reikland-legs",
+            "shadow-head", "shadow-body", "shadow-legs",
+            "ivory-head", "ivory-body", "ivory-legs",
+            "trenchmen-head", "trenchmen-body", "trenchmen-legs",
             "forlornzealot", "forlornacolyte",
             "sturdyleatherarmor", "bonearmor", "woodarmor"
         };
@@ -866,6 +873,75 @@ namespace canjewelry.src
             {  "fadynasties:fa-dynasties-body-*", new int[2] {3, 3} },
             {  "fadynasties:fa-dynasties-legs-*", new int[1] {3} },
 
+            // FA 2.x item codes
+            {  "fagreenwich:platehead-*", new int[1] {3} },
+            {  "fagreenwich:platebody-*", new int[2] {3, 3} },
+            {  "fagreenwich:platelegs-*", new int[1] {3} },
+
+            {  "fajousting:platehead-*", new int[1] {3} },
+            {  "fajousting:platebody-*", new int[2] {3, 3} },
+            {  "fajousting:platelegs-*", new int[1] {3} },
+
+            {  "favarangian:platehead-*", new int[1] {3} },
+            {  "favarangian:platebody-*", new int[2] {3, 3} },
+            {  "favarangian:platelegs-*", new int[1] {3} },
+            {  "favarangian:scalehead-*", new int[1] {3} },
+            {  "favarangian:scalebody-*", new int[2] {3, 3} },
+            {  "favarangian:scalelegs-*", new int[1] {3} },
+
+            {  "faviking:platehead-*", new int[1] {3} },
+            {  "faviking:platebody-*", new int[2] {3, 3} },
+            {  "faviking:platelegs-*", new int[1] {3} },
+            {  "faviking:chainhead-*", new int[1] {3} },
+            {  "faviking:chainbody-*", new int[2] {3, 3} },
+            {  "faviking:chainlegs-*", new int[1] {3} },
+
+            {  "fahussar:platehead-*", new int[1] {3} },
+            {  "fahussar:platebody-*", new int[2] {3, 3} },
+            {  "fahussar:platelegs-*", new int[1] {3} },
+            {  "fahussar:brigandinehead-*", new int[1] {3} },
+            {  "fahussar:brigandinebody-*", new int[2] {3, 3} },
+            {  "fahussar:brigandinelegs-*", new int[1] {3} },
+
+            {  "fadynasties:scalehead-*", new int[1] {3} },
+            {  "fadynasties:scalebody-*", new int[2] {3, 3} },
+            {  "fadynasties:scalelegs-*", new int[1] {3} },
+            {  "fadynasties:brigandinehead-*", new int[1] {3} },
+            {  "fadynasties:brigandinebody-*", new int[2] {3, 3} },
+            {  "fadynasties:brigandinelegs-*", new int[1] {3} },
+
+            {  "fagothic:platehead-*", new int[1] {3} },
+            {  "fagothic:platebody-*", new int[2] {3, 3} },
+            {  "fagothic:platelegs-*", new int[1] {3} },
+
+            {  "elstarfall:el-starfall-head-*", new int[1] {3} },
+            {  "elstarfall:el-starfall-body-*", new int[2] {3, 3} },
+            {  "elstarfall:el-starfall-legs-*", new int[1] {3} },
+
+            {  "elsynthetic:el-synthetic-head-*", new int[1] {3} },
+            {  "elsynthetic:el-synthetic-body-*", new int[2] {3, 3} },
+            {  "elsynthetic:el-synthetic-legs-*", new int[1] {3} },
+
+            {  "elghal:el-ghal-head-*", new int[1] {3} },
+            {  "elghal:el-ghal-body-*", new int[2] {3, 3} },
+            {  "elghal:el-ghal-legs-*", new int[1] {3} },
+
+            {  "elreikland:el-reikland-head-*", new int[1] {3} },
+            {  "elreikland:el-reikland-body-*", new int[2] {3, 3} },
+            {  "elreikland:el-reikland-legs-*", new int[1] {3} },
+
+            // modid is elshadowsp, but the asset domain (and so the item codes) is elshadow
+            {  "elshadow:el-shadow-head-*", new int[1] {3} },
+            {  "elshadow:el-shadow-body-*", new int[2] {3, 3} },
+            {  "elshadow:el-shadow-legs-*", new int[1] {3} },
+
+            {  "elivory:el-ivory-head-*", new int[1] {3} },
+            {  "elivory:el-ivory-body-*", new int[2] {3, 3} },
+            {  "elivory:el-ivory-legs-*", new int[1] {3} },
+
+            {  "eltrench:el-trenchmen-head-*", new int[1] {3} },
+            {  "eltrench:el-trenchmen-body-*", new int[2] {3, 3} },
+            {  "eltrench:el-trenchmen-legs-*", new int[1] {3} },
 
             #endregion
             #region firearms + exoskeletons
