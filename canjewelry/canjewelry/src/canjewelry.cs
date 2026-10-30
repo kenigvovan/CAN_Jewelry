@@ -257,6 +257,9 @@ namespace canjewelry.src
 
         private GuiDialogJewelryGuide guideDialog;
         private GuiDialogCuttingSettings cuttingSettingsDialog;
+        private GuiDialogAdminConfig adminConfigDialog;
+        // Set once the config file has been copied aside this session, before the first admin edit.
+        private bool adminEditBackupDone;
         private GuiDialogGemVisualDebug gemVisualDebugDialog;
         /// <summary>
         /// Loaded wearable restrictions, keyed by "category/name". Filled from every mod that ships
@@ -349,6 +352,9 @@ namespace canjewelry.src
             api.RegisterCollectibleBehaviorClass("Encrustable", typeof(EncrustableCB));
             api.RegisterCollectibleBehaviorClass("GemCuttableCB", typeof(CANGemCuttableCB));
             api.RegisterCollectibleBehaviorClass("GemAppraisalCB", typeof(CANGemAppraisalCB));
+            api.RegisterCollectibleBehaviorClass("CANGemPileable", typeof(CANGemPileableCB));
+            api.RegisterBlockClass("CANBlockGemPile", typeof(CANBlockGemPile));
+            api.RegisterBlockEntityClass("CANBEGemPile", typeof(CANBEGemPile));
             // Being wet passes, like being warm: it must not keep a dried gem from stacking.
             if (!GlobalConstants.IgnoredStackAttributes.Contains(CANGemAppraisal.WetUntilKey))
             {
@@ -473,6 +479,23 @@ namespace canjewelry.src
             clientChannel.RegisterMessageType(typeof(GemInspectStatePacket));
             clientChannel.RegisterMessageType(typeof(GemInspectClickPacket));
             clientChannel.RegisterMessageType(typeof(GemInspectClosePacket));
+            clientChannel.RegisterMessageType(typeof(admin.AdminConfigSnapshotPacket));
+            clientChannel.RegisterMessageType(typeof(admin.AdminConfigEditPacket));
+            clientChannel.SetMessageHandler<admin.AdminConfigSnapshotPacket>((packet) =>
+            {
+                // Only ever sent in answer to "/canjewelry config" or to an edit, both of which the
+                // server gates on the privilege. A refresh arrives after the config broadcast it
+                // follows - same channel, same order - so the dialogue redraws with the new rules.
+                if (packet == null) return;
+                if (packet.Open)
+                {
+                    adminConfigDialog?.TryClose();
+                    adminConfigDialog = new GuiDialogAdminConfig(capi, packet);
+                    adminConfigDialog.TryOpen();
+                    return;
+                }
+                if (adminConfigDialog != null && adminConfigDialog.IsOpened()) adminConfigDialog.Refresh(packet);
+            });
             clientChannel.SetMessageHandler<GemInspectStatePacket>((packet) =>
             {
                 if (packet == null) return;
@@ -803,6 +826,9 @@ namespace canjewelry.src
             serverChannel.RegisterMessageType(typeof(GemInspectStatePacket));
             serverChannel.RegisterMessageType(typeof(GemInspectClickPacket));
             serverChannel.RegisterMessageType(typeof(GemInspectClosePacket));
+            serverChannel.RegisterMessageType(typeof(admin.AdminConfigSnapshotPacket));
+            serverChannel.RegisterMessageType(typeof(admin.AdminConfigEditPacket));
+            serverChannel.SetMessageHandler<admin.AdminConfigEditPacket>(OnAdminConfigEdit);
             serverChannel.SetMessageHandler<GemInspectClickPacket>((player, packet) => CANGemInspectionServer.Click(player, packet));
             serverChannel.SetMessageHandler<GemInspectClosePacket>((player, packet) => CANGemInspectionServer.Close(player, packet?.SessionId));
             // A player who leaves mid-inspection gets the gem back rather than losing it.
@@ -1277,6 +1303,68 @@ namespace canjewelry.src
                 Hash = serverGemVisualsHash
             },
             byPlayer);
+        }
+
+        /// <summary>
+        /// One edit from the admin dialogue. The rules are baked into item attributes when they are
+        /// applied, so besides saving and broadcasting the server has to apply them again itself -
+        /// applyAndBroadcastConfig alone only reaches the clients, whose sync handler reapplies.
+        /// </summary>
+        private void OnAdminConfigEdit(IServerPlayer player, admin.AdminConfigEditPacket packet)
+        {
+            // A packet is a packet whoever sends it: checked here, not only on the opening command.
+            if (player == null || !player.HasPrivilege(Privilege.controlserver) || packet == null) return;
+
+            BackupConfigBeforeAdminEdit();
+
+            var result = admin.AdminConfigService.Apply(config, packet);
+            if (result.Changed)
+            {
+                // Recomputes which groups each gem still covers after its list changed.
+                config.ExpandItemGroups();
+                AddBehaviorAndSocketNumber(sapi);
+                commands.RegisterCommands.applyAndBroadcastConfig();
+                sapi.Logger.Notification("[canjewelry] {0} changed the config from the admin dialogue: {1} {2}",
+                    player.PlayerName, packet.Op, string.Join(" ", result.Args));
+            }
+
+            SendAdminSnapshot(player, false, result);
+        }
+
+        internal static void SendAdminSnapshot(IServerPlayer player, bool open, admin.AdminEditResult result = null)
+        {
+            serverChannel?.SendPacket(new admin.AdminConfigSnapshotPacket
+            {
+                Open = open,
+                Missing = admin.AdminConfigService.CollectMissingDefaults(config),
+                Message = result?.Message,
+                MessageIsError = result?.IsError ?? false,
+                MessageArgs = result?.Args ?? new List<string>()
+            }, player);
+        }
+
+        /// <summary>
+        /// Copies the config aside once per session before the dialogue first writes to it, so a
+        /// session of clicking can always be undone by hand. Never fatal.
+        /// </summary>
+        private void BackupConfigBeforeAdminEdit()
+        {
+            if (adminEditBackupDone) return;
+            adminEditBackupDone = true;
+            try
+            {
+                string fileName = this.Mod.Info.ModID + ".json";
+                string path = System.IO.Path.Combine(Vintagestory.API.Config.GamePaths.ModConfig, fileName);
+                if (!System.IO.File.Exists(path)) return;
+
+                string backupName = string.Format("{0}_admin_{1:yyyy-MM-dd_HH-mm-ss}.json.bak", this.Mod.Info.ModID, DateTime.Now);
+                System.IO.File.Copy(path, System.IO.Path.Combine(Vintagestory.API.Config.GamePaths.ModConfig, backupName));
+                sapi.Logger.Notification("[canjewelry] config backed up to {0} before the first admin edit", backupName);
+            }
+            catch (Exception e)
+            {
+                sapi.Logger.Warning("[canjewelry] could not back up the config before an admin edit: {0}", e.Message);
+            }
         }
 
         // The config is always written back after loading, and its stored shape changes between

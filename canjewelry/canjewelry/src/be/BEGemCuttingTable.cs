@@ -33,8 +33,16 @@ namespace canjewelry.src.be
         ItemStack workItemStack;
         public int SelectedRecipeId = -1;
         public byte[,,] Voxels = new byte[16, 14, 16]; // Only the first 2 bits of each byte are used and serialized
+        /// <summary>
+        /// Height of the table top, in blocks: the work item's lowest layer lies on it. The shape,
+        /// the voxel selection boxes, the particles and <see cref="GemCuttingWorkItemRenderer"/> all
+        /// go by this one value.
+        /// </summary>
+        public const float TopY = 9 / 16f;
+        private const int TopVoxel = 9;
+
         // Temporary data
-        float voxYOff = 10 / 16f;
+        float voxYOff = TopY;
         Cuboidf[] selectionBoxes = new Cuboidf[1];
         public int OwnMetalTier;
         GemCuttingWorkItemRenderer workitemRenderer;
@@ -121,16 +129,20 @@ namespace canjewelry.src.be
                 return null;
             }
 
-            string key = this.stoneType + "-" + this.metalType;
+            string key = this.stoneType + "-" + this.metalType + "-" + (int)Math.Round(this.MeshAngle * GameMath.RAD2DEG);
             if (meshes.TryGetValue(key, out MeshData mesh)) return mesh;
 
-            return meshes[key] = GenMesh(this.Api as ICoreClientAPI, null, tesselator, TexSource());
+            mesh = GenMesh(this.Api as ICoreClientAPI, null, tesselator, TexSource());
+            // Only the table turns: its top is square and the voxel grid covers all of it, so the
+            // work item stays on the world axes whichever way the table faces.
+            mesh?.Rotate(new Vec3f(0.5f, 0f, 0.5f), 0f, this.MeshAngle, 0f);
+            return meshes[key] = mesh;
         }
         public MeshData GenMesh(ICoreClientAPI capi, Shape shape = null, ITesselatorAPI tesselator = null, ITexPositionSource textureSource = null)
         {
             if (shape == null)
             {
-                shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json").Clone();
+                shape = Vintagestory.API.Common.Shape.TryGet(capi, BlockGemCuttingTable.ShapePath)?.Clone();
             }
 
             if (shape == null)
@@ -192,6 +204,11 @@ namespace canjewelry.src.be
                     FinishCut(byPlayer, mistakes);
                     return false;
                 }
+                if (SelectedRecipe != null && CANCarving.IsCarving(workItemStack))
+                {
+                    FinishCut(byPlayer, 0, roughCarve: true);
+                    return false;
+                }
             }
 
 
@@ -200,7 +217,10 @@ namespace canjewelry.src.be
                 return RotateWorkItem(byPlayer.Entity.Controls.ShiftKey);
             }
 
-            if (byPlayer.Entity.Controls.ShiftKey)
+            // Bone and antler are ground storable, and with shift held the game hands the click to
+            // the item first, so carving materials go on without it.
+            bool carvableInHand = CANCarving.IsCarvable(byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack?.Collectible);
+            if (byPlayer.Entity.Controls.ShiftKey || (carvableInHand && workItemStack == null))
             {
                 return TryPut(world, byPlayer, blockSel);
             }
@@ -410,7 +430,7 @@ namespace canjewelry.src.be
                 // the client gets the work item with the next sync. The gem returned on cancel
                 // carries the same truth, so taking it back off does not reroll it.
                 if (Api.Side == EnumAppSide.Server && newWorkItemStack == workItemStack
-                    && stack.Collectible is not CANItemGemCuttingWorkItem)
+                    && stack.Collectible is not CANItemGemCuttingWorkItem && !CANCarving.IsCarving(workItemStack))
                 {
                     CANGemAppraisalCB.ApplyTable(byPlayer, workItemStack);
                     CANGemAppraisal.CopyRoughKeys(workItemStack.Attributes, returnOnCancelStack.Attributes);
@@ -451,6 +471,20 @@ namespace canjewelry.src.be
         }
 
 
+        /// <summary>
+        /// Turns the table, after it was placed: OnBlockPlaced has already built the mesh by then.
+        /// Saved and sent on, so other players and the next load see it facing the same way.
+        /// </summary>
+        public void SetMeshAngle(float radians)
+        {
+            this.MeshAngle = radians;
+            if (this.Api is ICoreClientAPI clientApi)
+            {
+                this.currentMesh = this.getMesh(clientApi.Tesselator);
+            }
+            MarkDirty(true);
+        }
+
         internal void OnUseOver(IPlayer byPlayer, int selectionBoxIndex)
         {
             // box index 0 is the anvil itself
@@ -458,7 +492,7 @@ namespace canjewelry.src.be
 
             Cuboidf box = selectionBoxes[selectionBoxIndex];
 
-            Vec3i voxelPos = new Vec3i((int)(16 * box.X1), (int)(16 * box.Y1) - 2, (int)(16 * box.Z1));
+            Vec3i voxelPos = new Vec3i((int)(16 * box.X1), (int)Math.Round(16 * box.Y1) - TopVoxel, (int)(16 * box.Z1));
 
             OnUseOver(byPlayer, voxelPos, new BlockSelection() { Position = Pos, SelectionBoxIndex = selectionBoxIndex });
         }
@@ -890,19 +924,27 @@ namespace canjewelry.src.be
         /// last chisel strike used to carry two copies of this that had drifted apart.
         /// </summary>
         /// <param name="mistakes">Voxels off the recipe; each one lowers the buff values.</param>
-        protected void FinishCut(IPlayer byPlayer, int mistakes)
+        /// <param name="roughCarve">A carving finished with the hammer before its pattern was done.</param>
+        protected void FinishCut(IPlayer byPlayer, int mistakes, bool roughCarve = false)
         {
             Voxels = new byte[16, 14, 16];
             ItemStack outstack = SelectedRecipe.Output.ResolvedItemstack.Clone();
+            bool carving = CANCarving.IsCarving(workItemStack);
             // A work item from before carats gets its truth only now.
-            CANGemAppraisalCB.ApplyTable(byPlayer, workItemStack);
+            if (!carving) CANGemAppraisalCB.ApplyTable(byPlayer, workItemStack);
             float roughCarats = CANGemAppraisal.GetCarats(workItemStack.Attributes);
             float mistakeMult = mistakes > 0
                 ? Math.Max(0, 1 - (float)(canjewelry.config.minFineForMistake + Config.rand.NextDouble() * (canjewelry.config.maxFineForMistake - canjewelry.config.minFineForMistake)) * mistakes)
                 : 1f;
             var handOut = new List<ItemStack>();
             string cleave = CleavePresetOf(SelectedRecipe);
-            if (cleave != null)
+            if (carving)
+            {
+                float accuracy = roughCarve ? canjewelry.config.Carving.RoughCarveMult : mistakeMult;
+                CANCarving.FinishPiece(outstack, workItemStack, accuracy, canjewelry.config.GemCarats.Step);
+                handOut.Add(outstack);
+            }
+            else if (cleave != null)
             {
                 // A cleave gives rough pieces; if it cannot part the gem, the gem comes back whole.
                 handOut = CleavePieces(byPlayer, workItemStack, cleave, mistakeMult)
@@ -968,6 +1010,15 @@ namespace canjewelry.src.be
             if (mistakes > 0)
             {
                 dsc.AppendLine(Lang.Get("canjewelry:cut-forecast-mistakes", mistakes, (int)Math.Round((1 - kept) * 100)));
+            }
+
+            if (CANCarving.IsCarving(workItemStack))
+            {
+                float formBudget = recipe.Output.ResolvedItemstack?.Attributes.GetFloat(CANJWConstants.CARVE_BUDGET, 1f) ?? 1f;
+                float budget = CANCarving.Budget(formBudget, workItemStack, kept, cfg.Step);
+                float rough = CANCarving.Budget(formBudget, workItemStack, canjewelry.config.Carving.RoughCarveMult, cfg.Step);
+                dsc.AppendLine(Lang.Get("canjewelry:carve-forecast-budget", CANGemAppraisalCB.FormatCarats(budget), CANGemAppraisalCB.FormatCarats(rough)));
+                return;
             }
 
             AppendRecipeForecast(dsc, recipe, workItemStack.Attributes, workItemStack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET), kept);
@@ -1511,7 +1562,7 @@ namespace canjewelry.src.be
                     {
                         if (Voxels[x, y, z] != (byte)EnumVoxelMaterial.Empty)
                         {
-                            float py = y + 2;
+                            float py = y + TopVoxel;
                             boxes.Add(new Cuboidf(x / 16f, py / 16f, z / 16f, x / 16f + 1 / 16f, py / 16f + 1 / 16f, z / 16f + 1 / 16f));
                         }
                     }
@@ -1550,8 +1601,10 @@ namespace canjewelry.src.be
             returnOnCancelStack = tree.GetItemstack("returnOnCancelStack");
             string oldStone = this.stoneType;
             string oldMetal = this.metalType;
+            float oldAngle = this.MeshAngle;
             this.stoneType = tree.GetString("stoneType", "granite");
             this.metalType = tree.GetString("metalType", "copper");
+            this.MeshAngle = tree.GetFloat("meshAngle", this.MeshAngle);
 
             if (Api != null)
             {
@@ -1564,7 +1617,7 @@ namespace canjewelry.src.be
             // A client BE can be initialized before its data arrives (placed by another player,
             // landed after falling), and Initialize then built the granite/copper default mesh.
             if (Api is ICoreClientAPI clientApi
-                && (currentMesh == null || oldStone != this.stoneType || oldMetal != this.metalType))
+                && (currentMesh == null || oldStone != this.stoneType || oldMetal != this.metalType || oldAngle != this.MeshAngle))
             {
                 this.currentMesh = this.getMesh(clientApi.Tesselator);
                 clientApi.World.BlockAccessor.MarkBlockDirty(Pos);
@@ -1581,6 +1634,7 @@ namespace canjewelry.src.be
             tree.SetItemstack("returnOnCancelStack", returnOnCancelStack);
             tree.SetString("stoneType", this.stoneType);
             tree.SetString("metalType", this.metalType);
+            tree.SetFloat("meshAngle", this.MeshAngle);
         }
 
 
@@ -1742,6 +1796,12 @@ namespace canjewelry.src.be
             {
                 return Lang.Get("canjewelry:recipe-cleave-desc", (int)Math.Round((canjewelry.config.GemCarats?.Split?.Loss ?? 0f) * 100));
             }
+            if (CANCarving.IsCarvable(ingredient.Collectible))
+            {
+                float formBudget = recipe.Output.ResolvedItemstack?.Attributes.GetFloat(CANJWConstants.CARVE_BUDGET, 1f) ?? 1f;
+                float best = CANGemAppraisal.RoundCarats(formBudget * CANCarving.CeilingOf(ingredient.Collectible), canjewelry.config.GemCarats.Step);
+                return Lang.Get("canjewelry:carve-recipe-desc", CANGemAppraisalCB.FormatCarats(best));
+            }
             var sb = new StringBuilder();
             AppendRecipeForecast(sb, recipe, ingredient.Attributes, gemType, 1f);
             return sb.Length > 0 ? sb.ToString().TrimEnd() : Lang.Get("canjewelry:cut-forecast-need-loupe");
@@ -1819,6 +1879,8 @@ namespace canjewelry.src.be
         {
             MeshAngle = tree.GetFloat("meshAngle");
             MeshAngle -= degreeRotation * GameMath.DEG2RAD;
+            // Kept in [0, 2pi): the mesh cache is keyed by whole degrees, and -90 and 270 are one turn.
+            MeshAngle = GameMath.Mod(MeshAngle, 2 * GameMath.PI);
             tree.SetFloat("meshAngle", MeshAngle);
         }
     }

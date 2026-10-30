@@ -367,7 +367,7 @@ namespace canjewelry.src.jewelry
         /// <summary>True when this gem is at the stage the fitted grind layer works on.</summary>
         internal bool IsGrindingGem(ItemStack gem)
         {
-            if (gem?.Item is not CANCutGemItem || gem.StackSize != 1) return false;
+            if ((gem?.Item is not CANCutGemItem && !CANCarving.IsPolishable(gem)) || gem.StackSize != 1) return false;
             ITreeAttribute info = gem.Attributes.GetTreeAttribute("cangrindlayerinfo");
             return info != null && info.GetInt("grindtype") == this.getGrindLayerType();
         }
@@ -610,13 +610,15 @@ namespace canjewelry.src.jewelry
                 ItemStack activeItemStack = activeSlot.Itemstack;
                 AssetLocation item_code = activeSlot.Itemstack.Collectible.Code;
 
-                if(activeItemStack.Item is not CANCutGemItem)
+                // Carved pieces go through the same two stages, gaining luster instead of buffs.
+                bool polishable = CANCarving.IsPolishable(activeItemStack);
+                if(activeItemStack.Item is not CANCutGemItem && !polishable)
                 {
                     return;
                 }
 
                 ITreeAttribute cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
-                if (cutGemTree == null)
+                if (cutGemTree == null && !polishable)
                 {
                     return;
                 }
@@ -633,7 +635,11 @@ namespace canjewelry.src.jewelry
                 {
 
                     cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
-                    if (cutGemTree != null)
+                    if (polishable)
+                    {
+                        if (activeItemStack.Attributes.GetBool(CANJWConstants.POLISHED, false)) return;
+                    }
+                    else if (cutGemTree != null)
                     {
                         if (cutGemTree.GetBool(CANJWConstants.GEM_FULL_PROCESSED, false))
                         {
@@ -662,7 +668,25 @@ namespace canjewelry.src.jewelry
                     this.InputStack.Collectible.DamageItem(canjewelry.sapi.World, player.Entity, this.InputSlot);
                     // For everyone else nearby; the grinding player spawns a steadier stream client-side.
                     this.Api.World.SpawnParticles(this.MakeContactParticles(player, activeItemStack, this.GrindSpeed, 4f), player);
-                    if (itree.GetInt("grindcounter") <= 1)
+                    if (itree.GetInt("grindcounter") <= 1 && polishable)
+                    {
+                        int polishStage = itree.GetInt("grindtype");
+                        float luster = CANCarving.LusterAfterStage(canjewelry.config.Carving, polishStage);
+                        activeItemStack.Attributes.SetFloat(CANJWConstants.LUSTER,
+                            Math.Max(luster, activeItemStack.Attributes.GetFloat(CANJWConstants.LUSTER)));
+                        if (polishStage == 2)
+                        {
+                            activeItemStack.Attributes.RemoveAttribute("cangrindlayerinfo");
+                            activeItemStack.Attributes.SetBool(CANJWConstants.POLISHED, true);
+                        }
+                        else
+                        {
+                            itree.SetInt("grindtype", polishStage + 1);
+                            itree.SetInt("grindcounter", EncrustableCB.FireGrindStageStartEvent(player, activeItemStack, polishStage + 1, canjewelry.config.grinderStage2Counter));
+                        }
+                        activeSlot.MarkDirty();
+                    }
+                    else if (itree.GetInt("grindcounter") <= 1)
                     {
                         cutGemTree = activeItemStack.Attributes.GetTreeAttribute(CANJWConstants.CUT_GEM_TREE);
                         int grindStage = itree.GetInt("grindtype");

@@ -239,7 +239,11 @@ namespace canjewelry.src.utils
         {
             if (cfg == null || !cfg.CaratBudgetEnabled || item?.Collectible == null) return null;
 
-            float own = item.Collectible.Attributes?["cancaratbudget"].AsFloat(0) ?? 0;
+            // A carved piece carries its own budget, decided by how it was carved.
+            float onStack = item.Attributes?.GetFloat(CANJWConstants.CARAT_BUDGET, 0) ?? 0;
+            if (onStack > 0) return onStack;
+
+            float own = item.Collectible.Attributes?[CANJWConstants.CARAT_BUDGET].AsFloat(0) ?? 0;
             if (own > 0) return own;
 
             Vintagestory.API.Common.AssetLocation code = item.Collectible.Code;

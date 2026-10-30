@@ -15,7 +15,13 @@ namespace canjewelry.src.utils
         {
             bool shouldPatch = false;
 
-            string token = restrictionData.Key;
+            // Restrictions are keyed "category/name" so two categories may share a file name, but the
+            // attributes the displays look for are named after the file alone, capitalised -
+            // canHeadware, onHeadwareTransform. Built from the whole key they came out as
+            // "canclothes/headware" and no stand accepted anything any more.
+            string name = restrictionData.Key[(restrictionData.Key.LastIndexOf('/') + 1)..];
+            if (name.Length == 0) return;
+            string token = char.ToUpperInvariant(name[0]) + name[1..];
             RestrictionData data = restrictionData.Value;
 
             if (data.BlacklistedCodes != null)

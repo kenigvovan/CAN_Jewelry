@@ -292,6 +292,12 @@
   "item-crushed-diamond": "Diamant écrasé",
 
   "item-can-have-n-sockets": "Peut avoir ({0}) emplacements",
+  "item-carat-budget-free": "Budget en carats : {0} / {1} ct, {2} ct libres",
+  "item-carat-fits": "Une gemme jusqu'à {0} ct tient maintenant",
+  "item-shine": "Éclat : {0} %",
+  "item-tarnish-buff-loss": "Terni : effets des gemmes -{0} %",
+  "item-canpolishingcloth": "Chiffon à polir",
+  "itemdesc-canpolishingcloth": "Chiffon saupoudré de chaux. Prenez-le avec le curseur et cliquez gauche sur un bijou terni pour le polir.",
   "item-socket-tier": "Niveau d'emplacement : {0}",
   "socket-has-attribute": "{0} <font color=\"#99c9f9\"> {1} </font>",
   "socket-has-attribute-percent": "{0} <font color=\"#99c9f9\"> {1}% </font>",

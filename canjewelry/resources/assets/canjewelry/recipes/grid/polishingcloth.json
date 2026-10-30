@@ -1,0 +1,17 @@
+[
+  {
+    "ingredientPattern": "CL",
+    "ingredients": {
+      "C": { "type": "item", "code": "game:cloth-*" },
+      "L": { "type": "item", "code": "game:lime" }
+    },
+    "name": "can-polishingcloth",
+    "width": 2,
+    "height": 1,
+    "output": {
+      "type": "item",
+      "code": "canjewelry:canpolishingcloth",
+      "quantity": 4
+    }
+  }
+]

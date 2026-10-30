@@ -36,6 +36,26 @@ namespace canjewelry.src
         // On a cut gem tree: the flaw pieces still in the stone when it was cut, one entry each.
         public const string FLAW_PIECES = "gemflawpieces";
 
+        // Carving bone, antler and the like on the cutting table. CARVABLE is the material's itemtype
+        // attribute; the CARVE_* keys live on the work item. CARAT_BUDGET and LUSTER go on the stack.
+        public const string CARVABLE = "cancarvable";
+        public const string CARVE_MATERIAL = "carvematerial";
+        public const string CARVE_TEXTURE = "carvetexture";
+        public const string CARVE_CEILING = "carveceiling";
+        public const string CARVE_NAME = "carvename";
+        public const string CARVE_BUDGET = "cancarvebudget";
+        // Material of a finished piece, carried on into the jewelry made of it.
+        public const string PIECE_MATERIAL = "canpiecematerial";
+        public const string PIECE_TEXTURE = "canpiecetexture";
+        public const string PIECE_NAME = "canpiecename";
+        public const string CARAT_BUDGET = "cancaratbudget";
+        // Itemtype attribute of jewelry made of carved pieces: false keeps its own cancaratbudget
+        // instead of adding up the pieces'.
+        public const string BUDGET_FROM_PIECES = "canbudgetfrompieces";
+        public const string POLISHABLE = "canpolishable";
+        public const string LUSTER = "canluster";
+        public const string POLISHED = "canpolished";
+
         public const string TEMPORALGRASP = "temporalgrasp";
         public const string CUTTING_ROUND = "round";
         public const string CUTTING_BAGUETTE = "baguette";

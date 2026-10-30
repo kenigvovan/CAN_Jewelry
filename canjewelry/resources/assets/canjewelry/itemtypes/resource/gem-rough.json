@@ -3,6 +3,7 @@
   "__comment": "ItemOre is just for displaying the yield in units in the tooltip",
   "maxstacksize": 8,
   "class": "CANRoughGemItem",
+  "behaviors": [ { "name": "CANGemPileable" } ],
   "attributes": {
     "handbook": {
       "groupBy": [ "ore-{ore}-*" ]

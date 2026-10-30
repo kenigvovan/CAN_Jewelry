@@ -1,0 +1,24 @@
+{
+    "code": "cangempile",
+    "class": "CANBlockGemPile",
+    "entityClass": "CANBEGemPile",
+    "shape": { "base": "game:block/basic/invisible" },
+    "behaviors": [
+        { "name": "UnstableFalling", "properties": { "attachmentArea": { "x1": 0, "y1": 0, "z1": 0, "x2": 16, "y2": 0, "z2": 16 } } }
+    ],
+    "sidesolid": { "all": false },
+    "sideopaque": { "all": false },
+    "faceCullMode": "NeverCull",
+    "blockmaterial": "Stone",
+    "replaceable": 100,
+    "resistance": 0.2,
+    "lightAbsorption": 0,
+    "creativeinventory": { "general": [ "" ] },
+    "sounds": {
+        "place": "game:block/loosestone*",
+        "hit": "game:block/loosestone*",
+        "break": "game:block/loosestone*",
+        "walk": "game:walk/stone*"
+    },
+    "drops": []
+}

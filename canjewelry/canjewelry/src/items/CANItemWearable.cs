@@ -167,9 +167,28 @@ namespace canjewelry.src.items
             return jstack;
         }
 
+        // Tint of the stack being tesselated, set by PrepareTextures; null when it looks clean.
+        protected utils.TarnishTint nowTarnishOverlay;
+
+        /// <summary>
+        /// Fills tmpTextures for the stack and notes its tarnish tint. Everything that tesselates
+        /// with this item as its texture source goes through here.
+        /// </summary>
+        protected void PrepareTextures(ItemStack itemstack)
+        {
+            tmpTextures.Clear();
+            FillTextureDict(tmpTextures, itemstack);
+            nowTarnishOverlay = utils.CANTarnish.Overlay(canjewelry.config?.Tarnish, itemstack);
+        }
+
         protected TextureAtlasPosition getOrCreateTexPos(AssetLocation texturePath)
         {
             ICoreClientAPI clientApi = api as ICoreClientAPI;
+            if (nowTarnishOverlay != null && utils.CANTarnish.IsMetalTexture(texturePath))
+            {
+                curAtlas.GetOrInsertTexture(utils.CANTarnish.Tinted(clientApi, texturePath, nowTarnishOverlay), out _, out var tintedPos, 0.1f);
+                if (tintedPos != null) return tintedPos;
+            }
             curAtlas.GetOrInsertTexture(texturePath, out _, out var texPos, delegate
             {
                 IAsset asset = clientApi.Assets.TryGet(texturePath.Clone().WithPathPrefixOnce("textures/").WithPathAppendixOnce(".png"));
@@ -225,8 +244,7 @@ namespace canjewelry.src.items
 
         public virtual MeshData genMesh(ICoreClientAPI capi, ItemStack itemstack, ITexPositionSource texSource)
         {
-            this.tmpTextures.Clear();
-            this.FillTextureDict(tmpTextures, itemstack);
+            PrepareTextures(itemstack);
             JsonObject attributes = itemstack.Collectible.Attributes;
             EntityProperties entityType = capi.World.GetEntityType(new AssetLocation(attributes?["wearerEntityCode"].ToString() ?? "player"));
             Shape loadedShape = entityType.Client.LoadedShape;
@@ -265,6 +283,7 @@ namespace canjewelry.src.items
                     return null;
                 }
 
+                PrepareShape(attachedShape, itemstack);
                 shape.StepParentShape(attachedShape, assetLocation.ToShortString(), @base.ToShortString(), capi.Logger, delegate { });
                 if (compositeShape.Overlays != null)
                 {
@@ -305,6 +324,33 @@ namespace canjewelry.src.items
 
         protected virtual short MeshDefaultRenderPass => 1;
 
+        /// <summary>
+        /// Mesh of the stack's own shape alone, not stepparented onto the wearer, for showing the
+        /// piece off the body (a jewelry box, a display). The elements keep the coordinates they
+        /// have in the shape file, so a caller places it by the mesh's bounds, not by its origin.
+        /// </summary>
+        public virtual MeshData GenStandaloneMesh(ItemStack itemstack, ITextureAtlasAPI targetAtlas)
+        {
+            if (api is not ICoreClientAPI capi) return null;
+
+            CompositeShape compositeShape = GetStackShape(itemstack);
+            if (compositeShape == null) return null;
+
+            Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, compositeShape.Base.CopyWithPathPrefixAndAppendixOnce("shapes/", ".json"));
+            if (shape == null) return null;
+
+            curAtlas = targetAtlas;
+            PrepareTextures(itemstack);
+            PrepareShape(shape, itemstack);
+
+            nowTesselatingShape = shape;
+            capi.Tesselator.TesselateShape(Code.FirstCodePart(), shape, out MeshData mesh, this);
+            nowTesselatingShape = null;
+
+            if (targetAtlas != capi.ItemTextureAtlas) mesh.RenderPassesAndExtraBits.Fill(MeshDefaultRenderPass);
+            return mesh;
+        }
+
         public override void OnBeforeRender(ICoreClientAPI capi, ItemStack itemstack, EnumItemRenderTarget target, ref ItemRenderInfo renderinfo)
         {
             if (target == EnumItemRenderTarget.HandTp)
@@ -338,8 +384,15 @@ namespace canjewelry.src.items
                     compGearShape.Base, stack.Class, stack.Collectible.Code, shapePath);
                 return null;
             }
+            PrepareShape(gearShape, stack);
             return gearShape;
         }
+
+        /// <summary>
+        /// Last changes to a freshly loaded shape of this stack, before it is drawn in hand or worn.
+        /// Whatever it depends on has to be in GetMeshCacheKey too.
+        /// </summary>
+        protected virtual void PrepareShape(Shape shape, ItemStack stack) { }
 
         public virtual void CollectTextures(ItemStack stack, Shape shape, string texturePrefixCode, Dictionary<string, CompositeTexture> intoDict)
         {
@@ -350,9 +403,19 @@ namespace canjewelry.src.items
             // for genMesh. Filling it here would just leave one stack's textures lying around.
             var textures = new Dictionary<string, AssetLocation>();
             FillTextureDict(textures, stack);
+            utils.TarnishTint tarnish = utils.CANTarnish.Overlay(canjewelry.config?.Tarnish, stack);
 
             foreach (var texture in textures)
             {
+                if (tarnish != null && utils.CANTarnish.IsMetalTexture(texture.Value))
+                {
+                    CompositeTexture tinted = utils.CANTarnish.Tinted(capi, texture.Value, tarnish);
+                    capi.EntityTextureAtlas.GetOrInsertTexture(tinted, out int tintedSubId, out _);
+                    tinted.Baked.TextureSubId = tintedSubId;
+                    intoDict[texture.Key] = tinted;
+                    continue;
+                }
+
                 CompositeTexture ctex = new CompositeTexture { Base = texture.Value };
                 AssetLocation armorTexLoc = texture.Value;
                 int textureSubId;
@@ -373,15 +436,63 @@ namespace canjewelry.src.items
         public virtual CompositeShape GetAttachedShape(ItemStack stack, string slotCode) => GetStackShape(stack);
         public virtual string[] GetDisableElements(ItemStack stack) => null;
         public virtual string[] GetKeepElements(ItemStack stack) => null;
-        public virtual string GetTexturePrefixCode(ItemStack stack) => GetMeshCacheKey(stack);
+        // The tarnish step is part of both: a darker piece is another mesh with other textures.
+        public virtual string GetTexturePrefixCode(ItemStack stack)
+            => GetMeshCacheKey(stack) + utils.CANTarnish.CacheSuffix(canjewelry.config?.Tarnish, stack);
         public virtual bool IsAttachable(Entity toEntity, ItemStack itemStack) => true;
 
-        public virtual string GetMeshCacheKey(ItemSlot slot) => GetMeshCacheKey(slot.Itemstack);
+        public virtual string GetMeshCacheKey(ItemSlot slot)
+            => GetMeshCacheKey(slot.Itemstack) + utils.CANTarnish.CacheSuffix(canjewelry.config?.Tarnish, slot.Itemstack);
         public abstract string GetMeshCacheKey(ItemStack itemstack);
+
+        // Polishing works like the vanilla sewing kit: a cloth (canPolishStrength) on the mouse
+        // cursor, clicked onto a tarnished piece, takes that much tarnish off and is used up.
+        private static float PolishStrength(ItemStack stack)
+            => stack?.ItemAttributes?["canPolishStrength"].AsFloat(0f) ?? 0f;
+
+        public override int GetMergableQuantity(ItemStack sinkStack, ItemStack sourceStack, EnumMergePriority priority)
+        {
+            if (priority == EnumMergePriority.DirectMerge && PolishStrength(sourceStack) > 0f)
+            {
+                return utils.CANTarnish.Get(sinkStack) > 0f ? 1 : 0;
+            }
+            return base.GetMergableQuantity(sinkStack, sourceStack, priority);
+        }
+
+        public override void TryMergeStacks(ItemStackMergeOperation op)
+        {
+            float strength = PolishStrength(op.SourceSlot.Itemstack);
+            if (op.CurrentPriority == EnumMergePriority.DirectMerge && strength > 0f)
+            {
+                ItemStack piece = op.SinkSlot.Itemstack;
+                float tarnish = utils.CANTarnish.Get(piece);
+                if (tarnish > 0f)
+                {
+                    utils.CANTarnish.Set(piece, tarnish - strength);
+                    op.MovedQuantity = 1;
+                    op.SourceSlot.TakeOut(1);
+                    op.SourceSlot.MarkDirty();
+                    op.SinkSlot.MarkDirty();
+                }
+                return;
+            }
+            base.TryMergeStacks(op);
+        }
 
         public override void GetHeldItemInfo(ItemSlot inSlot, StringBuilder dsc, IWorldAccessor world, bool withDebugInfo)
         {
             base.GetHeldItemInfo(inSlot, dsc, world, withDebugInfo);
+
+            if (canjewelry.config?.Tarnish?.Enabled == true && utils.CANTarnish.DaysToFull(canjewelry.config.Tarnish, inSlot.Itemstack) > 0f)
+            {
+                float tarnish = utils.CANTarnish.Get(inSlot.Itemstack);
+                dsc.AppendLine(Lang.Get("canjewelry:item-shine", (int)Math.Round((1f - tarnish) * 100)));
+                if (tarnish > 0f)
+                {
+                    dsc.AppendLine(Lang.Get("canjewelry:item-tarnish-buff-loss",
+                        (int)Math.Round((1f - utils.CANTarnish.BuffMult(canjewelry.config.Tarnish, inSlot.Itemstack)) * 100)));
+                }
+            }
 
             if ((api as ICoreClientAPI).Settings.Bool["extendedDebugInfo"])
             {

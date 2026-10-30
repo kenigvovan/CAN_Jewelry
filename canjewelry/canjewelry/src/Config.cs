@@ -47,6 +47,10 @@ namespace canjewelry.src
         // Gem weight, appraisal and traits. Defaults live in the classes, so a config written
         // before this section existed reads them without an edit.
         public GemCaratsConfig GemCarats = new GemCaratsConfig();
+        // Carving bone, antler and the like: carat budget from the carving, luster from polishing.
+        public CarvingConfig Carving = new CarvingConfig();
+        // Worn metal darkening with time and the polishing that undoes it.
+        public TarnishConfig Tarnish = new TarnishConfig();
         /// <summary>
         /// The source of randomness for buff rolls, cuts and drop chances. Random.Shared is
         /// thread safe, while the shared instance this used to be was not: buff values are rolled
@@ -190,6 +194,13 @@ namespace canjewelry.src
             "hussar-head", "hussar-body", "hussar-legs",
             "gothic-head", "gothic-body", "gothic-legs",
             "dynasties-head", "dynasties-body", "dynasties-legs",
+            "starfall-head", "starfall-body", "starfall-legs",
+            "synthetic-head", "synthetic-body", "synthetic-legs",
+            "ghal-head", "ghal-body", "ghal-legs",
+            "reikland-head", "reikland-body", "reikland-legs",
+            "shadow-head", "shadow-body", "shadow-legs",
+            "ivory-head", "ivory-body", "ivory-legs",
+            "trenchmen-head", "trenchmen-body", "trenchmen-legs",
             "forlornzealot", "forlornacolyte",
             "sturdyleatherarmor", "bonearmor", "woodarmor"
         };
@@ -391,11 +402,20 @@ namespace canjewelry.src
 
         private void FillBuffItemSets()
         {
+            buffNameToPossibleItem = BuildDefaultBuffItemSets();
+        }
+
+        /// <summary>
+        /// The default gem -> item fragments table, expanded, registry members included. Also what
+        /// the admin dialogue compares a loaded config against to find fragments it is missing.
+        /// </summary>
+        internal static Dictionary<string, HashSet<string>> BuildDefaultBuffItemSets()
+        {
             var armorAndShield = ArmorSets.Union(ShieldSets);
             // Snapshot once — JewelrySets is a property that recomposes the set on every read, and
             // the table below reads it three dozen times.
             var jewelrySets = JewelrySets;
-            buffNameToPossibleItem = new Dictionary<string, HashSet<string>>
+            return new Dictionary<string, HashSet<string>>
             {
                 {"diamond",             armorAndShield.Union(jewelrySets).Union(new[]{"firearm-", "exoskeleton-", "walkingstick"}).ToHashSet()},
 
@@ -580,7 +600,7 @@ namespace canjewelry.src
             items_codes_with_socket_count_and_tiers = BuildDefaultSocketCounts();
         }
 
-        private static Dictionary<string, int[]> BuildDefaultSocketCounts()
+        internal static Dictionary<string, int[]> BuildDefaultSocketCounts()
         {
             var defaults = new Dictionary<string, int[]>()
         {
@@ -844,6 +864,71 @@ namespace canjewelry.src
             {  "fagreenwich:fa-greenwich-head-*", new int[1] {3} },
             {  "fagreenwich:fa-greenwich-body-*", new int[2] {3, 3} },
             {  "fagreenwich:fa-greenwich-legs-*", new int[1] {3} },
+            // 2.2.0+ item codes
+            {  "fagreenwich:platehead-*", new int[1] {3} },
+            {  "fagreenwich:platebody-*", new int[2] {3, 3} },
+            {  "fagreenwich:platelegs-*", new int[1] {3} },
+
+            {  "elstarfall:el-starfall-head-*", new int[1] {3} },
+            {  "elstarfall:el-starfall-body-*", new int[2] {3, 3} },
+            {  "elstarfall:el-starfall-legs-*", new int[1] {3} },
+
+            {  "elsynthetic:el-synthetic-head-*", new int[1] {3} },
+            {  "elsynthetic:el-synthetic-body-*", new int[2] {3, 3} },
+            {  "elsynthetic:el-synthetic-legs-*", new int[1] {3} },
+
+            {  "elghal:el-ghal-head-*", new int[1] {3} },
+            {  "elghal:el-ghal-body-*", new int[2] {3, 3} },
+            {  "elghal:el-ghal-legs-*", new int[1] {3} },
+
+            {  "elreikland:el-reikland-head-*", new int[1] {3} },
+            {  "elreikland:el-reikland-body-*", new int[2] {3, 3} },
+            {  "elreikland:el-reikland-legs-*", new int[1] {3} },
+
+            // modid is elshadowsp, but the asset domain (and so the item codes) is elshadow
+            {  "elshadow:el-shadow-head-*", new int[1] {3} },
+            {  "elshadow:el-shadow-body-*", new int[2] {3, 3} },
+            {  "elshadow:el-shadow-legs-*", new int[1] {3} },
+
+            {  "elivory:el-ivory-head-*", new int[1] {3} },
+            {  "elivory:el-ivory-body-*", new int[2] {3, 3} },
+            {  "elivory:el-ivory-legs-*", new int[1] {3} },
+
+            {  "fajousting:platehead-*", new int[1] {3} },
+            {  "fajousting:platebody-*", new int[2] {3, 3} },
+            {  "fajousting:platelegs-*", new int[1] {3} },
+
+            {  "favarangian:platehead-*", new int[1] {3} },
+            {  "favarangian:platebody-*", new int[2] {3, 3} },
+            {  "favarangian:platelegs-*", new int[1] {3} },
+            {  "favarangian:scalehead-*", new int[1] {3} },
+            {  "favarangian:scalebody-*", new int[2] {3, 3} },
+            {  "favarangian:scalelegs-*", new int[1] {3} },
+
+            {  "faviking:platehead-*", new int[1] {3} },
+            {  "faviking:platebody-*", new int[2] {3, 3} },
+            {  "faviking:platelegs-*", new int[1] {3} },
+            {  "faviking:chainhead-*", new int[1] {3} },
+            {  "faviking:chainbody-*", new int[2] {3, 3} },
+            {  "faviking:chainlegs-*", new int[1] {3} },
+
+            {  "fahussar:platehead-*", new int[1] {3} },
+            {  "fahussar:platebody-*", new int[2] {3, 3} },
+            {  "fahussar:platelegs-*", new int[1] {3} },
+            {  "fahussar:brigandinehead-*", new int[1] {3} },
+            {  "fahussar:brigandinebody-*", new int[2] {3, 3} },
+            {  "fahussar:brigandinelegs-*", new int[1] {3} },
+
+            {  "fadynasties:scalehead-*", new int[1] {3} },
+            {  "fadynasties:scalebody-*", new int[2] {3, 3} },
+            {  "fadynasties:scalelegs-*", new int[1] {3} },
+            {  "fadynasties:brigandinehead-*", new int[1] {3} },
+            {  "fadynasties:brigandinebody-*", new int[2] {3, 3} },
+            {  "fadynasties:brigandinelegs-*", new int[1] {3} },
+
+            {  "eltrench:el-trenchmen-head-*", new int[1] {3} },
+            {  "eltrench:el-trenchmen-body-*", new int[2] {3, 3} },
+            {  "eltrench:el-trenchmen-legs-*", new int[1] {3} },
 
             {  "faviking:fa-viking-head-*", new int[1] {3} },
             {  "faviking:fa-viking-body-*", new int[2] {3, 3} },
@@ -1388,7 +1473,7 @@ namespace canjewelry.src
             }
         }
 
-        private static HashSet<CustomVariantSocketsTiers> BuildDefaultCustomVariantSockets()
+        internal static HashSet<CustomVariantSocketsTiers> BuildDefaultCustomVariantSockets()
         {
             var custom_variants_sockets_tiers = new HashSet<CustomVariantSocketsTiers>();
 
@@ -2044,6 +2129,50 @@ namespace canjewelry.src
                 GrindingBuffIncreaseMultipliers = grindingBuffIncreaseMultipliers;
             }
         }
+        public class TarnishConfig
+        {
+            public bool Enabled = true;
+            // Share of a piece's gem buffs lost at full tarnish; in between it scales linearly.
+            public float MaxBuffPenalty = 0.15f;
+            // In-game days a piece needs to tarnish fully while worn. A metal left out, or 0, never
+            // tarnishes (gold). Only worn pieces tarnish, the way worn clothes wear out.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, float> DaysToFullByMetal = new Dictionary<string, float>
+            {
+                { "silver", 60 }, { "sterlingsilver", 90 },
+                { "copper", 30 }, { "tinbronze", 45 }, { "bismuthbronze", 45 }, { "blackbronze", 50 }, { "rosegold", 200 },
+                { "iron", 20 }, { "steel", 80 }, { "meteoriciron", 120 },
+                { "blacksteel", 100 }, { "redsteel", 100 }, { "bluesteel", 100 }
+            };
+            // The texture multiplied over a metal as it darkens: once when dull, twice when dark.
+            // Plain vanilla textures - lead for silver's grey, the clay patina, the iron rust.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<string, string> TintByMetal = new Dictionary<string, string>
+            {
+                { "silver", Lead }, { "sterlingsilver", Lead },
+                { "copper", Patina }, { "tinbronze", Patina }, { "bismuthbronze", Patina }, { "blackbronze", Patina }, { "rosegold", Patina },
+                { "iron", Rust }, { "steel", Rust }, { "meteoriciron", Rust },
+                { "blacksteel", Rust }, { "redsteel", Rust }, { "bluesteel", Rust }
+            };
+            private const string Lead = "game:block/metal/ingot/lead";
+            private const string Patina = "game:block/clay/vessel/sides/patina";
+            private const string Rust = "game:block/metal/tarnished/rust";
+            // Tarnish at which the dull and the dark look start.
+            public float DullFrom = 0.33f;
+            public float DarkFrom = 0.66f;
+            // Real seconds between updates of worn pieces.
+            public int UpdateIntervalSeconds = 60;
+        }
+        public class CarvingConfig
+        {
+            // Accuracy of a piece finished with the hammer before its pattern is done.
+            public float RoughCarveMult = 0.6f;
+            // Buff multiplier of an unpolished piece; a fully polished one gets 1.
+            public float LusterBuffMin = 0.85f;
+            // Luster a piece has after each grinder stage.
+            [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace)]
+            public Dictionary<int, float> LusterByStage = new Dictionary<int, float> { { 1, 0.5f }, { 2, 1.0f } };
+        }
         // Dictionaries below are replaced on read, not merged: merged, an entry the admin deleted
         // would come back from the defaults on every start.
         public class GemCaratsConfig
@@ -2235,7 +2364,7 @@ namespace canjewelry.src
             // it was weak, and the crack is gone.
             public float CrackLoss = 0.03f;
             // Lightest rough piece a cleave may give.
-            public float MinPieceCarats = 1.0f;
+            public float MinPieceCarats = 0.5f;
             // Name -> shares of the pieces; the chisel cycles through them in this order.
             [JsonProperty(ObjectCreationHandling = ObjectCreationHandling.Replace, ItemConverterType = typeof(utils.CompactFloatArrayConverter))]
             public Dictionary<string, float[]> Presets = new Dictionary<string, float[]>

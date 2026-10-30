@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using canjewelry.src.be;
 using canjewelry.src.jewelry;
+using canjewelry.src.utils;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -25,7 +26,12 @@ namespace canjewelry.src.items
             {
                 // This item has no "metal" variant, so the key used to be the same string for every
                 // one of them - and a bare "clearWorkItem" at that, in a cache the whole game shares.
-                MultiTextureMeshRef ccmr = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, "canjewelry:clearWorkItem-" + this.Code?.Path, delegate
+                // The mesh is textured by what is being worked, so that goes into the key too: without
+                // it the first carving or gem drawn was handed to every work item after it.
+                string material = CANCarving.IsCarving(itemstack)
+                    ? CANCarving.TextureOf(itemstack)
+                    : itemstack.Attributes.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET, CANJWConstants.FALLBACK_GEM_TYPE);
+                MultiTextureMeshRef ccmr = ObjectCacheUtil.GetOrCreate<MultiTextureMeshRef>(capi, "canjewelry:clearWorkItem-" + this.Code?.Path + "-" + material, delegate
                 {
                     byte[,,] voxels = new byte[16, 14, 16];
                     ItemIngot.CreateVoxelsFromIngot(capi, ref voxels, false);
@@ -82,7 +88,12 @@ namespace canjewelry.src.items
             }
             //AssetLocation asset = canjewelry.capi.Assets.TryGet(assetPath + ".png")?.Location;
 
-            if(!canjewelry.gems_textures_pngs.TryGetValue(gemBase, out var gemAssetLocationStr))
+            string gemAssetLocationStr;
+            if (CANCarving.IsCarving(workitemStack))
+            {
+                gemAssetLocationStr = new AssetLocation(CANCarving.TextureOf(workitemStack)).WithPathAppendixOnce(".png").ToString();
+            }
+            else if(!canjewelry.gems_textures_pngs.TryGetValue(gemBase, out gemAssetLocationStr))
             {
                 gemAssetLocationStr = "canjewelry:item/gem/diamond.png";
             }
@@ -186,6 +197,7 @@ namespace canjewelry.src.items
                 recipe.Output.ResolvedItemstack.GetName()
             }));
             var attrs = inSlot.Itemstack.Attributes;
+            if (CANCarving.IsCarving(inSlot.Itemstack)) return;
             cb.CANGemAppraisalCB.AppendRoughInfo(dsc, attrs,
                 attrs.GetString(CANJWConstants.ENCRUSTED_GEM_SIZE), attrs.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET));
         }
@@ -223,7 +235,7 @@ namespace canjewelry.src.items
             return stack.Clone();
         }*/
         public ItemStack GetBaseMaterial(ItemStack stack)
-            => cb.CANGemCuttableCB.RoughGemOfWorkItem(api.World, stack);
+            => CANCarving.IsCarving(stack) ? CANCarving.MaterialOf(api.World, stack) : cb.CANGemCuttableCB.RoughGemOfWorkItem(api.World, stack);
         public EnumHelveWorkableMode GetHelveWorkableMode(ItemStack stack, BlockEntityAnvil beAnvil)
         {
             if (beAnvil.SelectedRecipe.Name.Path == "plate" || beAnvil.SelectedRecipe.Name.Path == "blistersteel")

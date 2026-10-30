@@ -24,8 +24,8 @@
 	},
 	"guiTransform": {
 		"rotation": { "x": -30, "y": 45, "z": 0 },
-		"origin": { "x": 0.5, "y": 0.1, "z": 0.5 },
-		"scale": 3
+		"origin": { "x": 0.5, "y": 0, "z": 0.4 },
+		"scale": 1.9
 	},
 	"fpHandTransform": {
 		"translation": { "x": 0, "y": 0.1, "z": 0 },

@@ -1,6 +1,7 @@
 using canjewelry.src.cb;
 using canjewelry.src.CB;
 using canjewelry.src.items;
+using canjewelry.src.utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -38,6 +39,8 @@ namespace canjewelry.src.eb
         int triesToInit = 0;
         long callbackId = 0;
         long recomputeCallbackId = 0;
+        long tarnishTickId = 0;
+        double lastTarnishDays = -1;
         public bool initialized = false;
 
         // What was actually written to the stats last time, after clamping. Pure optimization:
@@ -85,9 +88,60 @@ namespace canjewelry.src.eb
             this.callbackId = 0;
             initialized = true;
 
+            var tarnishCfg = canjewelry.config?.Tarnish;
+            if (tarnishCfg != null && tarnishCfg.Enabled && this.tarnishTickId == 0)
+            {
+                this.tarnishTickId = canjewelry.sapi.Event.RegisterGameTickListener(OnTarnishTick,
+                    Math.Max(1, tarnishCfg.UpdateIntervalSeconds) * 1000);
+            }
+
             // Buffs are not persisted, this rebuilds them for the session.
             RecomputeBuffs();
             return true;
+        }
+
+        // Worn pieces tarnish by in-game time, so sleeping and a faster calendar count as well.
+        private void OnTarnishTick(float dt)
+        {
+            var cfg = canjewelry.config?.Tarnish;
+            IServerPlayer player = ServerPlayer;
+            if (cfg == null || !cfg.Enabled || player == null) return;
+
+            double now = entity.World.Calendar.TotalDays;
+            if (this.lastTarnishDays < 0)
+            {
+                this.lastTarnishDays = now;
+                return;
+            }
+            double days = now - this.lastTarnishDays;
+            this.lastTarnishDays = now;
+            if (days <= 0) return;
+
+            TarnishWorn(player.InventoryManager.GetOwnInventory(CHARACTER_INV), cfg, days);
+            TarnishWorn(canjewelry.GetAdditionalJewelryInventory(player), cfg, days);
+        }
+
+        private static void TarnishWorn(IInventory inv, Config.TarnishConfig cfg, double days)
+        {
+            if (inv == null) return;
+            for (int i = 0; i < inv.Count; i++)
+            {
+                ItemSlot slot = inv[i];
+                ItemStack stack = slot?.Itemstack;
+                if (stack?.Collectible is not CANItemWearable) continue;
+
+                float daysToFull = CANTarnish.DaysToFull(cfg, stack);
+                if (daysToFull <= 0f) continue;
+
+                float before = CANTarnish.Get(stack);
+                if (before >= 1f) continue;
+                float after = Math.Min(1f, before + (float)(days / daysToFull));
+                CANTarnish.Set(stack, after);
+
+                // Synced (and the buffs recomputed through SlotModified) once per whole percent,
+                // not on every tick.
+                if ((int)(after * 100) != (int)(before * 100)) slot.MarkDirty();
+            }
         }
 
         public override void OnEntityDespawn(EntityDespawnData despawn)
@@ -118,6 +172,12 @@ namespace canjewelry.src.eb
                 canjewelry.sapi.Event.UnregisterCallback(this.recomputeCallbackId);
                 this.recomputeCallbackId = 0;
             }
+            if (this.tarnishTickId != 0)
+            {
+                canjewelry.sapi.Event.UnregisterGameTickListener(this.tarnishTickId);
+                this.tarnishTickId = 0;
+            }
+            this.lastTarnishDays = -1;
             appliedTotals.Clear();
             fullSweepPending = true;
             initialized = false;
@@ -210,10 +270,12 @@ namespace canjewelry.src.eb
                 }
             }
 
+            float luster = CANCarving.LusterBuffMult(canjewelry.config?.Carving, itemStack);
+            float tarnish = CANTarnish.BuffMult(canjewelry.config?.Tarnish, itemStack);
             foreach (var buff in buffs)
             {
                 totals.TryGetValue(buff.Key, out float current);
-                totals[buff.Key] = current + buff.Value;
+                totals[buff.Key] = current + buff.Value * luster * tarnish;
             }
         }
 

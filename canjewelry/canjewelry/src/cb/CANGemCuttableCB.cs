@@ -54,6 +54,12 @@ namespace canjewelry.src.cb
                 // So a right click with a rough gem can reach water, to wet it for the inspection.
                 gem.LiquidSelectable = true;
             }
+
+            foreach (Item item in api.World.Items)
+            {
+                if (CANCarving.IsCarvable(item) && !item.HasBehavior<CANGemCuttableCB>())
+                    item.CollectibleBehaviors = item.CollectibleBehaviors.Append(new CANGemCuttableCB(item));
+            }
         }
 
         public int GetRequiredGemCuttingTableTier(ItemStack stack)
@@ -191,6 +197,13 @@ namespace canjewelry.src.cb
                 return null;
             }
             ItemStack workItemStack = new ItemStack(item, 1);
+            if (CANCarving.IsCarvable(stack.Collectible))
+            {
+                if (beGemCuttingTable.WorkItemStack != null) return null;
+                CANCarving.WriteWorkItem(stack.Collectible, workItemStack.Attributes);
+                beGemCuttingTable.Voxels = CANCarving.CreateVoxels(stack.Collectible);
+                return workItemStack;
+            }
             ITreeAttribute gemItemAttribute = new TreeAttribute();
             string gemType = stack.Collectible.Variant[CANJWConstants.GEM_TYPE_IN_SOCKET];
             if(gemType == null)
@@ -223,7 +236,7 @@ namespace canjewelry.src.cb
         {
             if (stack.Item is CANItemGemCuttingWorkItem)
             {
-                return RoughGemOfWorkItem(aapi.World, stack);
+                return CANCarving.IsCarving(stack) ? CANCarving.MaterialOf(aapi.World, stack) : RoughGemOfWorkItem(aapi.World, stack);
             }
             return stack;
         }

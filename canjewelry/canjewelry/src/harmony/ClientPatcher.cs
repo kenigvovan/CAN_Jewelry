@@ -27,6 +27,14 @@ namespace canjewelry.src.harmony
 
             harmonyInstance.Patch(typeof(CharacterSystem).GetMethod("StartClientSide"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_CharacterSystem_StartClientSide")));
 
+            // The dialog lights up the vanilla clothing slots an item fits; the extra jewelry slots
+            // get the same. By name: the class lives in VintagestoryLib.
+            var highlightSlots = AccessTools.Method(AccessTools.TypeByName("Vintagestory.Client.NoObf.GuiDialogCharacter"), "HighlightSlots");
+            if (highlightSlots != null)
+            {
+                harmonyInstance.Patch(highlightSlots, postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_GuiDialogCharacter_HighlightSlots")));
+            }
+
             harmonyInstance.Patch(typeof(ItemChisel).GetMethod("OnHeldAttackStart"), postfix: new HarmonyMethod(typeof(harmPatch).GetMethod("Postfix_ItemChisel_OnHeldAttackStart")));
 
             // Gems on worn gear. The static overload is the one every piece of gear goes through,

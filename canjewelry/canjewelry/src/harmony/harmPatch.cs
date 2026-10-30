@@ -208,8 +208,30 @@ namespace canjewelry.src.harmony
         bool withDebugInfo)
         {
             ItemStack itemstack = inSlot.Itemstack;
+            if (itemstack.Attributes.HasAttribute(CANJWConstants.LUSTER))
+            {
+                dsc.AppendLine(Lang.Get("canjewelry:item-luster", (int)Math.Round(itemstack.Attributes.GetFloat(CANJWConstants.LUSTER) * 100)));
+            }
+            ITreeAttribute polishing = CANCarving.IsPolishable(itemstack) ? itemstack.Attributes.GetTreeAttribute("cangrindlayerinfo") : null;
+            if (polishing != null)
+            {
+                dsc.AppendLine(Lang.Get("canjewelry:grinding-process-stage", polishing.GetInt("grindtype")));
+                dsc.AppendLine(Lang.Get("canjewelry:grinding-process-percent", string.Format("{0:0}", (20 - polishing.GetInt("grindcounter")) / 20.0 * 100)));
+            }
+            if (!itemstack.Attributes.HasAttribute("canencrusted"))
+            {
+                // No sockets yet: still say how much the piece will take, from the stack (a carving)
+                // or from its type (a ring's cancaratbudget), so a fresh piece is not silent about it.
+                float? emptyBudget = itemstack.Attributes.HasAttribute(CANJWConstants.CARAT_BUDGET)
+                    ? itemstack.Attributes.GetFloat(CANJWConstants.CARAT_BUDGET)
+                    : CANGemAppraisal.BudgetOf(canjewelry.config.GemCarats, itemstack);
+                if (emptyBudget != null)
+                {
+                    dsc.AppendLine(Lang.Get("canjewelry:item-carve-budget", CANGemAppraisalCB.FormatCarats(emptyBudget.Value)));
+                }
+            }
             if (itemstack.Attributes.HasAttribute("canencrusted"))
-            {             
+            {
                 ITreeAttribute tree = itemstack.Attributes.GetTreeAttribute("canencrusted");
                 int maxSocketsNumber = EncrustableCB.GetMaxAmountSockets(itemstack);
                 int canHaveNsocketsMore = maxSocketsNumber - tree.GetInt("socketsnumber");
@@ -217,12 +239,34 @@ namespace canjewelry.src.harmony
                 {
                     dsc.Append(Lang.Get("canjewelry:item-can-have-n-sockets", canHaveNsocketsMore)).Append("\n");
                 }
-                float? budget = CANGemAppraisal.BudgetOf(canjewelry.config.GemCarats, itemstack);
+                var caratsCfg = canjewelry.config.GemCarats;
+                float? budget = CANGemAppraisal.BudgetOf(caratsCfg, itemstack);
                 if (budget != null)
                 {
-                    dsc.Append(Lang.Get("canjewelry:item-carat-budget",
-                        CANGemAppraisalCB.FormatCarats(CANGemAppraisal.CaratsInSockets(canjewelry.config.GemCarats, itemstack, -1)),
-                        CANGemAppraisalCB.FormatCarats(budget.Value))).Append("\n");
+                    float used = CANGemAppraisal.CaratsInSockets(caratsCfg, itemstack, -1);
+                    float free = Math.Max(0, budget.Value - used);
+                    dsc.Append(Lang.Get("canjewelry:item-carat-budget-free",
+                        CANGemAppraisalCB.FormatCarats(used),
+                        CANGemAppraisalCB.FormatCarats(budget.Value),
+                        CANGemAppraisalCB.FormatCarats(free))).Append("\n");
+
+                    // The heaviest gem that goes in right now: the free budget, but no more than the
+                    // largest empty socket holds. Only by carats - in tier mode a socket has no weight.
+                    if (free > 0 && caratsCfg != null && caratsCfg.CapacityByCarats)
+                    {
+                        float largestEmpty = 0;
+                        for (int i = 0; i < tree.GetInt("socketsnumber"); i++)
+                        {
+                            ITreeAttribute socket = tree.GetTreeAttribute("slot" + i);
+                            if (socket == null || !string.IsNullOrEmpty(socket.GetString(CANJWConstants.GEM_TYPE_IN_SOCKET, ""))) continue;
+                            largestEmpty = Math.Max(largestEmpty, CANGemAppraisal.SocketCapacity(caratsCfg, socket.GetAsInt("sockettype")));
+                        }
+                        if (largestEmpty > 0)
+                        {
+                            dsc.Append(Lang.Get("canjewelry:item-carat-fits",
+                                CANGemAppraisalCB.FormatCarats(Math.Min(free, largestEmpty)))).Append("\n");
+                        }
+                    }
                 }
                 if (!canjewelry.config.TurnOffBuffs)
                 {
@@ -246,7 +290,6 @@ namespace canjewelry.src.harmony
                         // The capacity goes after the coloured tier, in the tooltip's own colour:
                         // in a dark tier colour it could not be read.
                         string capacityText = "";
-                        var caratsCfg = canjewelry.config.GemCarats;
                         if (caratsCfg != null && caratsCfg.CapacityByCarats)
                         {
                             string capacity = CANGemAppraisalCB.FormatCarats(CANGemAppraisal.SocketCapacity(caratsCfg, socketTier));
@@ -381,6 +424,28 @@ namespace canjewelry.src.harmony
         }
 
         private static GuiDialogCharacterBase characterDialog;
+
+        // The colour the game gives the clothing slots an item fits (GuiDialogCharacter.HighlightSlots).
+        private const string FittingSlotColor = "#5fbed4";
+
+        /// <summary>
+        /// Lights up the extra jewelry slots the item on the mouse, or under it, would go into - the
+        /// same rule and colour the dialog uses for its own clothing slots. The slot grid reads the
+        /// colour as it draws, so nothing needs recomposing.
+        /// </summary>
+        public static void Postfix_GuiDialogCharacter_HighlightSlots()
+        {
+            IPlayer player = canjewelry.capi?.World?.Player;
+            IInventory inv = player == null ? null : canjewelry.GetAdditionalJewelryInventory(player);
+            if (inv == null) return;
+
+            ItemSlot mouseSlot = player.InventoryManager.MouseItemSlot;
+            ItemSlot target = mouseSlot.Empty ? (player.InventoryManager.CurrentHoveredSlot ?? mouseSlot) : mouseSlot;
+            foreach (ItemSlot slot in inv)
+            {
+                slot.HexBackgroundColor = target?.Itemstack != null && slot.CanHold(target) ? FittingSlotColor : null;
+            }
+        }
 
         // One instance, so the tab can be found again among the handlers by reference.
         private static readonly Action<GuiComposer> additionalJewelryTabHandler = composeAdditionalJewelryTab;

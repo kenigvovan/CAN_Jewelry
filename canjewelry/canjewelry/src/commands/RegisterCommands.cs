@@ -108,6 +108,11 @@ namespace canjewelry.src.commands
                                             .HandleWith(OpenCuttingSettingsGui)
                                         .EndSub()
                                     .EndSub()
+                                    .BeginSub("config")
+                                        .RequiresPlayer()
+                                        .WithDesc("open the dialogue for socket rules, gem fitting and missing defaults")
+                                        .HandleWith(OpenAdminConfigGui)
+                                    .EndSub()
                                     ;
             if (canjewelry.config.debugMode)
             {
@@ -310,6 +315,18 @@ namespace canjewelry.src.commands
             }
 
             canjewelry.serverChannel?.SendPacket(CuttingSettingsPacket.FromConfig(canjewelry.config), player);
+            return TextCommandResult.Success();
+        }
+
+        public static TextCommandResult OpenAdminConfigGui(TextCommandCallingArgs args)
+        {
+            IServerPlayer player = args.Caller.Player as IServerPlayer;
+            if (player == null)
+            {
+                return TextCommandResult.Error("Needs a player to send the dialogue to.");
+            }
+
+            canjewelry.SendAdminSnapshot(player, true);
             return TextCommandResult.Success();
         }
 

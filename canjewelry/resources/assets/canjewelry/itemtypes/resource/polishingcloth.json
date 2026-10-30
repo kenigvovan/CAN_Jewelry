@@ -1,0 +1,21 @@
+{
+  "code": "canpolishingcloth",
+  "maxstacksize": 16,
+  "attributes": {
+    "canPolishStrength": 0.5,
+    "handbook": { "groupBy": [ "canpolishingcloth" ] }
+  },
+  "shape": { "base": "game:item/resource/cloth" },
+  "textures": {
+    "color": { "base": "game:block/cloth/linen/normal1" }
+  },
+  "creativeinventory": {
+    "general": [ "*" ],
+    "items": [ "*" ],
+    "canjewelry": [ "*" ]
+  },
+  "combustibleProps": {
+    "burnTemperature": 600,
+    "burnDuration": 4
+  }
+}

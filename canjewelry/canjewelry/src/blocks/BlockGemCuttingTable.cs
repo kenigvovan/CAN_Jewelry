@@ -21,6 +21,9 @@ namespace canjewelry.src.blocks
     {
         WorldInteraction[] interactions;
 
+        /// <summary>The table's shape. Its top is at <see cref="BlockEntityGemCuttingTable.TopY"/>.</summary>
+        public const string ShapePath = "canjewelry:shapes/block/gemcuttingtable_v2.json";
+
         /// <summary>
         /// The texture source for one mesh build, with the stone and metal of the table in hand
         /// pointed at their materials. Per call rather than per block: a Block is one object for the
@@ -213,9 +216,9 @@ namespace canjewelry.src.blocks
                     double dz = byPlayer.Entity.Pos.Z - (targetPos.Z + blockSel.HitPosition.Z);
                     float angleHor = (float)Math.Atan2(dx, dz);
 
-                    float deg22dot5rad = GameMath.PIHALF / 4;
-                    float roundRad = ((int)Math.Round(angleHor / deg22dot5rad)) * deg22dot5rad;
-                    bect.MeshAngle = roundRad;
+                    // Quarter turns only: the table top and the voxel grid on it have to line up.
+                    float roundRad = ((int)Math.Round(angleHor / GameMath.PIHALF)) * GameMath.PIHALF;
+                    bect.SetMeshAngle(GameMath.Mod(roundRad, 2 * GameMath.PI));
                 }
             }
 
@@ -249,7 +252,7 @@ namespace canjewelry.src.blocks
         public MeshData GenMesh(ICoreClientAPI capi, Shape shape, ITesselatorAPI tesselator, ITexPositionSource textureSource)
         {
             tesselator ??= capi.Tesselator;
-            shape ??= Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
+            shape ??= Vintagestory.API.Common.Shape.TryGet(capi, ShapePath);
             if (shape == null) return null;
 
             tesselator.TesselateShape("gemcuttingtable", shape, out var modeldata, textureSource);
@@ -267,7 +270,7 @@ namespace canjewelry.src.blocks
             string key = "canjewelry:gemcuttingtable-" + stoneType + "-" + metalType;
             renderinfo.ModelRef = ObjectCacheUtil.GetOrCreate(capi, key, delegate
             {
-                Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, "canjewelry:shapes/block/gemcuttingtable.json");
+                Shape shape = Vintagestory.API.Common.Shape.TryGet(capi, ShapePath);
                 MeshData meshdata = GenMesh(capi, shape, null, TexSource(capi, stoneType, metalType));
                 return capi.Render.UploadMultiTextureMesh(meshdata);
             });

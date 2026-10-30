@@ -36,6 +36,10 @@ namespace canjewelry.src.jewelry
 
         protected Vec3f origin = new Vec3f(0f, 0f, 0f);
 
+        // The work item mesh is built for a top at 2/16 - it is the held item's mesh as well - so
+        // the table lifts it onto its own top here.
+        private const float TopOffset = BlockEntityGemCuttingTable.TopY - 2 / 16f;
+
         public double RenderOrder => 0.5;
 
         public int RenderRange => 24;
@@ -90,7 +94,7 @@ namespace canjewelry.src.jewelry
             anvilShaderProg.Uniform("rgbaLightIn", lightRGBs);
             anvilShaderProg.Uniform("rgbaGlowIn", glowRgb);
             anvilShaderProg.Uniform("extraGlow", num2);
-            anvilShaderProg.UniformMatrix("modelMatrix", ModelMat.Identity().Translate((double)pos.X - cameraPos.X, (double)pos.Y - cameraPos.Y, (double)pos.Z - cameraPos.Z).Values);
+            anvilShaderProg.UniformMatrix("modelMatrix", ModelMat.Identity().Translate((double)pos.X - cameraPos.X, (double)pos.Y - cameraPos.Y + TopOffset, (double)pos.Z - cameraPos.Z).Values);
             anvilShaderProg.UniformMatrix("viewMatrix", render.CameraMatrixOriginf);
             anvilShaderProg.UniformMatrix("projectionMatrix", render.CurrentProjectionMatrix);
             render.RenderMultiTextureMesh(workItemMeshRef, "tex", 0);
@@ -106,7 +110,7 @@ namespace canjewelry.src.jewelry
                 IClientWorldAccessor world = api.World;
                 EntityPos entityPos = world.Player.Entity.Pos;
                 Vec3d cameraPos = world.Player.Entity.CameraPos;
-                ModelMat.Set(render.CameraMatrixOriginf).Translate((double)pos.X - cameraPos.X, (double)pos.Y - cameraPos.Y, (double)pos.Z - cameraPos.Z);
+                ModelMat.Set(render.CameraMatrixOriginf).Translate((double)pos.X - cameraPos.X, (double)pos.Y - cameraPos.Y + TopOffset, (double)pos.Z - cameraPos.Z);
                 outLineColorMul.A = 1f - GameMath.Clamp((float)Math.Sqrt(entityPos.SquareDistanceTo(pos.X, pos.Y, pos.Z)) / 5f - 1f, 0f, 1f);
                 float num2 = (render.LineWidth = 3.5f * api.Settings.Float["wireframethickness"]);
                 render.GLEnableDepthTest();
@@ -141,7 +145,8 @@ namespace canjewelry.src.jewelry
 			{
 				return;
 			}
-			ObjectCacheUtil.Delete(this.api, workitemStack.Attributes.GetInt("meshRefId", 0).ToString() ?? "");
+			// The key CANItemGemCuttingWorkItem caches the mesh under; the bare number never matched it.
+			ObjectCacheUtil.Delete(this.api, "canjewelry:workItemMesh-" + workitemStack.Attributes.GetInt("meshRefId", 0));
 			workitemStack.Attributes.RemoveAttribute("meshRefId");
 			if (recipeToOutlineVoxels != null)
 			{
