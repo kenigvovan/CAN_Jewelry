@@ -926,6 +926,10 @@ namespace canjewelry.src
             {  "fadynasties:brigandinebody-*", new int[2] {3, 3} },
             {  "fadynasties:brigandinelegs-*", new int[1] {3} },
 
+            {  "fagothic:platehead-*", new int[1] {3} },
+            {  "fagothic:platebody-*", new int[2] {3, 3} },
+            {  "fagothic:platelegs-*", new int[1] {3} },
+
             {  "eltrench:el-trenchmen-head-*", new int[1] {3} },
             {  "eltrench:el-trenchmen-body-*", new int[2] {3, 3} },
             {  "eltrench:el-trenchmen-legs-*", new int[1] {3} },
